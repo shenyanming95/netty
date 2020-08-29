@@ -32,9 +32,9 @@ import org.junit.Test;
 
 import java.util.Random;
 
-import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionFilter.*;
-import static io.netty.handler.codec.http.websocketx.extensions.compression.DeflateDecoder.*;
-import static io.netty.util.CharsetUtil.*;
+import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionFilter.ALWAYS_SKIP;
+import static io.netty.handler.codec.http.websocketx.extensions.compression.DeflateDecoder.EMPTY_DEFLATE_BLOCK;
+import static io.netty.util.CharsetUtil.UTF_8;
 import static org.junit.Assert.*;
 
 public class PerMessageDeflateDecoderTest {

@@ -24,9 +24,11 @@ import org.junit.Test;
 
 import java.util.Random;
 
-import static io.netty.buffer.Unpooled.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.junit.Assert.assertThat;
 
 public class ByteArrayEncoderTest {
 

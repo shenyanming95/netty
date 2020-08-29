@@ -31,8 +31,9 @@ import io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionFilte
 
 import java.util.List;
 
-import static io.netty.handler.codec.http.websocketx.extensions.compression.PerMessageDeflateDecoder.*;
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.handler.codec.http.websocketx.extensions.compression.PerMessageDeflateDecoder.EMPTY_DEFLATE_BLOCK;
+import static io.netty.handler.codec.http.websocketx.extensions.compression.PerMessageDeflateDecoder.FRAME_TAIL;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * Deflate implementation of a payload compressor for

@@ -23,7 +23,7 @@ import io.netty.util.internal.ObjectUtil;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-import static io.netty.buffer.Unpooled.*;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
 
 /**
  * Memory implementation of Attributes

@@ -15,6 +15,13 @@
  */
 package io.netty.handler.ssl;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
+import io.netty.util.IllegalReferenceCountException;
+import io.netty.util.internal.ObjectUtil;
+
 import java.math.BigInteger;
 import java.security.Principal;
 import java.security.PublicKey;
@@ -23,13 +30,6 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
-import io.netty.util.CharsetUtil;
-import io.netty.util.IllegalReferenceCountException;
-import io.netty.util.internal.ObjectUtil;
 
 /**
  * This is a special purpose implementation of a {@link X509Certificate} which allows

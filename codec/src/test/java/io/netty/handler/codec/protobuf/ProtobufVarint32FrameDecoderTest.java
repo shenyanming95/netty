@@ -20,9 +20,9 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.netty.buffer.Unpooled.*;
-import static org.hamcrest.core.Is.*;
-import static org.hamcrest.core.IsNull.*;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.*;
 
 public class ProtobufVarint32FrameDecoderTest {

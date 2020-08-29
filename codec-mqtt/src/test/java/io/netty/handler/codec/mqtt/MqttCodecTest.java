@@ -33,7 +33,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for MqttEncoder and MqttDecoder.

@@ -15,12 +15,10 @@
  */
 package io.netty.util.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static io.netty.util.internal.MathUtil.*;
-
 import org.junit.Test;
+
+import static io.netty.util.internal.MathUtil.*;
+import static org.junit.Assert.*;
 
 public class MathUtilTest {
 

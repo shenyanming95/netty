@@ -17,11 +17,7 @@ package io.netty.handler.ssl;
 
 import com.amazon.corretto.crypto.provider.AmazonCorrettoCryptoProvider;
 import com.amazon.corretto.crypto.provider.SelfTestStatus;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 

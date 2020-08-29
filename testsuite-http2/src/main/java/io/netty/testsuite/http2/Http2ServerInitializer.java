@@ -16,13 +16,7 @@
 
 package io.netty.testsuite.http2;
 
-import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
-
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpObjectAggregator;
@@ -35,6 +29,8 @@ import io.netty.handler.codec.http2.Http2CodecUtil;
 import io.netty.handler.codec.http2.Http2ServerUpgradeCodec;
 import io.netty.util.AsciiString;
 import io.netty.util.ReferenceCountUtil;
+
+import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
 
 /**
  * Sets up the Netty pipeline for the example server. Depending on the endpoint config, sets up the

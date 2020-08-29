@@ -16,30 +16,10 @@ package io.netty.microbench.http2;
 
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http2.DefaultHttp2Connection;
-import io.netty.handler.codec.http2.DefaultHttp2RemoteFlowController;
-import io.netty.handler.codec.http2.Http2Connection;
-import io.netty.handler.codec.http2.Http2ConnectionHandler;
-import io.netty.handler.codec.http2.Http2ConnectionHandlerBuilder;
-import io.netty.handler.codec.http2.Http2Exception;
-import io.netty.handler.codec.http2.Http2FrameAdapter;
-import io.netty.handler.codec.http2.Http2RemoteFlowController;
-import io.netty.handler.codec.http2.Http2Stream;
-import io.netty.handler.codec.http2.Http2StreamVisitor;
-import io.netty.handler.codec.http2.StreamByteDistributor;
-import io.netty.handler.codec.http2.UniformStreamByteDistributor;
-import io.netty.handler.codec.http2.WeightedFairQueueByteDistributor;
+import io.netty.handler.codec.http2.*;
 import io.netty.microbench.channel.EmbeddedChannelWriteReleaseHandlerContext;
 import io.netty.microbench.util.AbstractMicrobenchmark;
-import org.openjdk.jmh.annotations.AuxCounters;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.*;
 
 /**
  * Benchmark to compare stream byte distribution algorithms when priorities are identical for

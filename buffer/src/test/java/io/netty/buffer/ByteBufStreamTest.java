@@ -20,7 +20,7 @@ import org.junit.Test;
 import java.io.EOFException;
 import java.nio.charset.Charset;
 
-import static io.netty.util.internal.EmptyArrays.*;
+import static io.netty.util.internal.EmptyArrays.EMPTY_BYTES;
 import static org.junit.Assert.*;
 
 /**

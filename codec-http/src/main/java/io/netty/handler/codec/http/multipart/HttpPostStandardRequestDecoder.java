@@ -17,11 +17,7 @@ package io.netty.handler.codec.http.multipart;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.HttpConstants;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.LastHttpContent;
-import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.HttpPostBodyUtil.SeekAheadOptimize;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder.EndOfDataDecoderException;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder.ErrorDataDecoderException;
@@ -38,7 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
+import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
 
 /**
  * This decoder will decode Body and can handle POST BODY.

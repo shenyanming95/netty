@@ -21,8 +21,10 @@ import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import org.junit.Test;
 
-import static io.netty.buffer.Unpooled.*;
-import static org.hamcrest.CoreMatchers.*;
+import static io.netty.buffer.Unpooled.copiedBuffer;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 public class LineBasedFrameDecoderTest {

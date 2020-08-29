@@ -16,11 +16,7 @@
 package io.netty.channel.pool;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoop;
+import io.netty.channel.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
@@ -31,7 +27,7 @@ import io.netty.util.internal.PlatformDependent;
 import java.util.Deque;
 import java.util.concurrent.Callable;
 
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * Simple {@link ChannelPool} implementation which will create new {@link Channel}s if someone tries to acquire

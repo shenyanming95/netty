@@ -17,7 +17,6 @@ package io.netty.handler.codec;
 
 import org.junit.Test;
 
-
 import static org.junit.Assert.*;
 
 public class CodecOutputListTest {

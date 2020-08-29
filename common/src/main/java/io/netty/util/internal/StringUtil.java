@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * String utility class.

@@ -19,16 +19,12 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpObject;
-import io.netty.handler.codec.http.HttpUtil;
-import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.*;
 import io.netty.util.AsciiString;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
-import static io.netty.handler.codec.http.HttpVersion.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class HttpNativeServerHandler extends SimpleChannelInboundHandler<HttpObject> {
     private static final byte[] CONTENT = { 'H', 'e', 'l', 'l', 'o', ' ', 'N', 'a', 't', 'i', 'v', 'e' };

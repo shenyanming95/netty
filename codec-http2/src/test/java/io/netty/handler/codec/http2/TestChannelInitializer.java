@@ -18,12 +18,8 @@ package io.netty.handler.codec.http2;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelConfig;
-import io.netty.channel.ChannelHandler;
+import io.netty.channel.*;
 import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.RecvByteBufAllocator;
 import io.netty.util.UncheckedBooleanSupplier;
 
 import java.util.concurrent.atomic.AtomicInteger;

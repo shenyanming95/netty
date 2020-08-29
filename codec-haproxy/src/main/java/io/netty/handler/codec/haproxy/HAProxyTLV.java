@@ -20,7 +20,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.util.internal.StringUtil;
 
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A Type-Length Value (TLV vector) that can be added to the PROXY protocol

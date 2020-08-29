@@ -23,7 +23,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.local.LocalChannel;
 import io.netty.channel.local.LocalServerChannel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 class BaseChannelTest {
 

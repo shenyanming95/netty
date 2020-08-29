@@ -44,28 +44,14 @@ import java.security.AlgorithmConstraints;
 import java.security.AlgorithmParameters;
 import java.security.CryptoPrimitive;
 import java.security.Key;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static io.netty.handler.ssl.OpenSslTestUtils.checkShouldUseKeyManagerFactory;
 import static io.netty.handler.ssl.ReferenceCountedOpenSslEngine.MAX_PLAINTEXT_LENGTH;
-import static io.netty.handler.ssl.SslUtils.PROTOCOL_SSL_V2_HELLO;
-import static io.netty.handler.ssl.SslUtils.PROTOCOL_SSL_V3;
-import static io.netty.handler.ssl.SslUtils.PROTOCOL_TLS_V1;
-import static io.netty.handler.ssl.SslUtils.PROTOCOL_TLS_V1_1;
-import static io.netty.handler.ssl.SslUtils.PROTOCOL_TLS_V1_2;
+import static io.netty.handler.ssl.SslUtils.*;
 import static io.netty.internal.tcnative.SSL.SSL_CVERIFY_IGNORED;
 import static java.lang.Integer.MAX_VALUE;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)

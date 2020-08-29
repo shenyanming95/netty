@@ -16,8 +16,8 @@
 package io.netty.buffer;
 
 import io.netty.buffer.CompositeByteBuf.ByteWrapper;
-import io.netty.util.internal.ObjectUtil;
 import io.netty.util.CharsetUtil;
+import io.netty.util.internal.ObjectUtil;
 import io.netty.util.internal.PlatformDependent;
 
 import java.nio.ByteBuffer;

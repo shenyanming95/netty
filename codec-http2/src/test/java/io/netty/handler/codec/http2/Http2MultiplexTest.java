@@ -16,15 +16,7 @@ package io.netty.handler.codec.http2;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpScheme;
@@ -49,26 +41,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static io.netty.handler.codec.http2.Http2TestUtil.anyChannelPromise;
-import static io.netty.handler.codec.http2.Http2TestUtil.anyHttp2Settings;
-import static io.netty.handler.codec.http2.Http2TestUtil.assertEqualsAndRelease;
-import static io.netty.handler.codec.http2.Http2TestUtil.bb;
+import static io.netty.handler.codec.http2.Http2TestUtil.*;
 import static io.netty.util.ReferenceCountUtil.release;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 public abstract class Http2MultiplexTest<C extends Http2FrameCodec> {
     private final Http2Headers request = new DefaultHttp2Headers()

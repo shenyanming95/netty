@@ -15,12 +15,12 @@
  */
 package io.netty.handler.codec.serialization;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 public class CompactObjectSerializationTest {
 

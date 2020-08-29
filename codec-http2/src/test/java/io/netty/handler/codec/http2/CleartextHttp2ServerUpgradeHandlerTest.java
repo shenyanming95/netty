@@ -22,16 +22,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.embedded.EmbeddedChannel;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.codec.http.HttpServerUpgradeHandler;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.HttpServerUpgradeHandler.UpgradeCodec;
 import io.netty.handler.codec.http.HttpServerUpgradeHandler.UpgradeCodecFactory;
 import io.netty.handler.codec.http.HttpServerUpgradeHandler.UpgradeEvent;
-import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.CleartextHttp2ServerUpgradeHandler.PriorKnowledgeUpgradeEvent;
 import io.netty.handler.codec.http2.Http2Stream.State;
 import io.netty.util.CharsetUtil;
@@ -42,15 +36,8 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for {@link CleartextHttp2ServerUpgradeHandler}

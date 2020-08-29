@@ -20,25 +20,9 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static io.netty.util.internal.StringUtil.NEWLINE;
-import static io.netty.util.internal.StringUtil.commonSuffixOfLength;
-import static io.netty.util.internal.StringUtil.indexOfWhiteSpace;
-import static io.netty.util.internal.StringUtil.indexOfNonWhiteSpace;
-import static io.netty.util.internal.StringUtil.isNullOrEmpty;
-import static io.netty.util.internal.StringUtil.simpleClassName;
-import static io.netty.util.internal.StringUtil.substringAfter;
-import static io.netty.util.internal.StringUtil.toHexString;
-import static io.netty.util.internal.StringUtil.toHexStringPadded;
-import static io.netty.util.internal.StringUtil.unescapeCsv;
-import static io.netty.util.internal.StringUtil.unescapeCsvFields;
+import static io.netty.util.internal.StringUtil.*;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class StringUtilTest {
 

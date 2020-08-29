@@ -23,10 +23,7 @@ import org.junit.Test;
 
 import java.net.SocketAddress;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 public class DynamicAddressConnectHandlerTest {
     private static final SocketAddress LOCAL = new SocketAddress() { };

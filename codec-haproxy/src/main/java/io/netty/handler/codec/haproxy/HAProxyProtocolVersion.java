@@ -15,7 +15,8 @@
  */
 package io.netty.handler.codec.haproxy;
 
-import static io.netty.handler.codec.haproxy.HAProxyConstants.*;
+import static io.netty.handler.codec.haproxy.HAProxyConstants.VERSION_ONE_BYTE;
+import static io.netty.handler.codec.haproxy.HAProxyConstants.VERSION_TWO_BYTE;
 
 /**
  * The HAProxy proxy protocol specification version.

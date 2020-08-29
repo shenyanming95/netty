@@ -17,6 +17,7 @@ package io.netty.channel.unix;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.internal.ObjectUtil;
+
 import java.nio.channels.WritableByteChannel;
 
 public abstract class SocketWritableByteChannel implements WritableByteChannel {

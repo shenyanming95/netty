@@ -16,8 +16,8 @@
 package io.netty.testsuite.shading;
 
 import io.netty.util.internal.PlatformDependent;
-import org.junit.Test;
 import org.junit.Assume;
+import org.junit.Test;
 
 import java.lang.reflect.Method;
 

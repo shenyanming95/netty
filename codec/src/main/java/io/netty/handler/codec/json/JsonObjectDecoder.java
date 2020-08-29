@@ -19,10 +19,10 @@ package io.netty.handler.codec.json;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.CorruptedFrameException;
 import io.netty.handler.codec.TooLongFrameException;
-import io.netty.channel.ChannelPipeline;
 
 import java.util.List;
 

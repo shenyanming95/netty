@@ -22,12 +22,12 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelMetadata;
 import io.netty.channel.ChannelOutboundBuffer;
-import io.netty.util.internal.SocketUtils;
 import io.netty.channel.nio.AbstractNioMessageChannel;
 import io.netty.channel.udt.DefaultUdtChannelConfig;
 import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.UdtChannelConfig;
 import io.netty.channel.udt.UdtMessage;
+import io.netty.util.internal.SocketUtils;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
@@ -39,7 +39,8 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
-import static java.nio.channels.SelectionKey.*;
+import static java.nio.channels.SelectionKey.OP_CONNECT;
+import static java.nio.channels.SelectionKey.OP_READ;
 
 /**
  * Message Connector for UDT Datagrams.

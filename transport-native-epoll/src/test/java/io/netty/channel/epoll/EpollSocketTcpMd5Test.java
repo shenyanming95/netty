@@ -21,17 +21,12 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.ConnectTimeoutException;
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.CharsetUtil;
+import io.netty.util.NetUtil;
+import org.junit.*;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collections;
-
-import io.netty.util.NetUtil;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 public class EpollSocketTcpMd5Test {
     private static final byte[] SERVER_KEY = "abc".getBytes(CharsetUtil.US_ASCII);

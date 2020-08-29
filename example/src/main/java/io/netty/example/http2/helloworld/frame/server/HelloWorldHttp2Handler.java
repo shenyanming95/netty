@@ -20,14 +20,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http2.DefaultHttp2DataFrame;
-import io.netty.handler.codec.http2.DefaultHttp2Headers;
-import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame;
-import io.netty.handler.codec.http2.DefaultHttp2WindowUpdateFrame;
-import io.netty.handler.codec.http2.Http2DataFrame;
-import io.netty.handler.codec.http2.Http2FrameStream;
-import io.netty.handler.codec.http2.Http2Headers;
-import io.netty.handler.codec.http2.Http2HeadersFrame;
+import io.netty.handler.codec.http2.*;
 import io.netty.util.CharsetUtil;
 
 import static io.netty.buffer.Unpooled.copiedBuffer;

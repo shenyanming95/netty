@@ -19,12 +19,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.codec.spdy.SpdyFrameCodec;
-import io.netty.handler.codec.spdy.SpdyHttpDecoder;
-import io.netty.handler.codec.spdy.SpdyHttpEncoder;
-import io.netty.handler.codec.spdy.SpdyHttpResponseStreamIdHandler;
-import io.netty.handler.codec.spdy.SpdySessionHandler;
-import io.netty.handler.codec.spdy.SpdyVersion;
+import io.netty.handler.codec.spdy.*;
 import io.netty.handler.ssl.ApplicationProtocolNames;
 import io.netty.handler.ssl.ApplicationProtocolNegotiationHandler;
 

@@ -16,8 +16,6 @@
 
 package io.netty.buffer;
 
-import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
-
 import io.netty.util.ByteProcessor;
 import io.netty.util.internal.EmptyArrays;
 import io.netty.util.internal.ObjectUtil;
@@ -33,6 +31,8 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
+
+import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
 
 /**
  * An empty {@link ByteBuf} whose capacity and maximum capacity are all {@code 0}.

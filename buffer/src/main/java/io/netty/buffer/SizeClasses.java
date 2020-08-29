@@ -15,7 +15,7 @@
  */
 package io.netty.buffer;
 
-import static io.netty.buffer.PoolThreadCache.*;
+import static io.netty.buffer.PoolThreadCache.log2;
 
 /**
  * SizeClasses requires {@code pageShifts} to be defined prior to inclusion,

@@ -16,10 +16,10 @@
 
 package io.netty.handler.codec.mqtt;
 
-import java.util.Arrays;
-
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.StringUtil;
+
+import java.util.Arrays;
 
 /**
  * Payload of {@link MqttConnectMessage}

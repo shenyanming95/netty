@@ -15,24 +15,17 @@
  */
 package io.netty.handler.codec.http;
 
-import java.util.Collection;
-import java.util.Collections;
-
-import org.junit.Test;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
+import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpServerUpgradeHandler.UpgradeCodec;
 import io.netty.handler.codec.http.HttpServerUpgradeHandler.UpgradeCodecFactory;
 import io.netty.util.CharsetUtil;
+import org.junit.Test;
+
+import java.util.Collection;
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 

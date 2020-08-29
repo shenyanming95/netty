@@ -19,8 +19,8 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.ServerChannel;
 
-import java.net.InetSocketAddress;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Set;
 
 /**

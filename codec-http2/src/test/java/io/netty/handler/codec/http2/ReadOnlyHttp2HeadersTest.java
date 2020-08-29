@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import static io.netty.handler.codec.http2.DefaultHttp2HeadersTest.*;
+import static io.netty.handler.codec.http2.DefaultHttp2HeadersTest.verifyPseudoHeadersFirst;
 import static org.junit.Assert.*;
 
 public class ReadOnlyHttp2HeadersTest {

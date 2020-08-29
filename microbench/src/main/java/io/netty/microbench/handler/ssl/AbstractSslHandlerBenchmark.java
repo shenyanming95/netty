@@ -29,9 +29,9 @@ import io.netty.microbench.util.AbstractMicrobenchmark;
 import io.netty.util.ReferenceCountUtil;
 import org.openjdk.jmh.annotations.Param;
 
-import java.io.File;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
+import java.io.File;
 
 import static io.netty.handler.codec.ByteToMessageDecoder.COMPOSITE_CUMULATOR;
 import static org.junit.Assert.assertNull;

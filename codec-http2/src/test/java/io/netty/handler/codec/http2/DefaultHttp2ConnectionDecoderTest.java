@@ -16,11 +16,7 @@ package io.netty.handler.codec.http2;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.DefaultChannelPromise;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import junit.framework.AssertionFailedError;
 import org.junit.Before;
@@ -38,31 +34,12 @@ import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 import static io.netty.buffer.Unpooled.wrappedBuffer;
 import static io.netty.handler.codec.http2.Http2CodecUtil.DEFAULT_PRIORITY_WEIGHT;
 import static io.netty.handler.codec.http2.Http2Error.PROTOCOL_ERROR;
-import static io.netty.handler.codec.http2.Http2Stream.State.IDLE;
-import static io.netty.handler.codec.http2.Http2Stream.State.OPEN;
-import static io.netty.handler.codec.http2.Http2Stream.State.RESERVED_REMOTE;
+import static io.netty.handler.codec.http2.Http2Stream.State.*;
 import static io.netty.util.CharsetUtil.UTF_8;
-
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.anyShort;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.isNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for {@link DefaultHttp2ConnectionDecoder}.

@@ -30,7 +30,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import static io.netty.buffer.Unpooled.*;
-import static io.netty.util.internal.EmptyArrays.*;
+import static io.netty.util.internal.EmptyArrays.EMPTY_BYTES;
+import static io.netty.util.internal.EmptyArrays.EMPTY_BYTE_BUFFERS;
 import static org.junit.Assert.*;
 
 /**

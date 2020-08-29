@@ -15,26 +15,18 @@
  */
 package io.netty.util.concurrent;
 
+import io.netty.util.concurrent.AbstractEventExecutor.LazyRunnable;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.netty.util.concurrent.AbstractEventExecutor.LazyRunnable;
-
 import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 public class SingleThreadEventExecutorTest {

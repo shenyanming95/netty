@@ -15,15 +15,14 @@
  */
 package io.netty.handler.ssl;
 
-import static io.netty.handler.ssl.ApplicationProtocolUtil.toList;
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
-
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLHandshakeException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLHandshakeException;
+import static io.netty.handler.ssl.ApplicationProtocolUtil.toList;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * Common base class for {@link JdkApplicationProtocolNegotiator} classes to inherit from.

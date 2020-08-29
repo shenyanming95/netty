@@ -20,9 +20,7 @@ import org.junit.Test;
 
 import static io.netty.handler.codec.http2.Http2CodecUtil.MAX_FRAME_SIZE_UPPER_BOUND;
 import static io.netty.handler.codec.http2.Http2CodecUtil.MAX_UNSIGNED_INT;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link Http2Settings}.

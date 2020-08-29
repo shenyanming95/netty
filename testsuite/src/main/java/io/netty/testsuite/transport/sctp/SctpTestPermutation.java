@@ -24,9 +24,9 @@ import io.netty.channel.sctp.nio.NioSctpChannel;
 import io.netty.channel.sctp.nio.NioSctpServerChannel;
 import io.netty.channel.sctp.oio.OioSctpChannel;
 import io.netty.channel.sctp.oio.OioSctpServerChannel;
-import io.netty.testsuite.util.TestUtils;
 import io.netty.testsuite.transport.TestsuitePermutation.BootstrapComboFactory;
 import io.netty.testsuite.transport.TestsuitePermutation.BootstrapFactory;
+import io.netty.testsuite.util.TestUtils;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
 import java.util.ArrayList;

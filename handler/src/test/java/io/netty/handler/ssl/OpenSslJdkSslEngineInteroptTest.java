@@ -15,16 +15,13 @@
  */
 package io.netty.handler.ssl;
 
-import io.netty.util.internal.PlatformDependent;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import javax.net.ssl.SSLEngine;
-
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import javax.net.ssl.SSLEngine;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

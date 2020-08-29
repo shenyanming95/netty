@@ -23,12 +23,9 @@ import io.netty.handler.codec.http.HttpHeaders;
 import java.net.URI;
 import java.util.List;
 
-import static io.netty.handler.codec.http.websocketx.WebSocketClientProtocolConfig.DEFAULT_ALLOW_MASK_MISMATCH;
-import static io.netty.handler.codec.http.websocketx.WebSocketClientProtocolConfig.DEFAULT_DROP_PONG_FRAMES;
-import static io.netty.handler.codec.http.websocketx.WebSocketClientProtocolConfig.DEFAULT_HANDLE_CLOSE_FRAMES;
-import static io.netty.handler.codec.http.websocketx.WebSocketClientProtocolConfig.DEFAULT_PERFORM_MASKING;
+import static io.netty.handler.codec.http.websocketx.WebSocketClientProtocolConfig.*;
 import static io.netty.handler.codec.http.websocketx.WebSocketServerProtocolConfig.DEFAULT_HANDSHAKE_TIMEOUT_MILLIS;
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * This handler does all the heavy lifting for you to run a websocket client.

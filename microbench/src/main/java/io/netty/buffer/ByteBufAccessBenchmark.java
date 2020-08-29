@@ -15,22 +15,12 @@
 */
 package io.netty.buffer;
 
-import java.nio.ByteBuffer;
-import java.util.concurrent.TimeUnit;
-
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.annotations.Warmup;
-
 import io.netty.microbench.util.AbstractMicrobenchmark;
 import io.netty.util.internal.PlatformDependent;
+import org.openjdk.jmh.annotations.*;
+
+import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
 
 @Warmup(iterations = 5, time = 1500, timeUnit = TimeUnit.MILLISECONDS)
 @Measurement(iterations = 10, time = 1500, timeUnit = TimeUnit.MILLISECONDS)

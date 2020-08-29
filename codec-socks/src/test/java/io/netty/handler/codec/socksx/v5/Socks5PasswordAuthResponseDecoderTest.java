@@ -20,7 +20,8 @@ import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 public class Socks5PasswordAuthResponseDecoderTest {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(

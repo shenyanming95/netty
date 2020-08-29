@@ -22,7 +22,8 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.CodecException;
 import io.netty.handler.codec.TooLongFrameException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class SerialMarshallingDecoderTest extends SerialCompatibleMarshallingDecoderTest {
 

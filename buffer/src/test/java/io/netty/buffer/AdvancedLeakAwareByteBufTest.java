@@ -15,13 +15,13 @@
  */
 package io.netty.buffer;
 
-import static io.netty.buffer.Unpooled.*;
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
 import io.netty.util.CharsetUtil;
 import io.netty.util.ResourceLeakTracker;
+import org.junit.Test;
+
+import static io.netty.buffer.Unpooled.compositeBuffer;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
+import static org.junit.Assert.assertArrayEquals;
 
 public class AdvancedLeakAwareByteBufTest extends SimpleLeakAwareByteBufTest {
 

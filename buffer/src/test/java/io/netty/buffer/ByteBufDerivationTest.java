@@ -22,7 +22,7 @@ import java.nio.ByteOrder;
 import java.util.Random;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 /**
  * Tests wrapping a wrapped buffer does not go way too deep chaining.

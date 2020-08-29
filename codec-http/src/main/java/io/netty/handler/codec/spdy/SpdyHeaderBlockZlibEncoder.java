@@ -23,7 +23,7 @@ import io.netty.util.internal.SuppressJava6Requirement;
 
 import java.util.zip.Deflater;
 
-import static io.netty.handler.codec.spdy.SpdyCodecUtil.*;
+import static io.netty.handler.codec.spdy.SpdyCodecUtil.SPDY_DICT;
 
 class SpdyHeaderBlockZlibEncoder extends SpdyHeaderBlockRawEncoder {
 

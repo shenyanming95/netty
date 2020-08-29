@@ -16,6 +16,7 @@
 package io.netty.handler.codec.socks;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertTrue;
 
 public class SocksInitResponseTest {

@@ -19,7 +19,7 @@ package io.netty.test.udt.nio;
 import io.netty.test.udt.util.UnitHelp;
 import org.junit.BeforeClass;
 
-import static org.junit.Assume.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Base for UDT tests.

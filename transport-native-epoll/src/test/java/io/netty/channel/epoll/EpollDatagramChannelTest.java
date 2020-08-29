@@ -30,11 +30,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 import static io.netty.util.NetUtil.LOCALHOST;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class EpollDatagramChannelTest {
 

@@ -21,7 +21,8 @@ import org.junit.Test;
 
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class HAProxySSLTLVTest {
 

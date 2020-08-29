@@ -21,7 +21,8 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 
-import static io.netty.handler.codec.http.HttpConstants.*;
+import static io.netty.handler.codec.http.HttpConstants.COLON;
+import static io.netty.handler.codec.http.HttpConstants.SP;
 import static io.netty.handler.codec.http.HttpObjectEncoder.CRLF_SHORT;
 
 final class HttpHeadersEncoder {

@@ -20,19 +20,14 @@ import io.netty.handler.codec.CodecException;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
-
 import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionTestUtil.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class WebSocketClientExtensionHandlerTest {
 

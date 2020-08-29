@@ -15,9 +15,6 @@
  */
 package io.netty.handler.codec.http;
 
-import static io.netty.util.internal.ObjectUtil.checkPositive;
-import static io.netty.util.internal.StringUtil.COMMA;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -31,6 +28,9 @@ import io.netty.util.internal.AppendableCharSequence;
 
 import java.util.List;
 import java.util.regex.Pattern;
+
+import static io.netty.util.internal.ObjectUtil.checkPositive;
+import static io.netty.util.internal.StringUtil.COMMA;
 
 /**
  * Decodes {@link ByteBuf}s into {@link HttpMessage}s and

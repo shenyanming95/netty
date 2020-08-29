@@ -28,7 +28,7 @@ import io.netty.handler.codec.haproxy.HAProxyProtocolVersion;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import io.netty.util.CharsetUtil;
 
-import static io.netty.example.haproxy.HAProxyServer.*;
+import static io.netty.example.haproxy.HAProxyServer.PORT;
 
 public final class HAProxyClient {
 

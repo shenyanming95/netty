@@ -25,7 +25,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.netty.handler.codec.spdy.SpdyCodecUtil.*;
+import static io.netty.handler.codec.spdy.SpdyCodecUtil.SPDY_SESSION_STREAM_ID;
 
 final class SpdySession {
 

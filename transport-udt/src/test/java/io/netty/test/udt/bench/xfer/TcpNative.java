@@ -16,13 +16,12 @@
 
 package io.netty.test.udt.bench.xfer;
 
+import com.google.caliper.Param;
 import io.netty.test.udt.bench.BenchXfer;
 import io.netty.test.udt.util.CaliperRunner;
 import io.netty.test.udt.util.TrafficControl;
 
 import java.util.List;
-
-import com.google.caliper.Param;
 
 /**
  * perform two way native TCP socket send/recv

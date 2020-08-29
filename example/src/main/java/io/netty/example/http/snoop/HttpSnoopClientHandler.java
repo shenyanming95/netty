@@ -17,11 +17,7 @@ package io.netty.example.http.snoop;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpUtil;
-import io.netty.handler.codec.http.HttpObject;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 
 public class HttpSnoopClientHandler extends SimpleChannelInboundHandler<HttpObject> {

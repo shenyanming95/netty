@@ -17,18 +17,8 @@ package io.netty.handler.ssl;
 
 import io.netty.util.internal.ObjectUtil;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.KeyManagerFactorySpi;
-import javax.net.ssl.ManagerFactoryParameters;
-import javax.net.ssl.X509ExtendedKeyManager;
-import javax.net.ssl.X509KeyManager;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.UnrecoverableKeyException;
+import javax.net.ssl.*;
+import java.security.*;
 import java.security.cert.X509Certificate;
 
 /**

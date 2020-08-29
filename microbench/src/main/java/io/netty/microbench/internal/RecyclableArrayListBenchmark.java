@@ -17,12 +17,7 @@ package io.netty.microbench.internal;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
 import io.netty.util.internal.RecyclableArrayList;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.*;
 
 /**
  * This class benchmarks different allocators with different allocation sizes.

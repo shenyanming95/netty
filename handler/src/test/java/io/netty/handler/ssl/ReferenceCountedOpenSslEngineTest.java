@@ -22,7 +22,7 @@ import org.junit.Test;
 
 import javax.net.ssl.SSLEngine;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
 
 public class ReferenceCountedOpenSslEngineTest extends OpenSslEngineTest {
 

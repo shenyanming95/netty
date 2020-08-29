@@ -22,13 +22,8 @@ import io.netty.handler.codec.http.HttpMethod;
 import org.junit.Test;
 
 import static io.netty.handler.codec.http.HttpHeadersTestUtils.of;
-import static io.netty.handler.codec.http.cors.CorsConfigBuilder.forAnyOrigin;
-import static io.netty.handler.codec.http.cors.CorsConfigBuilder.forOrigin;
-import static io.netty.handler.codec.http.cors.CorsConfigBuilder.forOrigins;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static io.netty.handler.codec.http.cors.CorsConfigBuilder.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class CorsConfigTest {

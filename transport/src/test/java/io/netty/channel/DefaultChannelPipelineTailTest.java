@@ -15,8 +15,10 @@
  */
 package io.netty.channel;
 
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import io.netty.bootstrap.Bootstrap;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -25,11 +27,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import io.netty.bootstrap.Bootstrap;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class DefaultChannelPipelineTailTest {
 

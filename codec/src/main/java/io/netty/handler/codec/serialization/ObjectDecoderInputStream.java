@@ -17,12 +17,7 @@ package io.netty.handler.codec.serialization;
 
 import io.netty.util.internal.ObjectUtil;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.StreamCorruptedException;
+import java.io.*;
 
 /**
  * An {@link ObjectInput} which is interoperable with {@link ObjectEncoder}

@@ -23,8 +23,8 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 import java.io.InputStream;
 
-import static io.netty.handler.codec.compression.Bzip2Constants.*;
-import static org.junit.Assert.*;
+import static io.netty.handler.codec.compression.Bzip2Constants.MIN_BLOCK_SIZE;
+import static org.junit.Assert.assertEquals;
 
 public class Bzip2EncoderTest extends AbstractEncoderTest {
 

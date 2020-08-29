@@ -20,7 +20,8 @@ import org.mockito.Mockito;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class CompleteChannelFutureTest {
 

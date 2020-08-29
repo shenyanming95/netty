@@ -27,7 +27,7 @@ import io.netty.util.internal.EmptyArrays;
 
 import java.util.List;
 
-import static io.netty.handler.codec.mqtt.MqttCodecUtil.*;
+import static io.netty.handler.codec.mqtt.MqttCodecUtil.isValidClientId;
 
 /**
  * Encodes Mqtt messages into bytes following the protocol specification v3.1

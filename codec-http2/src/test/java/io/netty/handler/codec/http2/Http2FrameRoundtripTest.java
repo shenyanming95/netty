@@ -15,11 +15,7 @@
 
 package io.netty.handler.codec.http2;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.CompositeByteBuf;
-import io.netty.buffer.EmptyByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.*;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -42,25 +38,11 @@ import java.util.List;
 import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 import static io.netty.handler.codec.http2.Http2CodecUtil.MAX_PADDING;
 import static io.netty.handler.codec.http2.Http2HeadersEncoder.NEVER_SENSITIVE;
-import static io.netty.handler.codec.http2.Http2TestUtil.newTestDecoder;
-import static io.netty.handler.codec.http2.Http2TestUtil.newTestEncoder;
-import static io.netty.handler.codec.http2.Http2TestUtil.randomString;
+import static io.netty.handler.codec.http2.Http2TestUtil.*;
 import static io.netty.util.CharsetUtil.UTF_8;
 import static java.lang.Math.min;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.anyShort;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.isA;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests encoding/decoding each HTTP2 frame type.

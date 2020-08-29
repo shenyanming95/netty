@@ -15,10 +15,10 @@
  */
 package io.netty.handler.codec.http.cookie;
 
-import java.util.List;
 import org.junit.Test;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.*;

@@ -15,11 +15,7 @@
  */
 package io.netty.handler.codec.http.websocketx;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.websocketx.WebSocketClientProtocolHandler.ClientHandshakeStateEvent;
 import io.netty.util.concurrent.Future;
@@ -27,7 +23,7 @@ import io.netty.util.concurrent.FutureListener;
 
 import java.util.concurrent.TimeUnit;
 
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkPositive;
 
 class WebSocketClientProtocolHandshakeHandler extends ChannelInboundHandlerAdapter {
     private static final long DEFAULT_HANDSHAKE_TIMEOUT_MS = 10000L;

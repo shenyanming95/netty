@@ -21,21 +21,10 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.AsciiString;
 import org.junit.Test;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
-import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
-import static io.netty.handler.codec.http.HttpHeaderNames.KEEP_ALIVE;
-import static io.netty.handler.codec.http.HttpHeaderNames.PROXY_CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderNames.TE;
-import static io.netty.handler.codec.http.HttpHeaderNames.TRANSFER_ENCODING;
-import static io.netty.handler.codec.http.HttpHeaderNames.UPGRADE;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.GZIP;
 import static io.netty.handler.codec.http.HttpHeaderValues.TRAILERS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class HttpConversionUtilTest {
     @Test

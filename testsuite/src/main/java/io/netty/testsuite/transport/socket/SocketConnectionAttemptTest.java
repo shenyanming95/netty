@@ -16,15 +16,11 @@
 package io.netty.testsuite.transport.socket;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelOption;
-import io.netty.util.internal.SocketUtils;
+import io.netty.channel.*;
 import io.netty.util.NetUtil;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.concurrent.Promise;
+import io.netty.util.internal.SocketUtils;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import org.junit.Test;
 
@@ -32,11 +28,12 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
 import static io.netty.testsuite.transport.socket.SocketTestPermutation.BAD_HOST;
 import static io.netty.testsuite.transport.socket.SocketTestPermutation.BAD_PORT;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeThat;
 
 public class SocketConnectionAttemptTest extends AbstractClientSocketTest {
 

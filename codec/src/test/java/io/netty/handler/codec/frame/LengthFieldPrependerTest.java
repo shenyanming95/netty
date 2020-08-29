@@ -23,9 +23,9 @@ import io.netty.util.CharsetUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.netty.buffer.Unpooled.*;
 import java.nio.ByteOrder;
 
+import static io.netty.buffer.Unpooled.copiedBuffer;
 import static org.junit.Assert.*;
 
 public class LengthFieldPrependerTest {

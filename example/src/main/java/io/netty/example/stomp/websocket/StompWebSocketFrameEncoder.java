@@ -21,11 +21,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.ContinuationWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
-import io.netty.handler.codec.stomp.LastStompContentSubframe;
-import io.netty.handler.codec.stomp.StompFrame;
-import io.netty.handler.codec.stomp.StompHeadersSubframe;
-import io.netty.handler.codec.stomp.StompSubframe;
-import io.netty.handler.codec.stomp.StompSubframeEncoder;
+import io.netty.handler.codec.stomp.*;
 
 import java.util.List;
 

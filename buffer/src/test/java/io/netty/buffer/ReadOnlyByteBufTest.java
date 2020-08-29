@@ -26,16 +26,8 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
 import static io.netty.buffer.ByteBufUtil.ensureWritableSuccess;
-import static io.netty.buffer.Unpooled.BIG_ENDIAN;
-import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
-import static io.netty.buffer.Unpooled.LITTLE_ENDIAN;
-import static io.netty.buffer.Unpooled.buffer;
-import static io.netty.buffer.Unpooled.unmodifiableBuffer;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static io.netty.buffer.Unpooled.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

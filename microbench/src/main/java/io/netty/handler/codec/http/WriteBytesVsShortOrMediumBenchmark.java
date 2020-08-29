@@ -19,15 +19,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.microbench.util.AbstractMicrobenchmark;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Threads;
-import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.TimeUnit;
 
-import static io.netty.handler.codec.http.HttpConstants.*;
+import static io.netty.handler.codec.http.HttpConstants.CR;
+import static io.netty.handler.codec.http.HttpConstants.LF;
 
 @Threads(1)
 @Warmup(iterations = 3)

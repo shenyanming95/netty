@@ -19,19 +19,13 @@ import io.netty.handler.codec.Headers;
 import io.netty.util.AsciiString;
 import io.netty.util.HashingStrategy;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
-import static io.netty.handler.codec.CharSequenceValueConverter.*;
-import static io.netty.handler.codec.http2.DefaultHttp2Headers.*;
-import static io.netty.util.AsciiString.*;
-import static io.netty.util.internal.EmptyArrays.*;
+import static io.netty.handler.codec.CharSequenceValueConverter.INSTANCE;
+import static io.netty.handler.codec.http2.DefaultHttp2Headers.HTTP2_NAME_VALIDATOR;
+import static io.netty.util.AsciiString.CASE_INSENSITIVE_HASHER;
+import static io.netty.util.AsciiString.CASE_SENSITIVE_HASHER;
+import static io.netty.util.internal.EmptyArrays.EMPTY_ASCII_STRINGS;
 
 /**
  * A variant of {@link Http2Headers} which only supports read-only methods.

@@ -24,9 +24,11 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import static io.netty.handler.codec.http2.Http2CodecUtil.*;
+import static io.netty.handler.codec.http2.Http2CodecUtil.SETTINGS_MAX_HEADER_LIST_SIZE;
+import static io.netty.handler.codec.http2.Http2CodecUtil.writeFrameHeader;
 import static io.netty.handler.codec.http2.Http2FrameTypes.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 /**

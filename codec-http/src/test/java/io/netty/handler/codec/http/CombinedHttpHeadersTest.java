@@ -25,10 +25,7 @@ import java.util.Iterator;
 import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
 import static io.netty.util.AsciiString.contentEquals;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class CombinedHttpHeadersTest {
     private static final CharSequence HEADER_NAME = "testHeader";

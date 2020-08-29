@@ -28,11 +28,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static io.netty.handler.codec.http.HttpObjectDecoder.DEFAULT_ALLOW_DUPLICATE_CONTENT_LENGTHS;
-import static io.netty.handler.codec.http.HttpObjectDecoder.DEFAULT_MAX_CHUNK_SIZE;
-import static io.netty.handler.codec.http.HttpObjectDecoder.DEFAULT_MAX_HEADER_SIZE;
-import static io.netty.handler.codec.http.HttpObjectDecoder.DEFAULT_MAX_INITIAL_LINE_LENGTH;
-import static io.netty.handler.codec.http.HttpObjectDecoder.DEFAULT_VALIDATE_HEADERS;
+import static io.netty.handler.codec.http.HttpObjectDecoder.*;
 
 /**
  * A combination of {@link HttpRequestEncoder} and {@link HttpResponseDecoder}

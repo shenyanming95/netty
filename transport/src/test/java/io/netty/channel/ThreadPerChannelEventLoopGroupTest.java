@@ -19,18 +19,14 @@ package io.netty.channel;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.util.concurrent.DefaultPromise;
-import io.netty.util.concurrent.DefaultThreadFactory;
-import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.GlobalEventExecutor;
-import io.netty.util.concurrent.Promise;
-import io.netty.util.concurrent.SingleThreadEventExecutor;
+import io.netty.util.concurrent.*;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ThreadPerChannelEventLoopGroupTest {
 

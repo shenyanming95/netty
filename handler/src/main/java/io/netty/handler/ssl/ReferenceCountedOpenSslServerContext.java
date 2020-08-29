@@ -27,14 +27,10 @@ import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
+import javax.net.ssl.*;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509ExtendedTrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 

@@ -30,30 +30,9 @@ import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.netty.handler.codec.http2.Http2CodecUtil.CONNECTION_STREAM_ID;
-import static io.netty.handler.codec.http2.Http2CodecUtil.DEFAULT_PRIORITY_WEIGHT;
-import static io.netty.handler.codec.http2.Http2CodecUtil.DEFAULT_WINDOW_SIZE;
-import static io.netty.handler.codec.http2.Http2CodecUtil.MAX_WEIGHT;
-import static io.netty.handler.codec.http2.Http2CodecUtil.MIN_WEIGHT;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+import static io.netty.handler.codec.http2.Http2CodecUtil.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for {@link DefaultHttp2RemoteFlowController}.

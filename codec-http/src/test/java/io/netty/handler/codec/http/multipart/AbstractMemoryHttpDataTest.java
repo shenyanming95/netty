@@ -20,7 +20,6 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.util.internal.PlatformDependent;
-
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -33,7 +32,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
 
-import static io.netty.util.CharsetUtil.*;
+import static io.netty.util.CharsetUtil.UTF_8;
 import static org.junit.Assert.*;
 
 /** {@link AbstractMemoryHttpData} test cases. */

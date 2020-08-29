@@ -17,13 +17,13 @@
 package io.netty.handler.codec;
 
 
-import java.util.Map.Entry;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.ObjectUtil;
+
+import java.util.Map.Entry;
 
 public final class AsciiHeadersEncoder {
 

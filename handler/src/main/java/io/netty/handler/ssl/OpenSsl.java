@@ -36,11 +36,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static io.netty.handler.ssl.SslUtils.*;
 

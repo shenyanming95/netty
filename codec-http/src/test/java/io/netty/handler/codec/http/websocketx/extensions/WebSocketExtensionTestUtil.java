@@ -15,21 +15,12 @@
  */
 package io.netty.handler.codec.http.websocketx.extensions;
 
-import java.util.List;
-
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.DefaultHttpRequest;
-import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
 import org.mockito.ArgumentMatcher;
+
+import java.util.List;
 
 import static org.mockito.Mockito.argThat;
 

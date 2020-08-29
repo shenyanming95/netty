@@ -21,17 +21,11 @@ import io.netty.util.internal.PlatformDependent;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 import static io.netty.util.internal.ObjectUtil.checkPositive;
-import static io.netty.util.internal.StringUtil.EMPTY_STRING;
-import static io.netty.util.internal.StringUtil.SPACE;
-import static io.netty.util.internal.StringUtil.decodeHexByte;
+import static io.netty.util.internal.StringUtil.*;
 
 /**
  * Splits an HTTP query string into a path string and key-value parameter pairs.

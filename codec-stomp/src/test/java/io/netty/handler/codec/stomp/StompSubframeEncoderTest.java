@@ -24,7 +24,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.netty.handler.codec.stomp.StompTestConstants.*;
+import static io.netty.handler.codec.stomp.StompTestConstants.SEND_FRAME_UTF8;
 import static org.junit.Assert.*;
 
 public class StompSubframeEncoderTest {

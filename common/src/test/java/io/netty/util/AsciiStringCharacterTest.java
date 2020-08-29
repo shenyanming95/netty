@@ -24,12 +24,7 @@ import java.util.Random;
 import static io.netty.util.AsciiString.contains;
 import static io.netty.util.AsciiString.containsIgnoreCase;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Test character encoding and case insensitivity for the {@link AsciiString} class

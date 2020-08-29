@@ -16,11 +16,7 @@
 
 package io.netty.channel.unix;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.CompositeByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.*;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -28,9 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static io.netty.channel.unix.UnixChannelUtil.isBufferCopyNeededForWrite;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class UnixChannelUtilTest {
 

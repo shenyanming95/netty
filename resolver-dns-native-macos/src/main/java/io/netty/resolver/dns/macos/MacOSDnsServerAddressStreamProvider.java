@@ -19,11 +19,7 @@ import io.netty.resolver.dns.DnsServerAddressStream;
 import io.netty.resolver.dns.DnsServerAddressStreamProvider;
 import io.netty.resolver.dns.DnsServerAddressStreamProviders;
 import io.netty.resolver.dns.DnsServerAddresses;
-import io.netty.util.internal.NativeLibraryLoader;
-import io.netty.util.internal.PlatformDependent;
-import io.netty.util.internal.StringUtil;
-import io.netty.util.internal.SystemPropertyUtil;
-import io.netty.util.internal.ThrowableUtil;
+import io.netty.util.internal.*;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 

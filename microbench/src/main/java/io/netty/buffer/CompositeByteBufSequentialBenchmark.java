@@ -17,20 +17,14 @@ package io.netty.buffer;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
 import io.netty.util.ByteProcessor;
-
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.annotations.Warmup;
-
-import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
-import static io.netty.buffer.Unpooled.wrappedBuffer;
+import org.openjdk.jmh.annotations.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
 
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 10, time = 1, timeUnit = TimeUnit.SECONDS)

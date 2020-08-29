@@ -19,21 +19,14 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.EventLoopGroup;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.util.Random;
 
 import static io.netty.channel.kqueue.BsdSocket.BSD_SND_LOW_AT_MAX;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNoException;
 
 public class KQueueSocketChannelConfigTest {

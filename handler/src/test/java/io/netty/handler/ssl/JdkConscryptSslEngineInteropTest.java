@@ -15,8 +15,6 @@
  */
 package io.netty.handler.ssl;
 
-import java.security.Provider;
-
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -24,6 +22,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import javax.net.ssl.SSLSessionContext;
+import java.security.Provider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

@@ -18,16 +18,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 
-import static io.netty.handler.codec.http2.Http2CodecUtil.DEFAULT_PRIORITY_WEIGHT;
-import static io.netty.handler.codec.http2.Http2CodecUtil.MAX_WEIGHT;
-import static io.netty.handler.codec.http2.Http2CodecUtil.MIN_WEIGHT;
+import static io.netty.handler.codec.http2.Http2CodecUtil.*;
 import static io.netty.handler.codec.http2.WeightedFairQueueByteDistributor.INITIAL_CHILDREN_MAP_SIZE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.doAnswer;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class WeightedFairQueueByteDistributorDependencyTreeTest extends
                                                 AbstractWeightedFairQueueByteDistributorDependencyTest {

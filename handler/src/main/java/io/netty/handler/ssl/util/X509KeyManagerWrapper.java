@@ -16,16 +16,17 @@
 
 package io.netty.handler.ssl.util;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
-
 import io.netty.util.internal.SuppressJava6Requirement;
+
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.X509ExtendedKeyManager;
+import javax.net.ssl.X509KeyManager;
 import java.net.Socket;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.X509ExtendedKeyManager;
-import javax.net.ssl.X509KeyManager;
+
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 @SuppressJava6Requirement(reason = "Usage guarded by java version check")
 final class X509KeyManagerWrapper extends X509ExtendedKeyManager {

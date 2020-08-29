@@ -17,11 +17,7 @@ package io.netty.handler.ssl;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -45,21 +41,8 @@ import javax.net.ssl.X509TrustManager;
 import javax.security.auth.x500.X500Principal;
 import java.io.File;
 import java.security.KeyStore;
-import java.security.cert.CRLReason;
-import java.security.cert.CertPathValidatorException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.CertificateRevokedException;
-import java.security.cert.Extension;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.security.cert.*;
+import java.util.*;
 
 
 @RunWith(Parameterized.class)

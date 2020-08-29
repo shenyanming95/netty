@@ -30,11 +30,7 @@ import org.junit.Assume;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
-import java.net.NetworkInterface;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;

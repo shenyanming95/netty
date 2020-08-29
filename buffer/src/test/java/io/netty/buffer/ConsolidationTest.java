@@ -18,8 +18,8 @@ package io.netty.buffer;
 import io.netty.util.CharsetUtil;
 import org.junit.Test;
 
-import static io.netty.buffer.Unpooled.*;
-import static org.junit.Assert.*;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests buffer consolidation

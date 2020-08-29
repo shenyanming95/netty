@@ -24,7 +24,8 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
-import static io.netty.handler.codec.compression.Lz4Constants.*;
+import static io.netty.handler.codec.compression.Lz4Constants.MAX_BLOCK_SIZE;
+import static io.netty.handler.codec.compression.Lz4Constants.MIN_BLOCK_SIZE;
 
 public class Lz4FrameDecoderTest extends AbstractDecoderTest {
 

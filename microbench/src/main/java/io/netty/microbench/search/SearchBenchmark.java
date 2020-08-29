@@ -22,16 +22,8 @@ import io.netty.buffer.search.AbstractMultiSearchProcessorFactory;
 import io.netty.buffer.search.AbstractSearchProcessorFactory;
 import io.netty.buffer.search.SearchProcessorFactory;
 import io.netty.microbench.util.AbstractMicrobenchmark;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.CompilerControl;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.annotations.CompilerControl.Mode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.annotations.Warmup;
 
 import java.util.Arrays;
 import java.util.Random;

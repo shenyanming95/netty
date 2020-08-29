@@ -16,13 +16,13 @@
 
 package io.netty.handler.codec.stomp;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
-
 import io.netty.handler.codec.CharSequenceValueConverter;
 import io.netty.handler.codec.DefaultHeaders;
 import io.netty.handler.codec.HeadersUtils;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
 
 import static io.netty.util.AsciiString.CASE_INSENSITIVE_HASHER;
 import static io.netty.util.AsciiString.CASE_SENSITIVE_HASHER;

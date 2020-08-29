@@ -25,9 +25,7 @@ import org.junit.Test;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 

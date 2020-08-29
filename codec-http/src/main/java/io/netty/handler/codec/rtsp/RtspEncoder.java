@@ -18,11 +18,7 @@ package io.netty.handler.codec.rtsp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.handler.codec.UnsupportedMessageTypeException;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpMessage;
-import io.netty.handler.codec.http.HttpObjectEncoder;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.StringUtil;
 

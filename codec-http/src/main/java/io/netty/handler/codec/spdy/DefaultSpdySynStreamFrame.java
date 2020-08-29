@@ -15,9 +15,9 @@
  */
 package io.netty.handler.codec.spdy;
 
-import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
-
 import io.netty.util.internal.StringUtil;
+
+import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
 
 /**
  * The default {@link SpdySynStreamFrame} implementation.

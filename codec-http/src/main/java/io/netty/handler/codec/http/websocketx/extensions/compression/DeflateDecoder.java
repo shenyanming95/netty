@@ -32,7 +32,7 @@ import io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionFilte
 
 import java.util.List;
 
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * Deflate implementation of a payload decompressor for

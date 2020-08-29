@@ -19,17 +19,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.embedded.EmbeddedChannel;
-import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpRequestDecoder;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.HttpResponseDecoder;
-import io.netty.handler.codec.http.HttpResponseEncoder;
-import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.*;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.ReferenceCounted;
 import org.hamcrest.CoreMatchers;
@@ -38,7 +28,7 @@ import org.junit.Test;
 
 import java.util.Iterator;
 
-import static io.netty.handler.codec.http.HttpVersion.*;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class WebSocketServerHandshaker13Test extends WebSocketServerHandshakerTest {
 

@@ -16,9 +16,9 @@
 
 package io.netty.resolver;
 
-import io.netty.util.internal.SocketUtils;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Promise;
+import io.netty.util.internal.SocketUtils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

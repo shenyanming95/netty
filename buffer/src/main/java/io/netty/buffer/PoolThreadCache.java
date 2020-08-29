@@ -17,8 +17,6 @@
 package io.netty.buffer;
 
 
-import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
-
 import io.netty.buffer.PoolArena.SizeClass;
 import io.netty.util.internal.MathUtil;
 import io.netty.util.internal.ObjectPool;
@@ -31,6 +29,8 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
 
 /**
  * Acts a Thread cache for allocations. This implementation is moduled after

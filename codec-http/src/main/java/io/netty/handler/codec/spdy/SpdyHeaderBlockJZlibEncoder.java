@@ -22,7 +22,7 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.compression.CompressionException;
 
-import static io.netty.handler.codec.spdy.SpdyCodecUtil.*;
+import static io.netty.handler.codec.spdy.SpdyCodecUtil.SPDY_DICT;
 
 class SpdyHeaderBlockJZlibEncoder extends SpdyHeaderBlockRawEncoder {
 

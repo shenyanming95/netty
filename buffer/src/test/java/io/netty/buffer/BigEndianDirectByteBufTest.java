@@ -15,11 +15,11 @@
  */
 package io.netty.buffer;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 import java.nio.ByteOrder;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * Tests big-endian direct channel buffers

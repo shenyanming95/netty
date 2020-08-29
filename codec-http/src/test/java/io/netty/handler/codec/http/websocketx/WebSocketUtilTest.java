@@ -15,18 +15,15 @@
  */
 package io.netty.handler.codec.http.websocketx;
 
-import org.junit.Test;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.EmptyArrays;
+import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class WebSocketUtilTest {
 

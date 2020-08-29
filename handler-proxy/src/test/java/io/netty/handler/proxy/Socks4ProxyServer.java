@@ -21,21 +21,15 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.socksx.v4.DefaultSocks4CommandResponse;
-import io.netty.handler.codec.socksx.v4.Socks4CommandRequest;
-import io.netty.handler.codec.socksx.v4.Socks4CommandResponse;
-import io.netty.handler.codec.socksx.v4.Socks4CommandStatus;
-import io.netty.handler.codec.socksx.v4.Socks4CommandType;
-import io.netty.handler.codec.socksx.v4.Socks4ServerDecoder;
-import io.netty.handler.codec.socksx.v4.Socks4ServerEncoder;
+import io.netty.handler.codec.socksx.v4.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.SocketUtils;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 final class Socks4ProxyServer extends ProxyServer {
 

@@ -17,10 +17,10 @@ package io.netty.channel;
 
 import io.netty.util.internal.ObjectUtil;
 
-import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
-
 import java.util.ArrayDeque;
 import java.util.Queue;
+
+import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
 
 /**
  * This implementation allows to register {@link ChannelFuture} instances which will get notified once some amount of

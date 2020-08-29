@@ -15,15 +15,15 @@
  */
 package io.netty.resolver.dns;
 
-import java.net.UnknownHostException;
-import java.util.List;
-
 import io.netty.channel.EventLoop;
 import io.netty.handler.codec.dns.DnsQuestion;
 import io.netty.handler.codec.dns.DnsRecord;
 import io.netty.handler.codec.dns.DnsRecordType;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Promise;
+
+import java.net.UnknownHostException;
+import java.util.List;
 
 final class DnsRecordResolveContext extends DnsResolveContext<DnsRecord> {
 

@@ -18,17 +18,13 @@ package io.netty.handler.codec.http;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
+import org.junit.Test;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class HttpClientUpgradeHandlerTest {
 

@@ -21,7 +21,8 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.CharsetUtil;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.*;
 
 public class HttpServerCodecTest {

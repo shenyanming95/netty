@@ -15,20 +15,13 @@
  */
 package io.netty.handler.codec.http.cookie;
 
-import static io.netty.handler.codec.http.cookie.CookieUtil.add;
-import static io.netty.handler.codec.http.cookie.CookieUtil.addQuoted;
-import static io.netty.handler.codec.http.cookie.CookieUtil.stringBuilder;
-import static io.netty.handler.codec.http.cookie.CookieUtil.stripTrailingSeparator;
-import static io.netty.handler.codec.http.cookie.CookieUtil.stripTrailingSeparatorOrNull;
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.internal.InternalThreadLocalMap;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+
+import static io.netty.handler.codec.http.cookie.CookieUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A <a href="http://tools.ietf.org/html/rfc6265">RFC6265</a> compliant cookie encoder to be used client side, so

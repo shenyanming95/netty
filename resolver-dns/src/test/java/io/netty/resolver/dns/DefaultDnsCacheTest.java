@@ -18,7 +18,6 @@ package io.netty.resolver.dns;
 import io.netty.channel.DefaultEventLoopGroup;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
-
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.NetUtil;
 import org.junit.Test;
@@ -28,11 +27,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 public class DefaultDnsCacheTest {
 

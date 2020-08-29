@@ -30,7 +30,8 @@ import org.junit.rules.ExpectedException;
 
 import java.util.List;
 
-import static io.netty.buffer.Unpooled.*;
+import static io.netty.buffer.Unpooled.buffer;
+import static io.netty.buffer.Unpooled.copiedBuffer;
 import static org.junit.Assert.*;
 
 public class HAProxyMessageDecoderTest {

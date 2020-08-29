@@ -28,7 +28,6 @@ import java.util.List;
 
 import static io.netty.buffer.Unpooled.unreleasableBuffer;
 import static io.netty.handler.codec.http2.Http2CodecUtil.connectionPrefaceBuf;
-
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**

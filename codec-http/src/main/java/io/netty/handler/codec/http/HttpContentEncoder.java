@@ -29,7 +29,7 @@ import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Queue;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT_ENCODING;
 
 /**
  * Encodes the content of the outbound {@link HttpResponse} and {@link HttpContent}.

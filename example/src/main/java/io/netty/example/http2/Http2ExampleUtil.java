@@ -14,7 +14,6 @@
  */
 package io.netty.example.http2;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -22,6 +21,8 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * Utility methods used by the example client and server.

@@ -15,7 +15,6 @@
  */
 package io.netty.microbench.util;
 
-import static org.junit.Assert.assertNull;
 import io.netty.channel.EventLoop;
 import io.netty.util.concurrent.AbstractEventExecutor;
 import io.netty.util.concurrent.Future;
@@ -23,10 +22,11 @@ import io.netty.util.concurrent.ProgressivePromise;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.openjdk.jmh.annotations.Fork;
 
 import java.util.concurrent.TimeUnit;
 
-import org.openjdk.jmh.annotations.Fork;
+import static org.junit.Assert.assertNull;
 
 /**
  * This harness facilitates the sharing of an executor between JMH and Netty and

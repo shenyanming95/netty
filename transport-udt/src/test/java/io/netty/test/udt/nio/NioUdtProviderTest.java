@@ -17,17 +17,11 @@
 package io.netty.test.udt.nio;
 
 import io.netty.channel.udt.UdtServerChannel;
-import io.netty.channel.udt.nio.NioUdtByteAcceptorChannel;
-import io.netty.channel.udt.nio.NioUdtByteConnectorChannel;
-import io.netty.channel.udt.nio.NioUdtByteRendezvousChannel;
-import io.netty.channel.udt.nio.NioUdtProvider;
-import io.netty.channel.udt.nio.NioUdtMessageAcceptorChannel;
-import io.netty.channel.udt.nio.NioUdtMessageConnectorChannel;
-import io.netty.channel.udt.nio.NioUdtMessageRendezvousChannel;
-
+import io.netty.channel.udt.nio.*;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class NioUdtProviderTest extends AbstractUdtTest {
 

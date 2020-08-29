@@ -24,7 +24,6 @@ import org.junit.Test;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.X509KeyManager;
-
 import java.net.Socket;
 import java.security.KeyStore;
 import java.security.Principal;

@@ -18,11 +18,7 @@ package io.netty.channel.oio;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelException;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.socket.oio.OioServerSocketChannel;
 import io.netty.channel.socket.oio.OioSocketChannel;
 import io.netty.util.NetUtil;
@@ -33,7 +29,7 @@ import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class OioEventLoopTest {
     @Test

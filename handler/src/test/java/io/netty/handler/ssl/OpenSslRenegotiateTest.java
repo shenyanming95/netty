@@ -17,9 +17,8 @@ package io.netty.handler.ssl;
 
 import org.junit.BeforeClass;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import javax.net.ssl.SSLException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;

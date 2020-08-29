@@ -26,11 +26,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelMetadata;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.CharsetUtil;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.mockito.ArgumentMatcher;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static io.netty.util.internal.StringUtil.NEWLINE;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;

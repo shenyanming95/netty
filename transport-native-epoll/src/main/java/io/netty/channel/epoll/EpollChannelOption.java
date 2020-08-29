@@ -17,6 +17,7 @@ package io.netty.channel.epoll;
 
 import io.netty.channel.ChannelOption;
 import io.netty.channel.unix.UnixChannelOption;
+
 import java.net.InetAddress;
 import java.util.Map;
 

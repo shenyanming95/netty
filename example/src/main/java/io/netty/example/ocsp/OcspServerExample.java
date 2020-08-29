@@ -16,11 +16,20 @@
 
 package io.netty.example.ocsp;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.ssl.*;
+import io.netty.util.CharsetUtil;
+import org.bouncycastle.asn1.ocsp.OCSPResponseStatus;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.ocsp.*;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMParser;
+
+import java.io.*;
 import java.math.BigInteger;
 import java.net.URI;
 import java.security.PrivateKey;
@@ -28,29 +37,6 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import org.bouncycastle.asn1.ocsp.OCSPResponseStatus;
-import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.ocsp.BasicOCSPResp;
-import org.bouncycastle.cert.ocsp.CertificateStatus;
-import org.bouncycastle.cert.ocsp.OCSPReq;
-import org.bouncycastle.cert.ocsp.OCSPResp;
-import org.bouncycastle.cert.ocsp.SingleResp;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMParser;
-
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.handler.ssl.OpenSsl;
-import io.netty.handler.ssl.ReferenceCountedOpenSslContext;
-import io.netty.handler.ssl.ReferenceCountedOpenSslEngine;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SslHandler;
-import io.netty.handler.ssl.SslProvider;
-import io.netty.util.CharsetUtil;
 
 /**
  * ATTENTION: This is an incomplete example! In order to provide a fully functional

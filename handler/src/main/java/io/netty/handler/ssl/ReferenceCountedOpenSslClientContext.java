@@ -16,29 +16,19 @@
 package io.netty.handler.ssl;
 
 import io.netty.internal.tcnative.CertificateCallback;
+import io.netty.internal.tcnative.SSL;
+import io.netty.internal.tcnative.SSLContext;
 import io.netty.util.internal.SuppressJava6Requirement;
 import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import io.netty.internal.tcnative.SSL;
-import io.netty.internal.tcnative.SSLContext;
 
+import javax.net.ssl.*;
+import javax.security.auth.x500.X500Principal;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509ExtendedTrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.security.auth.x500.X500Principal;
+import java.util.*;
 
 /**
  * A client-side {@link SslContext} which uses OpenSSL's SSL/TLS implementation.

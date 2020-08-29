@@ -17,9 +17,6 @@ package io.netty.handler.codec.protobuf;
 
 import com.google.protobuf.nano.CodedOutputByteBufferNano;
 import com.google.protobuf.nano.MessageNano;
-
-import java.util.List;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -27,6 +24,8 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.MessageToMessageEncoder;
+
+import java.util.List;
 
 /**
  * Encodes the requested <a href="https://github.com/google/protobuf">Google

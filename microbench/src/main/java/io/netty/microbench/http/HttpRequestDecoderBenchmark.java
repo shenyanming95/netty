@@ -20,12 +20,7 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.microbench.util.AbstractMicrobenchmark;
 import io.netty.util.CharsetUtil;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.annotations.*;
 
 /**
  * This benchmark is based on HttpRequestDecoderTest class.

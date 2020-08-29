@@ -15,11 +15,7 @@
  */
 package io.netty.handler.codec.http;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelPromise;
+import io.netty.channel.*;
 
 import static io.netty.handler.codec.http.HttpUtil.*;
 

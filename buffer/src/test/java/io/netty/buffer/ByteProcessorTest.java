@@ -16,11 +16,11 @@
 
 package io.netty.buffer;
 
-import static org.junit.Assert.assertEquals;
 import io.netty.util.ByteProcessor;
 import io.netty.util.CharsetUtil;
-
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class ByteProcessorTest {
     @Test

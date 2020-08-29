@@ -19,8 +19,8 @@ package io.netty.handler.codec.http.websocketx;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.util.ReferenceCountUtil;
 import org.junit.Test;
 

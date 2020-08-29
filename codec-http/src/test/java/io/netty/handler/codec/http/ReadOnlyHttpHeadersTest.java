@@ -23,17 +23,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON;
-import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_OCTET_STREAM;
-import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
-import static io.netty.handler.codec.http.HttpHeaderValues.ZERO;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static io.netty.handler.codec.http.HttpHeaderValues.*;
+import static org.junit.Assert.*;
 
 public class ReadOnlyHttpHeadersTest {
     @Test

@@ -29,7 +29,8 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Random;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.*;
 
 public abstract class AbstractIntegrationTest {

@@ -15,17 +15,17 @@
  */
 package io.netty.resolver.dns;
 
-import static io.netty.resolver.dns.DnsAddressDecoder.decodeAddress;
+import io.netty.channel.EventLoop;
+import io.netty.handler.codec.dns.DnsRecord;
+import io.netty.handler.codec.dns.DnsRecordType;
+import io.netty.util.concurrent.Promise;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 
-import io.netty.channel.EventLoop;
-import io.netty.handler.codec.dns.DnsRecord;
-import io.netty.handler.codec.dns.DnsRecordType;
-import io.netty.util.concurrent.Promise;
+import static io.netty.resolver.dns.DnsAddressDecoder.decodeAddress;
 
 final class DnsAddressResolveContext extends DnsResolveContext<InetAddress> {
 

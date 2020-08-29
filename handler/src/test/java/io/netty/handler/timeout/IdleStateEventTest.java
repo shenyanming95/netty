@@ -19,7 +19,7 @@ import org.junit.Test;
 
 import static io.netty.handler.timeout.IdleStateEvent.*;
 import static org.hamcrest.Matchers.hasToString;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class IdleStateEventTest {
     @Test

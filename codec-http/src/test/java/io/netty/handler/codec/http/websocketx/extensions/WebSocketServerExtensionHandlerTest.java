@@ -20,12 +20,11 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-
-import org.junit.Test;
 
 import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionTestUtil.*;
 import static org.junit.Assert.*;

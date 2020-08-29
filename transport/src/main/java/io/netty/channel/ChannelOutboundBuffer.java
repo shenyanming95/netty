@@ -21,13 +21,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.FastThreadLocal;
-import io.netty.util.internal.InternalThreadLocalMap;
-import io.netty.util.internal.ObjectPool;
+import io.netty.util.internal.*;
 import io.netty.util.internal.ObjectPool.Handle;
 import io.netty.util.internal.ObjectPool.ObjectCreator;
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.PromiseNotificationUtil;
-import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 

@@ -15,17 +15,8 @@
  */
 package io.netty.handler.codec.http.websocketx;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelPromise;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
+import io.netty.channel.*;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler.ServerHandshakeStateEvent;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.Future;
@@ -33,11 +24,11 @@ import io.netty.util.concurrent.FutureListener;
 
 import java.util.concurrent.TimeUnit;
 
-import static io.netty.handler.codec.http.HttpMethod.*;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
-import static io.netty.handler.codec.http.HttpUtil.*;
-import static io.netty.handler.codec.http.HttpVersion.*;
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.handler.codec.http.HttpMethod.GET;
+import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
+import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * Handles the HTTP handshake (the HTTP Upgrade request) for {@link WebSocketServerProtocolHandler}.

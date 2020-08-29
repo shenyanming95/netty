@@ -15,14 +15,14 @@
  */
 package io.netty.handler.codec.http;
 
-import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.ObjectUtil;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
 
 /**
  * The version of HTTP or its derived protocols, such as

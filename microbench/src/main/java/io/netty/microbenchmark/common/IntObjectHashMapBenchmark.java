@@ -17,12 +17,7 @@ package io.netty.microbenchmark.common;
 import io.netty.microbench.util.AbstractMicrobenchmark;
 import io.netty.util.collection.IntObjectHashMap;
 import org.agrona.collections.Int2ObjectHashMap;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.HashSet;

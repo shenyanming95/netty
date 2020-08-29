@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static io.netty.handler.codec.haproxy.HAProxyConstants.*;
+import static io.netty.handler.codec.haproxy.HAProxyConstants.BINARY_PREFIX;
 import static io.netty.handler.codec.haproxy.HAProxyMessageEncoder.*;
 import static org.junit.Assert.*;
 

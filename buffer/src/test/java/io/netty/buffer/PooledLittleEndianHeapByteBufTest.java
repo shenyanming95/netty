@@ -17,7 +17,7 @@ package io.netty.buffer;
 
 import java.nio.ByteOrder;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
 
 /**
  * Tests little-endian heap channel buffers

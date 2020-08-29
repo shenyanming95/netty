@@ -26,17 +26,12 @@ import io.netty.util.internal.EmptyArrays;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManager;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 

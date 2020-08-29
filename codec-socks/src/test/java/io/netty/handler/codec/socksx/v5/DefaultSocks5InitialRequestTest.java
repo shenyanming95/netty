@@ -16,6 +16,7 @@
 package io.netty.handler.codec.socksx.v5;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertTrue;
 
 public class DefaultSocks5InitialRequestTest {

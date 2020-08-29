@@ -15,26 +15,13 @@
 package io.netty.handler.codec.http2;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.DefaultChannelId;
-import io.netty.channel.ServerChannel;
+import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
-import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpVersion;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
+import io.netty.handler.codec.http.*;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import static org.junit.Assert.*;
 
 public class Http2ServerUpgradeCodecTest {
 

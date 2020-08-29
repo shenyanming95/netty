@@ -15,9 +15,9 @@
  */
 package io.netty.handler.codec.http.cookie;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class ClientCookieEncoderTest {
 

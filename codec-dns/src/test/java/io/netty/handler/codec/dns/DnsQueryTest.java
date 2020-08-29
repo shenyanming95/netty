@@ -16,7 +16,6 @@
 package io.netty.handler.codec.dns;
 
 import io.netty.channel.embedded.EmbeddedChannel;
-
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.internal.SocketUtils;
 import org.junit.Assert;

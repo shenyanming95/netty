@@ -16,13 +16,11 @@
 
 package io.netty.util.concurrent;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 import java.util.concurrent.FutureTask;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class ImmediateExecutorTest {
 

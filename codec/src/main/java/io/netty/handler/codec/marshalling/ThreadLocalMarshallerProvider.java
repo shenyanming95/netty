@@ -16,7 +16,6 @@
 package io.netty.handler.codec.marshalling;
 
 import io.netty.channel.ChannelHandlerContext;
-
 import io.netty.util.concurrent.FastThreadLocal;
 import org.jboss.marshalling.Marshaller;
 import org.jboss.marshalling.MarshallerFactory;

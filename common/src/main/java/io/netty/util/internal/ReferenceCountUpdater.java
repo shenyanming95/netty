@@ -15,12 +15,12 @@
  */
 package io.netty.util.internal;
 
-import static io.netty.util.internal.ObjectUtil.checkPositive;
+import io.netty.util.IllegalReferenceCountException;
+import io.netty.util.ReferenceCounted;
 
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-import io.netty.util.IllegalReferenceCountException;
-import io.netty.util.ReferenceCounted;
+import static io.netty.util.internal.ObjectUtil.checkPositive;
 
 /**
  * Common logic for {@link ReferenceCounted} implementations

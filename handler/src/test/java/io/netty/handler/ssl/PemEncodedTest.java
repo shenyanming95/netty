@@ -16,21 +16,20 @@
 
 package io.netty.handler.ssl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.util.ReferenceCountUtil;
+import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.security.PrivateKey;
 
-import io.netty.buffer.UnpooledByteBufAllocator;
-import org.junit.Test;
-
-import io.netty.handler.ssl.util.SelfSignedCertificate;
-import io.netty.util.ReferenceCountUtil;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 public class PemEncodedTest {
 

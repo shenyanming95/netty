@@ -24,7 +24,8 @@ import io.netty.util.NetUtil;
 
 import java.util.List;
 
-import static io.netty.handler.codec.haproxy.HAProxyConstants.*;
+import static io.netty.handler.codec.haproxy.HAProxyConstants.BINARY_PREFIX;
+import static io.netty.handler.codec.haproxy.HAProxyConstants.TEXT_PREFIX;
 
 /**
  * Encodes an HAProxy proxy protocol message

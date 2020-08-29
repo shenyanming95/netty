@@ -19,9 +19,9 @@ package io.netty.handler.ssl;
 import io.netty.handler.ssl.util.SimpleTrustManagerFactory;
 import io.netty.util.internal.ObjectUtil;
 
-import java.security.KeyStore;
 import javax.net.ssl.ManagerFactoryParameters;
 import javax.net.ssl.TrustManager;
+import java.security.KeyStore;
 
 final class TrustManagerFactoryWrapper extends SimpleTrustManagerFactory {
     private final TrustManager tm;

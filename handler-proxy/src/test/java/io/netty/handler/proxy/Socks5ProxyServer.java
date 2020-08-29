@@ -21,30 +21,15 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5InitialResponse;
-import io.netty.handler.codec.socksx.v5.DefaultSocks5PasswordAuthResponse;
-import io.netty.handler.codec.socksx.v5.Socks5AddressType;
-import io.netty.handler.codec.socksx.v5.Socks5AuthMethod;
-import io.netty.handler.codec.socksx.v5.Socks5CommandRequest;
-import io.netty.handler.codec.socksx.v5.Socks5CommandRequestDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5CommandResponse;
-import io.netty.handler.codec.socksx.v5.Socks5CommandStatus;
-import io.netty.handler.codec.socksx.v5.Socks5CommandType;
-import io.netty.handler.codec.socksx.v5.Socks5InitialRequest;
-import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthRequest;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthRequestDecoder;
-import io.netty.handler.codec.socksx.v5.Socks5PasswordAuthStatus;
-import io.netty.handler.codec.socksx.v5.Socks5ServerEncoder;
+import io.netty.handler.codec.socksx.v5.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.SocketUtils;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 final class Socks5ProxyServer extends ProxyServer {
 

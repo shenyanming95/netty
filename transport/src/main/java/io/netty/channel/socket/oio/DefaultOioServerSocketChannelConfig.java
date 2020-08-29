@@ -16,12 +16,7 @@
 package io.netty.channel.socket.oio;
 
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.ChannelException;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.MessageSizeEstimator;
-import io.netty.channel.PreferHeapByteBufAllocator;
-import io.netty.channel.RecvByteBufAllocator;
-import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.*;
 import io.netty.channel.socket.DefaultServerSocketChannelConfig;
 import io.netty.channel.socket.ServerSocketChannel;
 
@@ -29,7 +24,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Map;
 
-import static io.netty.channel.ChannelOption.*;
+import static io.netty.channel.ChannelOption.SO_TIMEOUT;
 
 /**
  * Default {@link OioServerSocketChannelConfig} implementation

@@ -15,14 +15,12 @@
  */
 package io.netty.handler.codec.http.cookie;
 
-import static io.netty.handler.codec.http.cookie.CookieUtil.firstInvalidCookieNameOctet;
-import static io.netty.handler.codec.http.cookie.CookieUtil.firstInvalidCookieValueOctet;
-import static io.netty.handler.codec.http.cookie.CookieUtil.unwrapValue;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.nio.CharBuffer;
 
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
+import static io.netty.handler.codec.http.cookie.CookieUtil.*;
 
 /**
  * Parent of Client and Server side cookie decoders

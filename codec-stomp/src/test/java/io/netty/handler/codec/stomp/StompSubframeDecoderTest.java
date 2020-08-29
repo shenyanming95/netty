@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static io.netty.handler.codec.stomp.StompTestConstants.*;
-import static io.netty.util.CharsetUtil.*;
+import static io.netty.util.CharsetUtil.UTF_8;
 import static org.junit.Assert.*;
 
 public class StompSubframeDecoderTest {

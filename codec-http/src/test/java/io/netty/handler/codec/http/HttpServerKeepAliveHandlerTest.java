@@ -27,19 +27,11 @@ import org.junit.runners.Parameterized.Parameters;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
-import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
-import static io.netty.handler.codec.http.HttpHeaderValues.MULTIPART_MIXED;
+import static io.netty.handler.codec.http.HttpHeaderValues.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static io.netty.handler.codec.http.HttpUtil.isContentLengthSet;
-import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
-import static io.netty.handler.codec.http.HttpUtil.setContentLength;
-import static io.netty.handler.codec.http.HttpUtil.setKeepAlive;
-import static io.netty.handler.codec.http.HttpUtil.setTransferEncodingChunked;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static io.netty.handler.codec.http.HttpUtil.*;
+import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
 public class HttpServerKeepAliveHandlerTest {

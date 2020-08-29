@@ -19,12 +19,12 @@ import io.netty.util.internal.DefaultPriorityQueue;
 import io.netty.util.internal.ObjectUtil;
 import io.netty.util.internal.PriorityQueue;
 
-import static io.netty.util.concurrent.ScheduledFutureTask.deadlineNanos;
-
 import java.util.Comparator;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
+import static io.netty.util.concurrent.ScheduledFutureTask.deadlineNanos;
 
 /**
  * Abstract base class for {@link EventExecutor}s that want to support scheduling.

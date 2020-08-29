@@ -30,7 +30,7 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
 
 /**
  * This is a test case for the deadlock scenario described in https://github.com/netty/netty/issues/8238.

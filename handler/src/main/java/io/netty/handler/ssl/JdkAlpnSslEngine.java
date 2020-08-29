@@ -21,15 +21,14 @@ import io.netty.util.internal.SuppressJava6Requirement;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLException;
-
 import java.nio.ByteBuffer;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import static io.netty.handler.ssl.SslUtils.toSSLHandshakeException;
 import static io.netty.handler.ssl.JdkApplicationProtocolNegotiator.ProtocolSelectionListener;
 import static io.netty.handler.ssl.JdkApplicationProtocolNegotiator.ProtocolSelector;
+import static io.netty.handler.ssl.SslUtils.toSSLHandshakeException;
 
 @SuppressJava6Requirement(reason = "Usage guarded by java version check")
 final class JdkAlpnSslEngine extends JdkSslEngine {

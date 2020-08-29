@@ -21,10 +21,10 @@ import io.netty.util.CharsetUtil;
 import org.junit.After;
 import org.junit.Test;
 
-import static io.netty.handler.codec.compression.Snappy.*;
-import static org.junit.Assert.*;
-
 import java.nio.CharBuffer;
+
+import static io.netty.handler.codec.compression.Snappy.*;
+import static org.junit.Assert.assertEquals;
 
 public class SnappyTest {
     private final Snappy snappy = new Snappy();

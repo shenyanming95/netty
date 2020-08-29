@@ -17,16 +17,16 @@ package io.netty.channel.epoll;
 
 import io.netty.channel.ChannelException;
 import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.socket.InternetProtocolFamily;
 import io.netty.channel.unix.NativeInetAddress;
 import io.netty.channel.unix.PeerCredentials;
 import io.netty.channel.unix.Socket;
-import io.netty.channel.socket.InternetProtocolFamily;
 import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.SocketUtils;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.Enumeration;

@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class SctpEchoTest extends AbstractSctpTest {
 

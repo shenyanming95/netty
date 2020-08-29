@@ -15,22 +15,12 @@
  */
 package io.netty.util.concurrent;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.annotations.Threads;
-import org.openjdk.jmh.annotations.Warmup;
-
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.microbench.util.AbstractMicrobenchmark;
+import org.openjdk.jmh.annotations.*;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 @Warmup(iterations = 5, time = 3, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 10, time = 3, timeUnit = TimeUnit.SECONDS)

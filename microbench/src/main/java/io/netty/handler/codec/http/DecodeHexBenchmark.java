@@ -18,14 +18,7 @@ package io.netty.handler.codec.http;
 import io.netty.microbench.util.AbstractMicrobenchmark;
 import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.StringUtil;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.annotations.*;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;

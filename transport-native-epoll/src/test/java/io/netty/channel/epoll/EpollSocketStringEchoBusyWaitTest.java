@@ -15,12 +15,6 @@
  */
 package io.netty.channel.epoll;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
@@ -32,6 +26,11 @@ import io.netty.testsuite.transport.TestsuitePermutation.BootstrapFactory;
 import io.netty.testsuite.transport.socket.SocketStringEchoTest;
 import io.netty.util.IntSupplier;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EpollSocketStringEchoBusyWaitTest extends SocketStringEchoTest {
 

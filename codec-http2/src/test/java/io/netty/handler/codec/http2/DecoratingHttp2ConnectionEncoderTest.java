@@ -15,10 +15,8 @@
 package io.netty.handler.codec.http2;
 
 import org.junit.Test;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
+
+import static org.mockito.Mockito.*;
 
 public class DecoratingHttp2ConnectionEncoderTest {
 

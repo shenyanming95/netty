@@ -31,10 +31,7 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.netty.handler.codec.http.HttpHeadersTestUtils.of;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 public class HttpContentEncoderTest {

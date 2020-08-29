@@ -15,10 +15,9 @@
  */
 package io.netty.handler.ssl;
 
+import javax.net.ssl.SSLEngine;
 import java.util.Collections;
 import java.util.List;
-
-import javax.net.ssl.SSLEngine;
 
 import static io.netty.handler.ssl.ApplicationProtocolUtil.toList;
 import static io.netty.util.internal.ObjectUtil.checkNotNull;

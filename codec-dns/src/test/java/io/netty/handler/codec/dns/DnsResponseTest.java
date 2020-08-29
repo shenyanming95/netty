@@ -28,7 +28,7 @@ import org.junit.rules.ExpectedException;
 import java.net.InetSocketAddress;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class DnsResponseTest {
 

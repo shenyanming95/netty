@@ -16,12 +16,12 @@
 
 package io.netty.handler.codec.mqtt;
 
-import static org.junit.Assert.assertNull;
-
 import io.netty.util.CharsetUtil;
 import org.junit.Test;
 
 import java.util.Collections;
+
+import static org.junit.Assert.assertNull;
 
 public class MqttConnectPayloadTest {
 

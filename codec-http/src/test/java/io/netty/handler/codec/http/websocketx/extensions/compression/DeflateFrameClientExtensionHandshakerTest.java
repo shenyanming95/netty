@@ -15,17 +15,17 @@
  */
 package io.netty.handler.codec.http.websocketx.extensions.compression;
 
-import static io.netty.handler.codec.http.websocketx.extensions.compression.
-        DeflateFrameServerExtensionHandshaker.*;
-import static org.junit.Assert.*;
 import io.netty.handler.codec.http.websocketx.extensions.WebSocketClientExtension;
 import io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionData;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
+import static io.netty.handler.codec.http.websocketx.extensions.compression.DeflateFrameServerExtensionHandshaker.DEFLATE_FRAME_EXTENSION;
+import static io.netty.handler.codec.http.websocketx.extensions.compression.DeflateFrameServerExtensionHandshaker.X_WEBKIT_DEFLATE_FRAME_EXTENSION;
+import static org.junit.Assert.*;
 
 public class DeflateFrameClientExtensionHandshakerTest {
 

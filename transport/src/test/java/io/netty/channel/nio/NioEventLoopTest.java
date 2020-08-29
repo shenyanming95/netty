@@ -15,23 +15,12 @@
  */
 package io.netty.channel.nio;
 
-import io.netty.channel.AbstractEventLoopTest;
-import io.netty.channel.Channel;
-import io.netty.channel.DefaultSelectStrategyFactory;
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.EventLoopTaskQueueFactory;
-import io.netty.channel.SelectStrategy;
-import io.netty.channel.SelectStrategyFactory;
-import io.netty.channel.SingleThreadEventLoop;
+import io.netty.channel.*;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.IntSupplier;
-import io.netty.util.concurrent.DefaultEventExecutorChooserFactory;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.RejectedExecutionHandlers;
-import io.netty.util.concurrent.ThreadPerTaskExecutor;
+import io.netty.util.concurrent.*;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.Test;
 
@@ -42,11 +31,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Queue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 

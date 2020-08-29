@@ -15,10 +15,10 @@
  */
 package io.netty.handler.codec.spdy;
 
+import io.netty.util.internal.StringUtil;
+
 import static io.netty.util.internal.ObjectUtil.checkPositive;
 import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
-
-import io.netty.util.internal.StringUtil;
 
 /**
  * The default {@link SpdyWindowUpdateFrame} implementation.

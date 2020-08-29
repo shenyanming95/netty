@@ -21,12 +21,7 @@ import io.netty.util.CharsetUtil;
 import org.junit.Assume;
 import org.junit.Test;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509ExtendedKeyManager;
-import javax.net.ssl.X509ExtendedTrustManager;
+import javax.net.ssl.*;
 import java.io.ByteArrayInputStream;
 import java.net.Socket;
 import java.security.Principal;

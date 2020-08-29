@@ -30,7 +30,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 
-import static io.netty.buffer.Unpooled.*;
+import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
+import static io.netty.buffer.Unpooled.wrappedBuffer;
 
 /**
  * Abstract Disk HttpData implementation

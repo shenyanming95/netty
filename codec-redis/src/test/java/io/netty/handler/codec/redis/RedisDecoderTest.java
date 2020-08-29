@@ -28,7 +28,8 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static io.netty.handler.codec.redis.RedisCodecTestUtil.*;
+import static io.netty.handler.codec.redis.RedisCodecTestUtil.byteBufOf;
+import static io.netty.handler.codec.redis.RedisCodecTestUtil.bytesOf;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 

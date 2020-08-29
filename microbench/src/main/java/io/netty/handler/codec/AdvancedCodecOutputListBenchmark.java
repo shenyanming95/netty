@@ -16,11 +16,7 @@
 package io.netty.handler.codec;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.*;
 
 @State(Scope.Benchmark)
 @Threads(16)

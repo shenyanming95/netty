@@ -18,7 +18,7 @@ package io.netty.handler.codec.http;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 
-import static io.netty.handler.codec.http.HttpConstants.*;
+import static io.netty.handler.codec.http.HttpConstants.SP;
 
 /**
  * Encodes an {@link HttpResponse} or an {@link HttpContent} into

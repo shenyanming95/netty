@@ -32,10 +32,7 @@ import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 
 import static io.netty.channel.pool.ChannelPoolTestUtils.getLocalAddrId;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class AbstractChannelPoolMapTest {
     @Test(expected = ConnectException.class)

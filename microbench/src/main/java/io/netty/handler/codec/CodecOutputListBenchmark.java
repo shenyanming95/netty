@@ -17,11 +17,7 @@ package io.netty.handler.codec;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
 import io.netty.util.internal.RecyclableArrayList;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.annotations.*;
 
 import java.util.ArrayList;
 import java.util.List;

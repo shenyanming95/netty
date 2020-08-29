@@ -20,11 +20,7 @@ import io.netty.util.ReferenceCounted;
 import io.netty.util.internal.PlatformDependent;
 import org.junit.Assert;
 
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLEngineResult;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSession;
+import javax.net.ssl.*;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.function.BiFunction;

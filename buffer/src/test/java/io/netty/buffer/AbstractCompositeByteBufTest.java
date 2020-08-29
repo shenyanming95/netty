@@ -23,30 +23,13 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
-import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
-import static io.netty.buffer.Unpooled.buffer;
-import static io.netty.buffer.Unpooled.compositeBuffer;
-import static io.netty.buffer.Unpooled.directBuffer;
-import static io.netty.buffer.Unpooled.wrappedBuffer;
+import static io.netty.buffer.Unpooled.*;
 import static io.netty.util.internal.EmptyArrays.EMPTY_BYTES;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * An abstract test class for composite channel buffers

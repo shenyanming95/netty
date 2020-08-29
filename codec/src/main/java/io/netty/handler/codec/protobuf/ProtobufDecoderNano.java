@@ -16,9 +16,6 @@
 package io.netty.handler.codec.protobuf;
 
 import com.google.protobuf.nano.MessageNano;
-
-import java.util.List;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -28,6 +25,8 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.util.internal.ObjectUtil;
+
+import java.util.List;
 
 /**
  * Decodes a received {@link ByteBuf} into a

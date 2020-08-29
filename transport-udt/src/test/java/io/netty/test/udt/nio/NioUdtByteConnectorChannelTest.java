@@ -19,7 +19,7 @@ package io.netty.test.udt.nio;
 import io.netty.channel.udt.nio.NioUdtByteConnectorChannel;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 
 public class NioUdtByteConnectorChannelTest extends AbstractUdtTest {
 

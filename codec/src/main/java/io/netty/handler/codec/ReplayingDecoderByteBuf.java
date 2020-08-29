@@ -15,15 +15,6 @@
  */
 package io.netty.handler.codec;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
-import java.nio.channels.GatheringByteChannel;
-import java.nio.channels.ScatteringByteChannel;
-import java.nio.charset.Charset;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.SwappedByteBuf;
@@ -32,6 +23,15 @@ import io.netty.util.ByteProcessor;
 import io.netty.util.Signal;
 import io.netty.util.internal.ObjectUtil;
 import io.netty.util.internal.StringUtil;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
+import java.nio.channels.GatheringByteChannel;
+import java.nio.channels.ScatteringByteChannel;
+import java.nio.charset.Charset;
 
 /**
  * Special {@link ByteBuf} implementation which is used by the {@link ReplayingDecoder}

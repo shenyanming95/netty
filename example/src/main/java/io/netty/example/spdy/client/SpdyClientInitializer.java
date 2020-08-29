@@ -24,8 +24,8 @@ import io.netty.handler.codec.spdy.SpdyHttpEncoder;
 import io.netty.handler.codec.spdy.SpdySessionHandler;
 import io.netty.handler.ssl.SslContext;
 
-import static io.netty.handler.codec.spdy.SpdyVersion.*;
-import static io.netty.util.internal.logging.InternalLogLevel.*;
+import static io.netty.handler.codec.spdy.SpdyVersion.SPDY_3_1;
+import static io.netty.util.internal.logging.InternalLogLevel.INFO;
 
 public class SpdyClientInitializer extends ChannelInitializer<SocketChannel> {
 

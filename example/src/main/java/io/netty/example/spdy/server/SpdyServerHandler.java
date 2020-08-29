@@ -27,17 +27,15 @@ import io.netty.util.CharsetUtil;
 
 import java.util.Date;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.netty.handler.codec.http.HttpUtil.is100ContinueExpected;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
  * HTTP handler that responds with a "Hello World"

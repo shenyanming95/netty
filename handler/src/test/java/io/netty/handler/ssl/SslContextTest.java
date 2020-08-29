@@ -19,6 +19,9 @@ import io.netty.util.internal.ResourcesUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLException;
 import java.io.File;
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -26,10 +29,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLException;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeNotNull;

@@ -20,7 +20,6 @@ import com.barchart.udt.SocketUDT;
 import com.barchart.udt.StatusUDT;
 import com.barchart.udt.TypeUDT;
 import com.google.caliper.Param;
-
 import io.netty.test.udt.bench.BenchXfer;
 import io.netty.test.udt.util.CaliperRunner;
 import io.netty.test.udt.util.TrafficControl;
@@ -33,7 +32,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static io.netty.test.udt.util.UnitHelp.*;
+import static io.netty.test.udt.util.UnitHelp.localSocketAddress;
+import static io.netty.test.udt.util.UnitHelp.socketAwait;
 
 /**
  * perform two way native UDT socket send/recv

@@ -26,10 +26,12 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
-import static io.netty.handler.codec.redis.RedisCodecTestUtil.*;
+import static io.netty.handler.codec.redis.RedisCodecTestUtil.byteBufOf;
+import static io.netty.handler.codec.redis.RedisCodecTestUtil.bytesOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 /**
  * Verifies the correct functionality of the {@link RedisEncoder}.

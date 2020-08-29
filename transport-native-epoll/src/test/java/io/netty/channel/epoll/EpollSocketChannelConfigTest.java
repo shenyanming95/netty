@@ -15,24 +15,20 @@
  */
 package io.netty.channel.epoll;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import org.junit.*;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.util.Map;
 import java.util.Random;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNoException;
 
 public class EpollSocketChannelConfigTest {
 

@@ -15,15 +15,15 @@
  */
 package io.netty.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import io.netty.util.ByteProcessor.IndexOfProcessor;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * Test the underlying memory methods for the {@link AsciiString} class.

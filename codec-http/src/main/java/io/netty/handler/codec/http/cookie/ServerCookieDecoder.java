@@ -15,14 +15,9 @@
  */
 package io.netty.handler.codec.http.cookie;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A <a href="http://tools.ietf.org/html/rfc6265">RFC6265</a> compliant cookie decoder to be used server side.

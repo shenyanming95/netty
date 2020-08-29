@@ -25,12 +25,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.DecoderException;
-import io.netty.handler.ssl.JdkSslClientContext;
-import io.netty.handler.ssl.OpenSsl;
-import io.netty.handler.ssl.OpenSslServerContext;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslHandler;
-import io.netty.handler.ssl.SslHandshakeCompletionEvent;
+import io.netty.handler.ssl.*;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.logging.InternalLogger;
@@ -41,6 +36,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import javax.net.ssl.SSLHandshakeException;
 import java.io.File;
 import java.nio.channels.ClosedChannelException;
 import java.security.cert.CertificateException;
@@ -52,11 +48,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.net.ssl.SSLHandshakeException;
-
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
 public class SocketSslClientRenegotiateTest extends AbstractSocketTest {

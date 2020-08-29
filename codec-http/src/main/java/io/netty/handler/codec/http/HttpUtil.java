@@ -15,6 +15,11 @@
  */
 package io.netty.handler.codec.http;
 
+import io.netty.util.AsciiString;
+import io.netty.util.CharsetUtil;
+import io.netty.util.NetUtil;
+import io.netty.util.internal.ObjectUtil;
+
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -23,11 +28,6 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import io.netty.util.AsciiString;
-import io.netty.util.CharsetUtil;
-import io.netty.util.NetUtil;
-import io.netty.util.internal.ObjectUtil;
 
 /**
  * Utility methods useful in the HTTP context.

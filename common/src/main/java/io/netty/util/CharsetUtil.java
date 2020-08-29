@@ -16,13 +16,14 @@
 package io.netty.util;
 
 import io.netty.util.internal.InternalThreadLocalMap;
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.Map;
+
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A utility class that provides various common operations and constants

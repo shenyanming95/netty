@@ -22,7 +22,7 @@ import org.junit.Test;
 
 import java.util.Map.Entry;
 
-import static io.netty.util.AsciiString.*;
+import static io.netty.util.AsciiString.of;
 import static org.junit.Assert.*;
 
 public class DefaultHttp2HeadersTest {

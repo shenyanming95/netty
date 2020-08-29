@@ -15,16 +15,12 @@
  */
 package io.netty.handler.codec;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
-
 import io.netty.util.AsciiString;
 import io.netty.util.concurrent.FastThreadLocal;
 
-import java.util.BitSet;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
+import java.util.*;
+
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A formatter for HTTP header dates, such as "Expires" and "Date" headers, or "expires" field in "Set-Cookie".

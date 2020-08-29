@@ -16,11 +16,11 @@
 
 package io.netty.util.concurrent;
 
-import static org.mockito.Mockito.*;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import static org.mockito.Mockito.*;
 
 public class PromiseNotifierTest {
 

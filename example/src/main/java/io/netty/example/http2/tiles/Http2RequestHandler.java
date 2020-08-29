@@ -16,15 +16,6 @@
 
 package io.netty.example.http2.tiles;
 
-import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
-import static io.netty.example.http2.Http2ExampleUtil.firstValue;
-import static io.netty.example.http2.Http2ExampleUtil.toInt;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpUtil.setContentLength;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static java.lang.Integer.parseInt;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -36,6 +27,16 @@ import io.netty.handler.codec.http2.HttpConversionUtil;
 import io.netty.handler.codec.http2.InboundHttp2ToHttpAdapter;
 
 import java.util.concurrent.TimeUnit;
+
+import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
+import static io.netty.example.http2.Http2ExampleUtil.firstValue;
+import static io.netty.example.http2.Http2ExampleUtil.toInt;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpUtil.setContentLength;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static java.lang.Integer.parseInt;
 
 /**
  * Handles all the requests for data. It receives a {@link FullHttpRequest},

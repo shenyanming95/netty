@@ -15,25 +15,17 @@
  */
 package io.netty.handler.codec.http.cookie;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.matchers.JUnitMatchers.containsString;
 import io.netty.handler.codec.DateFormatter;
+import io.netty.handler.codec.http.cookie.CookieHeaderNames.SameSite;
+import org.junit.Test;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.netty.handler.codec.http.cookie.CookieHeaderNames.SameSite;
-import org.junit.Test;
+import static org.junit.Assert.*;
+import static org.junit.matchers.JUnitMatchers.containsString;
 
 public class ServerCookieEncoderTest {
 

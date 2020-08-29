@@ -16,6 +16,14 @@
 
 package io.netty.example.ocsp;
 
+import io.netty.util.CharsetUtil;
+import org.bouncycastle.asn1.*;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.cert.ocsp.OCSPReq;
+import org.bouncycastle.cert.ocsp.OCSPResp;
+import org.bouncycastle.x509.extension.X509ExtensionUtil;
+
+import javax.net.ssl.HttpsURLConnection;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,21 +33,6 @@ import java.net.URI;
 import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.HttpsURLConnection;
-
-import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.ASN1Primitive;
-import org.bouncycastle.asn1.BERTags;
-import org.bouncycastle.asn1.DERTaggedObject;
-import org.bouncycastle.asn1.DLSequence;
-import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.cert.ocsp.OCSPReq;
-import org.bouncycastle.cert.ocsp.OCSPResp;
-import org.bouncycastle.x509.extension.X509ExtensionUtil;
-
-import io.netty.util.CharsetUtil;
 
 public final class OcspUtils {
     /**

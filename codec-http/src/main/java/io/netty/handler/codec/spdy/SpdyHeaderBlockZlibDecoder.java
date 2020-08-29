@@ -21,7 +21,7 @@ import io.netty.buffer.ByteBufAllocator;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
-import static io.netty.handler.codec.spdy.SpdyCodecUtil.*;
+import static io.netty.handler.codec.spdy.SpdyCodecUtil.SPDY_DICT;
 
 final class SpdyHeaderBlockZlibDecoder extends SpdyHeaderBlockRawDecoder {
 

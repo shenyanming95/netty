@@ -26,7 +26,7 @@ import java.util.Queue;
 import java.util.Random;
 
 import static io.netty.handler.codec.spdy.SpdyCodecUtil.SPDY_HEADER_SIZE;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.*;
 
 public class SpdyFrameDecoderTest {

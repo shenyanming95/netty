@@ -15,17 +15,16 @@
  */
 package io.netty.handler.codec.http.websocketx.extensions.compression;
 
-import static io.netty.handler.codec.http.websocketx.extensions.compression.
-        PerMessageDeflateServerExtensionHandshaker.*;
-import static org.junit.Assert.*;
-import io.netty.handler.codec.http.websocketx.extensions.WebSocketServerExtension;
 import io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionData;
+import io.netty.handler.codec.http.websocketx.extensions.WebSocketServerExtension;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
+import static io.netty.handler.codec.http.websocketx.extensions.compression.PerMessageDeflateServerExtensionHandshaker.*;
+import static org.junit.Assert.*;
 
 public class PerMessageDeflateServerExtensionHandshakerTest {
 

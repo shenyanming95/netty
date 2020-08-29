@@ -29,8 +29,10 @@ import io.netty.util.internal.StringUtil;
 
 import java.util.List;
 
-import static io.netty.buffer.ByteBufUtil.*;
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.buffer.ByteBufUtil.indexOf;
+import static io.netty.buffer.ByteBufUtil.readBytes;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
+import static io.netty.util.internal.ObjectUtil.checkPositive;
 
 /**
  * Decodes {@link ByteBuf}s into {@link StompHeadersSubframe}s and {@link StompContentSubframe}s.

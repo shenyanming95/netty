@@ -15,27 +15,27 @@
  */
 package io.netty.handler.ssl;
 
-import static io.netty.handler.ssl.SslUtils.toSSLHandshakeException;
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
-import static java.lang.Math.min;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.ssl.JdkApplicationProtocolNegotiator.ProtocolSelectionListener;
 import io.netty.handler.ssl.JdkApplicationProtocolNegotiator.ProtocolSelector;
-import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLEngineResult;
-import javax.net.ssl.SSLException;
-
 import io.netty.util.internal.SystemPropertyUtil;
 import org.conscrypt.AllocatedBuffer;
 import org.conscrypt.BufferAllocator;
 import org.conscrypt.Conscrypt;
 import org.conscrypt.HandshakeListener;
+
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLException;
+import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+
+import static io.netty.handler.ssl.SslUtils.toSSLHandshakeException;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
+import static java.lang.Math.min;
 
 /**
  * A {@link JdkSslEngine} that uses the Conscrypt provider or SSL with ALPN.

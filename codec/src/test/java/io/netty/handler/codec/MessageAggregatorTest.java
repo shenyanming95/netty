@@ -16,11 +16,6 @@
 
 package io.netty.handler.codec;
 
-import org.junit.Test;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.DefaultByteBufHolder;
@@ -29,6 +24,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.CharsetUtil;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 public class MessageAggregatorTest {
     private static final class ReadCounter extends ChannelOutboundHandlerAdapter {

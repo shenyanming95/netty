@@ -18,14 +18,7 @@ package io.netty.handler.codec.http.multipart;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.DefaultHttpRequest;
-import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.HttpConstants;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder.EncoderMode;
 import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder.ErrorDataEncoderException;
 import io.netty.util.CharsetUtil;
@@ -37,14 +30,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_DISPOSITION;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TRANSFER_ENCODING;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static org.junit.Assert.*;
 
 /** {@link HttpPostRequestEncoder} test case. */
 public class HttpPostRequestEncoderTest {

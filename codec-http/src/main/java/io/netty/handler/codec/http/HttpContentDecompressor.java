@@ -15,14 +15,11 @@
  */
 package io.netty.handler.codec.http;
 
-import static io.netty.handler.codec.http.HttpHeaderValues.DEFLATE;
-import static io.netty.handler.codec.http.HttpHeaderValues.GZIP;
-import static io.netty.handler.codec.http.HttpHeaderValues.X_DEFLATE;
-import static io.netty.handler.codec.http.HttpHeaderValues.X_GZIP;
-
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.compression.ZlibCodecFactory;
 import io.netty.handler.codec.compression.ZlibWrapper;
+
+import static io.netty.handler.codec.http.HttpHeaderValues.*;
 
 /**
  * Decompresses an {@link HttpMessage} and an {@link HttpContent} compressed in

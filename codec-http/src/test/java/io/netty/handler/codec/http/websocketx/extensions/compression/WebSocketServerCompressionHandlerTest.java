@@ -22,15 +22,14 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionData;
 import io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionUtil;
 import io.netty.handler.codec.http.websocketx.extensions.WebSocketServerExtensionHandler;
-
-import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Test;
 
-import static io.netty.handler.codec.http.websocketx.extensions.compression.
-        PerMessageDeflateServerExtensionHandshaker.*;
-import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionTestUtil.*;
+import java.util.List;
+
+import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionTestUtil.newUpgradeRequest;
+import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionTestUtil.newUpgradeResponse;
+import static io.netty.handler.codec.http.websocketx.extensions.compression.PerMessageDeflateServerExtensionHandshaker.*;
 
 public class WebSocketServerCompressionHandlerTest {
 

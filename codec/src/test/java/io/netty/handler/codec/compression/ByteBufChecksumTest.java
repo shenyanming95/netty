@@ -27,7 +27,7 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 import static io.netty.handler.codec.compression.Lz4Constants.DEFAULT_SEED;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class ByteBufChecksumTest {
 

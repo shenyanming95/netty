@@ -18,7 +18,8 @@ package io.netty.channel;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class SucceededChannelFutureTest {
     @Test

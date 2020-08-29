@@ -15,14 +15,14 @@
  */
 package io.netty.resolver.dns;
 
-import java.net.IDN;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.handler.codec.dns.DnsRawRecord;
 import io.netty.handler.codec.dns.DnsRecord;
+
+import java.net.IDN;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * Decodes an {@link InetAddress} from an A or AAAA {@link DnsRawRecord}.

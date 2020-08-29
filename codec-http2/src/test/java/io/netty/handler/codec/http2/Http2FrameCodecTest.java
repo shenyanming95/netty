@@ -16,21 +16,11 @@ package io.netty.handler.codec.http2;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
+import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.UnsupportedMessageTypeException;
-import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpScheme;
-import io.netty.handler.codec.http.HttpServerUpgradeHandler;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.HttpServerUpgradeHandler.UpgradeEvent;
-import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http2.Http2Exception.StreamException;
 import io.netty.handler.codec.http2.Http2Stream.State;
 import io.netty.handler.logging.LogLevel;
@@ -56,28 +46,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.netty.handler.codec.http2.Http2CodecUtil.isStreamIdValid;
 import static io.netty.handler.codec.http2.Http2Error.NO_ERROR;
-import static io.netty.handler.codec.http2.Http2TestUtil.anyChannelPromise;
-import static io.netty.handler.codec.http2.Http2TestUtil.anyHttp2Settings;
-import static io.netty.handler.codec.http2.Http2TestUtil.assertEqualsAndRelease;
-import static io.netty.handler.codec.http2.Http2TestUtil.bb;
+import static io.netty.handler.codec.http2.Http2TestUtil.*;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.anyShort;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.same;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link Http2FrameCodec}.

@@ -18,11 +18,7 @@ package io.netty.microbench.util;
 import io.netty.util.ResourceLeakDetector;
 import io.netty.util.ResourceLeakHint;
 import io.netty.util.ResourceLeakTracker;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.annotations.*;
 
 public class ResourceLeakDetectorRecordBenchmark extends AbstractMicrobenchmark {
     private static final Object TRACKED = new Object();

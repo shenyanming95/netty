@@ -21,12 +21,7 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.CodecException;
-import io.netty.handler.codec.redis.ArrayRedisMessage;
-import io.netty.handler.codec.redis.ErrorRedisMessage;
-import io.netty.handler.codec.redis.FullBulkStringRedisMessage;
-import io.netty.handler.codec.redis.IntegerRedisMessage;
-import io.netty.handler.codec.redis.RedisMessage;
-import io.netty.handler.codec.redis.SimpleStringRedisMessage;
+import io.netty.handler.codec.redis.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 

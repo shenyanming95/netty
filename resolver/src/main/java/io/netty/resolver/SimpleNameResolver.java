@@ -22,7 +22,7 @@ import io.netty.util.concurrent.Promise;
 
 import java.util.List;
 
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A skeletal {@link NameResolver} implementation.

@@ -15,11 +15,7 @@
  */
 package io.netty.util.internal.logging;
 
-import static org.junit.Assert.assertEquals;
-
-import java.lang.reflect.Method;
-import java.util.Arrays;
-
+import io.netty.util.internal.ReflectionUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,7 +25,10 @@ import org.apache.logging.log4j.spi.ExtendedLoggerWrapper;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assume;
 
-import io.netty.util.internal.ReflectionUtil;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * {@linkplain Log4J2Logger} extends {@linkplain ExtendedLoggerWrapper} implements {@linkplain InternalLogger}.<br>

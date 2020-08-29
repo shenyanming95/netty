@@ -15,15 +15,13 @@
  */
 package io.netty.util.internal.logging;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * We only need to test methods defined by {@link InternaLogger}.

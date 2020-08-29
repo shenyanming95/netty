@@ -15,17 +15,11 @@
  */
 package io.netty.bootstrap;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.resolver.AddressResolver;
+import io.netty.resolver.AddressResolverGroup;
 import io.netty.resolver.DefaultAddressResolverGroup;
 import io.netty.resolver.NameResolver;
-import io.netty.resolver.AddressResolverGroup;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
 import io.netty.util.internal.ObjectUtil;

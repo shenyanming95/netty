@@ -24,7 +24,7 @@ import java.net.Socket;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
-import static io.netty.util.internal.ObjectUtil.*;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 @SuppressJava6Requirement(reason = "Usage guarded by java version check")
 final class X509TrustManagerWrapper extends X509ExtendedTrustManager {

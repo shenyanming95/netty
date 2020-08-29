@@ -17,33 +17,13 @@
 
 package io.netty.test.udt.util;
 
-import com.google.caliper.ConfiguredBenchmark;
-import com.google.caliper.Environment;
-import com.google.caliper.EnvironmentGetter;
-import com.google.caliper.Json;
-import com.google.caliper.Result;
-import com.google.caliper.Run;
-import com.google.caliper.Runner;
-import com.google.caliper.Scenario;
-import com.google.caliper.ScenarioResult;
-import com.google.caliper.SimpleBenchmark;
+import com.google.caliper.*;
 import com.yammer.metrics.core.TimerContext;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Custom caliper runner for {@link CaliperBench}.

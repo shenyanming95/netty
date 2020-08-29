@@ -16,46 +16,25 @@
 
 package io.netty.example.ocsp;
 
-import java.math.BigInteger;
-
-import javax.net.ssl.SSLSession;
-import javax.security.cert.X509Certificate;
-
+import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.*;
+import io.netty.handler.ssl.*;
+import io.netty.handler.ssl.ocsp.OcspClientHandler;
+import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.Promise;
 import org.bouncycastle.asn1.ocsp.OCSPResponseStatus;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.CertificateStatus;
 import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.cert.ocsp.SingleResp;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpClientCodec;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.ssl.OpenSsl;
-import io.netty.handler.ssl.ReferenceCountedOpenSslContext;
-import io.netty.handler.ssl.ReferenceCountedOpenSslEngine;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SslHandler;
-import io.netty.handler.ssl.SslProvider;
-import io.netty.handler.ssl.ocsp.OcspClientHandler;
-import io.netty.util.ReferenceCountUtil;
-import io.netty.util.concurrent.Promise;
+import javax.net.ssl.SSLSession;
+import javax.security.cert.X509Certificate;
+import java.math.BigInteger;
 
 /**
  * This is a very simple example for an HTTPS client that uses OCSP stapling.

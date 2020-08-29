@@ -15,6 +15,10 @@
  */
 package io.netty.handler.codec.http;
 
+import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
+import org.junit.Test;
+
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -22,16 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
-import org.junit.Test;
-
 import static io.netty.handler.codec.http.HttpHeadersTestUtils.of;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class HttpUtilTest {
 

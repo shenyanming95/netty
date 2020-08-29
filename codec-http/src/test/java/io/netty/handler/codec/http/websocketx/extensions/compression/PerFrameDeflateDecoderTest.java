@@ -26,8 +26,9 @@ import org.junit.Test;
 
 import java.util.Random;
 
-import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtension.*;
-import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionFilter.*;
+import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtension.RSV1;
+import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtension.RSV3;
+import static io.netty.handler.codec.http.websocketx.extensions.WebSocketExtensionFilter.ALWAYS_SKIP;
 import static org.junit.Assert.*;
 
 public class PerFrameDeflateDecoderTest {

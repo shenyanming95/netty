@@ -20,9 +20,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.protobuf.ProtobufDecoder;
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 import java.util.List;
+
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A decoder that decodes the content of the received {@link DatagramPacket} using

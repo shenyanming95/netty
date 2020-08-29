@@ -18,14 +18,14 @@ package io.netty.buffer;
 
 import io.netty.util.internal.StringUtil;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import static java.lang.Math.*;
-
-import java.nio.ByteBuffer;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 final class PoolChunkList<T> implements PoolChunkListMetric {
     private static final Iterator<PoolChunkMetric> EMPTY_METRICS = Collections.<PoolChunkMetric>emptyList().iterator();

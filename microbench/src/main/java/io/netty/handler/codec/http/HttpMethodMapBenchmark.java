@@ -16,27 +16,14 @@
 package io.netty.handler.codec.http;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static io.netty.handler.codec.http.HttpMethod.CONNECT;
-import static io.netty.handler.codec.http.HttpMethod.DELETE;
-import static io.netty.handler.codec.http.HttpMethod.GET;
-import static io.netty.handler.codec.http.HttpMethod.HEAD;
-import static io.netty.handler.codec.http.HttpMethod.OPTIONS;
-import static io.netty.handler.codec.http.HttpMethod.PATCH;
-import static io.netty.handler.codec.http.HttpMethod.POST;
-import static io.netty.handler.codec.http.HttpMethod.PUT;
-import static io.netty.handler.codec.http.HttpMethod.TRACE;
+import static io.netty.handler.codec.http.HttpMethod.*;
 import static io.netty.util.internal.MathUtil.findNextPositivePowerOfTwo;
 
 @State(Scope.Benchmark)

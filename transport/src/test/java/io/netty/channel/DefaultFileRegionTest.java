@@ -18,17 +18,11 @@ package io.netty.channel;
 import io.netty.util.internal.PlatformDependent;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class DefaultFileRegionTest {
 

@@ -23,22 +23,19 @@ import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.lang.ref.WeakReference;
 import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import static io.netty.util.internal.StringUtil.EMPTY_STRING;
-import static io.netty.util.internal.StringUtil.NEWLINE;
-import static io.netty.util.internal.StringUtil.simpleClassName;
+import static io.netty.util.internal.StringUtil.*;
 
 public class ResourceLeakDetector<T> {
 

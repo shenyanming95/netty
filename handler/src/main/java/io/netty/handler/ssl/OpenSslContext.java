@@ -17,10 +17,9 @@ package io.netty.handler.ssl;
 
 import io.netty.buffer.ByteBufAllocator;
 
-import java.security.cert.Certificate;
-
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
+import java.security.cert.Certificate;
 
 /**
  * This class will use a finalizer to ensure native resources are automatically cleaned up. To avoid finalizers

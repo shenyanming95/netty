@@ -23,7 +23,8 @@ import io.netty.util.CharsetUtil;
 
 import java.util.List;
 
-import static io.netty.handler.codec.haproxy.HAProxyConstants.*;
+import static io.netty.handler.codec.haproxy.HAProxyConstants.BINARY_PREFIX;
+import static io.netty.handler.codec.haproxy.HAProxyConstants.TEXT_PREFIX;
 
 /**
  * Decodes an HAProxy proxy protocol header
