@@ -460,9 +460,13 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             // cancelled
             return promise;
         }
-
+        // findContextOutbound()从链表尾部一直向前找, 直至找到一个ChannelOutboundHandler
+        // 类型的上下文, 一般是管道上下文链表的头结点DefaultChannelPipeline$HeadContext对象
         final AbstractChannelHandlerContext next = findContextOutbound(MASK_BIND);
+        // 获取AbstractChannelHandlerContext对应的EventExecutor
         EventExecutor executor = next.executor();
+        // 常见的线程模型, 若当前线程是EventExecutor底层Thread, 则直接调用; 否则添加一个任务,
+        // 让底层Thread慢慢消费. 实际调用invokeBind()方法.
         if (executor.inEventLoop()) {
             next.invokeBind(localAddress, promise);
         } else {
@@ -477,13 +481,19 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     }
 
     private void invokeBind(SocketAddress localAddress, ChannelPromise promise) {
+        // invokeHandler()方法判断当前上下文AbstractChannelHandlerContext是否已经
+        // 回调过ChannelHandler.handlerAdded()方法.
         if (invokeHandler()) {
             try {
+                // 获取与ChannelHandlerContext绑定的ChannelHandler对象, 实际还是
+                // DefaultChannelPipeline$HeadContext(看它的类定义即可), 调用它
+                // 的bind()方法, 最终落到Unsafe.bind()方法上
                 ((ChannelOutboundHandler) handler()).bind(this, localAddress, promise);
             } catch (Throwable t) {
                 notifyOutboundHandlerException(t, promise);
             }
         } else {
+            // 如果invokeHandler()返回false, 则回去继续调用bind(), 取另一个上下文来调用.
             bind(localAddress, promise);
         }
     }

@@ -67,13 +67,17 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel}
      */
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
+        // 调用父类AbstractChannel的构造方法, 因为是创建nio的Channel, 所以parent为null
         super(parent);
+        // ch即nio的通道, readInterestOp即I/O事情感兴趣的事件, 其值即OP_ACCEPT
         this.ch = ch;
         this.readInterestOp = readInterestOp;
         try {
+            // 将nio的通道配置成非阻塞式
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {
+                // 配置出现异常, 关掉通道
                 ch.close();
             } catch (IOException e2) {
                 logger.warn(
@@ -367,12 +371,20 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         boolean selected = false;
         for (;;) {
             try {
+                // javaChannel()是返回nio通道SelectableChannel实例;
+                // eventLoop().unwrappedSelector()是返回nio选择器Selector;
+                // 然后将通道注册到选择器上, 同时还把当前通道NioServerSocketChannel当成attachment
+                // 一般nio注册, 都会指定SelectionKey.OP_ACCEPT类似值, 但netty这边指定为0. 原因：
+                // SelectionKey#interestOps(int ops)方法可以方便地修改监听操作位, 所以, 这边会将
+                // 注册返回的SelectionKey 赋给AbstractNioChannel的成员变量 selectionKey.
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {
                 if (!selected) {
                     // Force the Selector to select now as the "canceled" SelectionKey may still be
                     // cached and not removed because no Select.select(..) operation was called yet.
+                    // 强制Selector立即选择， 因为“取消的”选择键可能仍被缓存并且未被删除,
+                    // 因为尚未调用Select.select()操作
                     eventLoop().selectNow();
                     selected = true;
                 } else {

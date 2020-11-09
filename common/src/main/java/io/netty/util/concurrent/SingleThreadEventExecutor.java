@@ -37,11 +37,11 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private static final InternalLogger logger =
             InternalLoggerFactory.getInstance(SingleThreadEventExecutor.class);
 
-    private static final int ST_NOT_STARTED = 1;
-    private static final int ST_STARTED = 2;
-    private static final int ST_SHUTTING_DOWN = 3;
-    private static final int ST_SHUTDOWN = 4;
-    private static final int ST_TERMINATED = 5;
+    private static final int ST_NOT_STARTED = 1; //未开始
+    private static final int ST_STARTED = 2; //已开始
+    private static final int ST_SHUTTING_DOWN = 3; //正在关闭中
+    private static final int ST_SHUTDOWN = 4; //已关闭
+    private static final int ST_TERMINATED = 5; //已终止
 
     private static final Runnable NOOP_TASK = new Runnable() {
         @Override
@@ -49,32 +49,52 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             // Do nothing.
         }
     };
-
+    // 字段的原子更新器, jdk并发包提供. 作用于本类的“state”字段
     private static final AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
+
+    // 字段的原子更新器, 作用于本类的“threadProperties”字段
     private static final AtomicReferenceFieldUpdater<SingleThreadEventExecutor, ThreadProperties> PROPERTIES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(
                     SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
 
+    // 任务队列, 通过Executor.execute()方法提交的任务就会添加到此
     private final Queue<Runnable> taskQueue;
 
+    // EventExecutor内部自己维护的线程Thread, 靠它去执行任务队列taskQueue中的任务, 单线程
     private volatile Thread thread;
+
     @SuppressWarnings("unused")
+    // io.netty.util.concurrent.ThreadProperties, netty封装的对线程属性的配置
     private volatile ThreadProperties threadProperties;
+
+    // java.util.concurrent.Executor, 通过它创建 thread 线程
     private final Executor executor;
+
+    // 标志线程是否被中断了
     private volatile boolean interrupted;
 
     private final CountDownLatch threadLock = new CountDownLatch(1);
     private final Set<Runnable> shutdownHooks = new LinkedHashSet<Runnable>();
+
+    // 添加任务到 taskQueue 队列时, 是否唤醒 thread 线程
     private final boolean addTaskWakesUp;
+
+    // 最大等待执行的任务数量, 即taskQueue的大小
     private final int maxPendingTasks;
+
+    // 任务拒绝策略
     private final RejectedExecutionHandler rejectedExecutionHandler;
 
+    // 最后执行时间
     private long lastExecutionTime;
 
     @SuppressWarnings({ "FieldMayBeFinal", "unused" })
+    // 线程状态, SingleThreadEventExecutor 在实现上，thread 的初始化采用延迟启动的方式，只
+    // 有在第一个任务时，executor 才会执行并创建该线程. 线程状态即该类开头那几个
     private volatile int state = ST_NOT_STARTED;
 
+    // 优雅关闭的时间配置
     private volatile long gracefulShutdownQuietPeriod;
     private volatile long gracefulShutdownTimeout;
     private long gracefulShutdownStartTime;
@@ -135,10 +155,14 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor,
                                         boolean addTaskWakesUp, int maxPendingTasks,
                                         RejectedExecutionHandler rejectedHandler) {
+        // 一层一层调用到顶级父类AbstractEventExecutor, 赋给EventExecutorGroup属性..
         super(parent);
+        // 它的构造方法就很简单, 都是属性赋值而已
         this.addTaskWakesUp = addTaskWakesUp;
         this.maxPendingTasks = Math.max(16, maxPendingTasks);
+        // 这个executor比较重要, 是java.util.concurrent.Executor类型, 可以执行一个任务
         this.executor = ThreadExecutorMap.apply(executor, this);
+        // newTaskQueue()会创建LinkedBlockingQueue实例
         taskQueue = newTaskQueue(this.maxPendingTasks);
         rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
     }

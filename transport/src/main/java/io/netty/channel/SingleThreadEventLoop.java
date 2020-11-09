@@ -32,9 +32,11 @@ import java.util.concurrent.ThreadFactory;
  */
 public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor implements EventLoop {
 
+    // 任务队列的最大容量
     protected static final int DEFAULT_MAX_PENDING_TASKS = Math.max(16,
             SystemPropertyUtil.getInt("io.netty.eventLoop.maxPendingTasks", Integer.MAX_VALUE));
 
+    // 任务队列
     private final Queue<Runnable> tailTasks;
 
     protected SingleThreadEventLoop(EventLoopGroup parent, ThreadFactory threadFactory, boolean addTaskWakesUp) {
@@ -55,7 +57,15 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
     protected SingleThreadEventLoop(EventLoopGroup parent, Executor executor,
                                     boolean addTaskWakesUp, int maxPendingTasks,
                                     RejectedExecutionHandler rejectedExecutionHandler) {
+        // 此构造方法是在创建NioEventLoop中被调用的, 这几个方法参数含义如下：
+        // 1.parent即NioEventLoopGroup实例, 因为是在NioEventLoopGroup调用newChild()方法创建EventExecutor实例;
+        // 2.executor即在MultithreadEventExecutorGroup中创建的ThreadPerTaskExecutor实例;
+        // 3.addTaskWakeUp为false, 是在NioEventLoop构造方法中直接指定的;
+        // 4.maxPendingTasks即Integer.MAX_VALUE, 是SingleThreadEventLoop成员变量定义的;
+        // 5.rejectedExecutionHandler即RejectedExecutionHandlers的匿名实现类, 默认跑异常
+        // 然后调用父类SingleThreadEventExecutor的构造方法
         super(parent, executor, addTaskWakesUp, maxPendingTasks, rejectedExecutionHandler);
+        // 调用newTaskQueue()方法, 创建LinkedBlockingQueue队列赋给成员变量tailTasks
         tailTasks = newTaskQueue(maxPendingTasks);
     }
 
@@ -78,12 +88,15 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
     @Override
     public ChannelFuture register(Channel channel) {
+        // 会将通道channel和this对象(EventExecutor类型)创建DefaultChannelPromise, 继续调用重载方法
         return register(new DefaultChannelPromise(channel, this));
     }
 
     @Override
     public ChannelFuture register(final ChannelPromise promise) {
         ObjectUtil.checkNotNull(promise, "promise");
+        // 创建通道时在调用顶级父类AbstractChannel构造方法, 会创建NioMessageUnsafe, 所以
+        // 每个Channel都有自己的Unsafe实现. 最终就是通过Unsafe.regisrer()来注册Channel.
         promise.channel().unsafe().register(this, promise);
         return promise;
     }

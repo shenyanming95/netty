@@ -231,22 +231,28 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @Override
     public Promise<V> await() throws InterruptedException {
+        // 如果Future已经执行完, 即成员变量result不为空, 则方法直接返回
         if (isDone()) {
             return this;
         }
-
+        // 上面if语句没返回说明了这个Future肯定是没有完成的
+        // 判断线程是否以中断
         if (Thread.interrupted()) {
             throw new InterruptedException(toString());
         }
-
+        // 判断死锁：若当前线程与这个Future关联的EventExecutor所在的线程是同一个,则肯定会死锁.
         checkDeadLock();
-
+        // 对当前Future加锁
         synchronized (this) {
+            // 使用wait()进行线程通信, 建议用while, 而不是单纯地使用if判断, 防止假唤醒.
             while (!isDone()) {
+                // 等待这个Future的线程数加一
                 incWaiters();
                 try {
+                    // 在这里阻塞, 等待Future完成
                     wait();
                 } finally {
+                    // 等待这个Future的线程数减一
                     decWaiters();
                 }
             }
@@ -396,6 +402,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @Override
     public Promise<V> sync() throws InterruptedException {
+        // 调用await()等待Future执行完毕
         await();
         rethrowIfFailed();
         return this;
@@ -621,6 +628,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
      */
     private synchronized boolean checkNotifyWaiters() {
         if (waiters > 0) {
+            // 唤醒所有阻塞在await()的线程
             notifyAll();
         }
         return listeners != null;

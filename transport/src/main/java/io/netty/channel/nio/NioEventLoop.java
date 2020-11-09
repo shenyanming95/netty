@@ -47,12 +47,17 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioEventLoop.class);
 
+    // 待议..
     private static final int CLEANUP_INTERVAL = 256; // XXX Hard-coded value, but won't need customization.
 
+    // 表示是否禁用SelectionKey的优化, 默认值为false, 表示开启
     private static final boolean DISABLE_KEY_SET_OPTIMIZATION =
             SystemPropertyUtil.getBoolean("io.netty.noKeySetOptimization", false);
 
+    // 少于该值, 不开启空轮询重建新的 Selector 对象的功能
     private static final int MIN_PREMATURE_SELECTOR_RETURNS = 3;
+
+    // NIO Selector 空轮询此值的次数后, 重建新的 Selector 对象, 默认值为512
     private static final int SELECTOR_AUTO_REBUILD_THRESHOLD;
 
     private final IntSupplier selectNowSupplier = new IntSupplier() {
@@ -100,34 +105,49 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     /**
      * The NIO {@link Selector}.
      */
+    // 包装过的Selector, 被netty优化过了
     private Selector selector;
+    // 原生的Selector对象
     private Selector unwrappedSelector;
+    // 一个Set实现, 用来存放SelectionKey集合. netty自己实现，经过优化
     private SelectedSelectionKeySet selectedKeys;
-
+    // JDK原生接口, 用来创建一个Selector对象
     private final SelectorProvider provider;
 
     private static final long AWAKE = -1L;
     private static final long NONE = Long.MAX_VALUE;
 
-    // nextWakeupNanos is:
+    // 唤醒标记, 因为原生的Selector.wakeup()唤醒方法开销比较大, 通过该标识, 减少调用：
     //    AWAKE            when EL is awake
     //    NONE             when EL is waiting with no wakeup scheduled
     //    other value T    when EL is waiting with wakeup scheduled at time T
     private final AtomicLong nextWakeupNanos = new AtomicLong(AWAKE);
 
+    // 选择策略, 有两个值：SelectStrategy.SELECT(阻塞式选择) 和 SelectStrategy.CONTINUE(非阻塞式重试性选择)
     private final SelectStrategy selectStrategy;
 
+    // 处理 Channel 的就绪的 IO 事件, 占处理任务的总时间的比例
     private volatile int ioRatio = 50;
+
+    // 被取消的选择键SelectionKey的数量
     private int cancelledKeys;
+
+    // 是否需要再次发起Selector的select()操作
     private boolean needsToSelectAgain;
 
     NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
                  SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler,
                  EventLoopTaskQueueFactory queueFactory) {
+        // 调用抽象父类SingleThreadEventLoop的构造方法,
         super(parent, executor, false, newTaskQueue(queueFactory), newTaskQueue(queueFactory),
                 rejectedExecutionHandler);
+        // 将方法参数的selectorProvider赋值给成员变量provider, 此对象根据操作系统不同而不同.
         this.provider = ObjectUtil.checkNotNull(selectorProvider, "selectorProvider");
+        // 保存选择策略, 默认实现为：DefaultSelectStrategyFactory
         this.selectStrategy = ObjectUtil.checkNotNull(strategy, "selectStrategy");
+        // 调用openSelector()获取SelectorTuple对象, 然后将SelectorTuple的selector对象赋给
+        // 成员变量selector(经过netty优化过的nio选择器Selector); 将selectorTuple的
+        // unwrappedSelector赋给成员变量unwrappedSelector(原生的nio选择器Selector).
         final SelectorTuple selectorTuple = openSelector();
         this.selector = selectorTuple.selector;
         this.unwrappedSelector = selectorTuple.unwrappedSelector;
@@ -157,13 +177,17 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private SelectorTuple openSelector() {
+        // 定义一个Selector, 用来保存java原生nio的Selector对象
         final Selector unwrappedSelector;
         try {
+            // 直接调用java.nio.channels.spi.SelectorProvider获取一个选择器
             unwrappedSelector = provider.openSelector();
         } catch (IOException e) {
             throw new ChannelException("failed to open a new selector", e);
         }
-
+        // DISABLE_KEYSET_OPTIMIZATION是NioEventLoop的成员变量, 表示是否要禁用Selector的
+        // 优化, 一般为false. 若为true的话, 则SelectorTuple的两个选择器引用都是nio原生的
+        // 选择器Selector
         if (DISABLE_KEY_SET_OPTIMIZATION) {
             return new SelectorTuple(unwrappedSelector);
         }
@@ -172,6 +196,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             @Override
             public Object run() {
                 try {
+                    // 获取 sun.nio.ch.SelectorImpl的Class类型
                     return Class.forName(
                             "sun.nio.ch.SelectorImpl",
                             false,
@@ -181,7 +206,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 }
             }
         });
-
+        // 如果无法获取sun.nio.ch.SelectorImpl的Class类型, 那么就不会优化Selector, 直接用原生的Selector包装SelectorTuple, 再将其返回
         if (!(maybeSelectorImplClass instanceof Class) ||
             // ensure the current selector implementation is what we can instrument.
             !((Class<?>) maybeSelectorImplClass).isAssignableFrom(unwrappedSelector.getClass())) {
@@ -191,14 +216,18 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
             return new SelectorTuple(unwrappedSelector);
         }
-
+        // 代码执行到这里, 即可以获取sun.nio.ch.SelectorImpl的Class类型, 将其强转
         final Class<?> selectorImplClass = (Class<?>) maybeSelectorImplClass;
+        // SelectedSelectionKeySet是netty自定义的一个Set实现, 用来保存nio中的选择键
+        // SelectionKey, 其内部用一个数组来存放.
         final SelectedSelectionKeySet selectedKeySet = new SelectedSelectionKeySet();
-
+        // 通过反射获取Selector的selectedKeys和publicSelectedKeys的属性Field对象,
+        // 将netty 定义的SelectedSelectionKeySet赋给上面创建出来的unwrappedSelector
         Object maybeException = AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
             public Object run() {
                 try {
+                    // 获取"selectedKeys"和"publicSelectedKeys" 的 Field对象
                     Field selectedKeysField = selectorImplClass.getDeclaredField("selectedKeys");
                     Field publicSelectedKeysField = selectorImplClass.getDeclaredField("publicSelectedKeys");
 
@@ -218,7 +247,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         }
                         // We could not retrieve the offset, lets try reflection as last-resort.
                     }
-
+                    // 设置Field可访问, 若报错, 直接返回错误对象
                     Throwable cause = ReflectionUtil.trySetAccessible(selectedKeysField, true);
                     if (cause != null) {
                         return cause;
@@ -227,7 +256,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     if (cause != null) {
                         return cause;
                     }
-
+                    // 设置 SelectedSelectionKeySet 对象到 unwrappedSelector 的 Field 中
                     selectedKeysField.set(unwrappedSelector, selectedKeySet);
                     publicSelectedKeysField.set(unwrappedSelector, selectedKeySet);
                     return null;
@@ -238,13 +267,18 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 }
             }
         });
-
+        // 如果通过Field设值失败, 则返回未被优化的Selector
         if (maybeException instanceof Exception) {
             selectedKeys = null;
             Exception e = (Exception) maybeException;
             logger.trace("failed to instrument a special java.util.Set into: {}", unwrappedSelector, e);
             return new SelectorTuple(unwrappedSelector);
         }
+        // 代码走到这里, 则说明已经赋值成功, 可以优化. 则netty会创建一个
+        // SelectedSelectionKeySetSelector作为优化后的Selector. 它与原生的Selector组合成
+        // SelectorTuple返回. 其实, netty优化后的SelectedSelectionKeySetSelector, 就是在
+        // 每次选择完以后, 将原先Selector中的selectedKeys集合给清空掉(回忆下nio原生的
+        // selector每次调用select()获取选择键后, 都要手动地删掉这个选择键)
         selectedKeys = selectedKeySet;
         logger.trace("instrumented a special java.util.Set into: {}", unwrappedSelector);
         return new SelectorTuple(unwrappedSelector,

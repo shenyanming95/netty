@@ -72,6 +72,8 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance
      */
     public NioServerSocketChannel() {
+        // DEFAULT_SELECTOR_PROVIDER是NioServerSocketChannel的静态成员变量, 它是一个
+        // java.nio.channels.spi.SelectorProvider类型,通过它获取通道实例后,调用重载构造方法
         this(newSocket(DEFAULT_SELECTOR_PROVIDER));
     }
 
@@ -86,7 +88,10 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance using the given {@link ServerSocketChannel}.
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
+        // 调用父类AbstractNioMessageChannel的构造方法
         super(null, channel, SelectionKey.OP_ACCEPT);
+        // javaChannel()返回的是上面newSocket()方法创建的nio的ServerSocketChannel;
+        // javaChannel().socket()就是获取java.net.ServerSocket对象, 由此创建通道配置类
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
     }
 
@@ -131,8 +136,10 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     @Override
     protected void doBind(SocketAddress localAddress) throws Exception {
         if (PlatformDependent.javaVersion() >= 7) {
+            // 如果Java版本大于等于7, 则通过nio通道绑定
             javaChannel().bind(localAddress, config.getBacklog());
         } else {
+            // 小于7的JDK版本, 通过nio通道的Socket来绑定
             javaChannel().socket().bind(localAddress, config.getBacklog());
         }
     }

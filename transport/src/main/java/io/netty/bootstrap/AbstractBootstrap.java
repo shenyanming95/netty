@@ -260,19 +260,25 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        // initAndRegister()做了3件事：创建、初始化和注册通道.
         final ChannelFuture regFuture = initAndRegister();
+        // 获取上一步创建好的通道实例, NioServerSocketChannel
         final Channel channel = regFuture.channel();
+        // 若异步创建和初始化通道发生异常了, 这个cause()方法就会返回异常, 这边就直接返回Future
         if (regFuture.cause() != null) {
             return regFuture;
         }
-
+        // 若Future.isDone()返回true, 说明通道创建和初始化已经成功完成
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
             ChannelPromise promise = channel.newPromise();
+            // 调用doBind0()绑定, 带上上面创建好的DefaultChannelPromise
             doBind0(regFuture, channel, localAddress, promise);
             return promise;
         } else {
             // Registration future is almost always fulfilled already, but just in case it's not.
+            // 因为netty很多都是异步的, 有可能通道三部曲(创建,初始化,注册)还未完成. 所以就需要
+            // 往Future上添加监听器, 在执行完毕后回调.
             final PendingRegistrationPromise promise = new PendingRegistrationPromise(channel);
             regFuture.addListener(new ChannelFutureListener() {
                 @Override
@@ -281,10 +287,13 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
                     if (cause != null) {
                         // Registration on the EventLoop failed so fail the ChannelPromise directly to not cause an
                         // IllegalStateException once we try to access the EventLoop of the Channel.
+                        // future.cause()不为空, 说明出现异常, 将promise置为失败.
                         promise.setFailure(cause);
                     } else {
                         // Registration was successful, so set the correct executor to use.
                         // See https://github.com/netty/netty/issues/2586
+                        // 如果注册一切顺利, 设置AbstractBootstrap的registered变量为true;
+                        // 同样也是调用doBind0()执行绑定.
                         promise.registered();
 
                         doBind0(regFuture, channel, localAddress, promise);
@@ -296,11 +305,18 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     final ChannelFuture initAndRegister() {
+        // io.netty.channel.Channel对象
         Channel channel = null;
         try {
+            // 通过ChannelFactory创建一个通道, 默认使用反射的方式ReflectiveChannelFactory.
+            // ReflectiveChannelFactory需要指定一个Class对象, 它通过反射调用它的无参构造方法
+            // 创建一个Channel实例, 大部分情况下这个Class对象为：NioServerSocketChannel.
+            // 这里就会调用NioServerSocketChannel的无参构造方法创建它的实例, 即创建通道
             channel = channelFactory.newChannel();
+            // 上一步完成, 可以获取到通道实例, 紧接着调用init()方法初始化通道
             init(channel);
         } catch (Throwable t) {
+            // 初始化通道失败, 若创建好了将其关闭, 然后返回一个失败的DefaultChannelPromise
             if (channel != null) {
                 // channel can be null if newChannel crashed (eg SocketException("too many open files"))
                 channel.unsafe().closeForcibly();
@@ -310,9 +326,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             // as the Channel is not registered yet we need to force the usage of the GlobalEventExecutor
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
-
+        // 若channel初始化成功, 执行注册通道操作.
+        // 通过AbstractBootstrap.config().group()获取到EventLoopGroup对象, 即创建事件循环组到的NioEventLoopGroup, 调用它的register()
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
+            // 注册失败, 关闭通道.
             if (channel.isRegistered()) {
                 channel.close();
             } else {
@@ -340,12 +358,15 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
 
         // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
         // the pipeline in its channelRegistered() implementation.
+        // 获取通道事件循环组, 并向其提交一个任务
         channel.eventLoop().execute(new Runnable() {
             @Override
             public void run() {
                 if (regFuture.isSuccess()) {
+                    // 如果regFuture成功了, 直接调用Channel的bind()方法, 并且添加一个监听器
                     channel.bind(localAddress, promise).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
                 } else {
+                    // regFuture失败则设置失败项, 然后返回
                     promise.setFailure(regFuture.cause());
                 }
             }

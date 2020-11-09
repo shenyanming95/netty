@@ -32,8 +32,13 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 
     private final EventExecutor[] children;
     private final Set<EventExecutor> readonlyChildren;
+
+    // 用于表示已终止的EventExecutor数量
     private final AtomicInteger terminatedChildren = new AtomicInteger();
+
+    // 用于终止 EventExecutor 的异步 Future
     private final Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
+
     private final EventExecutorChooserFactory.EventExecutorChooser chooser;
 
     /**
@@ -55,6 +60,10 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor, Object... args) {
+        // nThreads一般情况为CPU核心*2; executor为null; args一般为:
+        // WindowsSelectorProvider(window环境下)、DefaultSelectStrategyFactory
+        // 和RejectedExecutionHandlers. 然后它额外添加了一个事件执行选择器工厂实现
+        // DefaultEventExecutorChooserFactory, 最后调用重载的构造方法。
         this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);
     }
 
@@ -73,21 +82,27 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         }
 
         if (executor == null) {
+            // 如果executor为空, 实例化io.netty.util.concurrent.ThreadPerTaskExecutor对象
+            // 它会用到netty默认的线程工厂io.netty.util.concurrent.DefaultThreadFactory
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
-
+        // children即EventExecutor[]数组, 它的大小跟传入的线程数nThreads一样, 然后为数组的每个对象创建一个新对象
         children = new EventExecutor[nThreads];
 
         for (int i = 0; i < nThreads; i ++) {
+            // 标志此次创建的对象是否成功
             boolean success = false;
             try {
+                // 调用newChild()方法创建EventExecutor对象, 点击跳转newChild()方法
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {
                 // TODO: Think about if this is a good exception type
                 throw new IllegalStateException("failed to create a child event loop", e);
             } finally {
+                // 只要有一个创建失败了, 执行下面的逻辑
                 if (!success) {
+                    // 将前面创建好的EventExecutor优雅关闭掉
                     for (int j = 0; j < i; j ++) {
                         children[j].shutdownGracefully();
                     }
@@ -95,7 +110,11 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                     for (int j = 0; j < i; j ++) {
                         EventExecutor e = children[j];
                         try {
+                            // EventExecutor.isTerminated()只有在它旗下所有任务都已经执行完
+                            // 才会返回true. 所以如果EventExecutor有任务还未执行完, 就进入下面的循环.
                             while (!e.isTerminated()) {
+                                // 等待EventExecutor旗下的任务执行直到3个条件发生：
+                                // 1.时间超时; 2.线程被中断; 3.任务全部执行完
                                 e.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
                             }
                         } catch (InterruptedException interrupted) {
@@ -107,22 +126,25 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                 }
             }
         }
-
+        // 如果正常地创建了指定数目的EventExecutor, 则通过参数的EventExecutorChooserFactory
+        // 创建一个EventExecutorChooserFactory.EventExecutorChooser. 这里默认让
+        // DefaultEventExecutorChooserFactory来创建, 点击跳转newChooser()方法
         chooser = chooserFactory.newChooser(children);
-
+        // 创建监听器, 用于 EventExecutor 终止时的监听
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
             @Override
             public void operationComplete(Future<Object> future) throws Exception {
                 if (terminatedChildren.incrementAndGet() == children.length) {
+                    // 当所有的EventExecutor都终止后, 通过成员变量terminationFuture通知所有的监听器
                     terminationFuture.setSuccess(null);
                 }
             }
         };
-
+        // 将上面创建的监听器添加到每个EventExecutor上.
         for (EventExecutor e: children) {
             e.terminationFuture().addListener(terminationListener);
         }
-
+        // 将之前创建好的EventExecutor数组转换为一个不可变的Set集合, 赋值给readonlyChildren
         Set<EventExecutor> childrenSet = new LinkedHashSet<EventExecutor>(children.length);
         Collections.addAll(childrenSet, children);
         readonlyChildren = Collections.unmodifiableSet(childrenSet);

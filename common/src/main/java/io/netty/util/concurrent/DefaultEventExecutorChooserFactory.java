@@ -33,8 +33,12 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
         if (isPowerOfTwo(executors.length)) {
+            // 若参数EventExecutor[]的大小是2的幂次方, 则使用PowerOfTwoEventExecutorChooser
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {
+            // 其它情况则创建GenericEventExecutorChooser.
+            // GenericEventExecutorChooser和PowerOfTwoEventExecutorChooser的区别，
+            // 主要是next()方法的区别，通过不同的选择逻辑，高效率地快速选择事件执行器：
             return new GenericEventExecutorChooser(executors);
         }
     }
@@ -53,6 +57,9 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 
         @Override
         public EventExecutor next() {
+            // 这个设计专门针对EventExecutor[]数组是2的幂次方的情况, 挺巧妙, 有点像hashMap对 capacity的设计一样, 具体逻辑为：
+            // 1.首先明确一点, 减运算“-”比 与运算“&”更高级, 所以先执行减法. 2的幂次方有个特点就是其二进制最高位为1, 其它位为0, 若减一后, 则变为最高位为0, 其它位为1;
+            // 2.然后将下标idx与 第一步得到的结果进行求余, 就可以保证依次顺序地获取每一个下标.这点很像hashMap计算capacity的算法, 力保每个桶都能被用到, 有效避免hash冲突.
             return executors[idx.getAndIncrement() & executors.length - 1];
         }
     }
@@ -70,6 +77,7 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 
         @Override
         public EventExecutor next() {
+            // 很简单, 就是通过将下标idx对EventExecutor[]数组求余, 然后将idx累加一
             return executors[(int) Math.abs(idx.getAndIncrement() % executors.length)];
         }
     }

@@ -36,6 +36,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
      * the {@link SelectorProvider} which is returned by {@link SelectorProvider#provider()}.
      */
     public NioEventLoopGroup() {
+        // 无参构造方法会调用下一个带有线程数的构造方法，并将线程数设置为0
         this(0);
     }
 
@@ -44,6 +45,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
      * {@link SelectorProvider} which is returned by {@link SelectorProvider#provider()}.
      */
     public NioEventLoopGroup(int nThreads) {
+        // 接收线程数，调用下一个构造方法，传入一个类型为java.util.concurrent.Executor的空对象
         this(nThreads, (Executor) null);
     }
 
@@ -64,6 +66,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     }
 
     public NioEventLoopGroup(int nThreads, Executor executor) {
+        // 接收线程数和Executor(默认0和null)，调用下一个构造方法，传入一个java.nio.channels.spi.SelectorProvider对象
         this(nThreads, executor, SelectorProvider.provider());
     }
 
@@ -83,11 +86,13 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
 
     public NioEventLoopGroup(
             int nThreads, Executor executor, final SelectorProvider selectorProvider) {
+        // 接收前三个重载构造方法的参数值，并调用下一个构造方法，传入默认的由netty定义的选择策略工厂实现类 - DefaultSelectStrategyFactory
         this(nThreads, executor, selectorProvider, DefaultSelectStrategyFactory.INSTANCE);
     }
 
     public NioEventLoopGroup(int nThreads, Executor executor, final SelectorProvider selectorProvider,
                              final SelectStrategyFactory selectStrategyFactory) {
+        // 接收前四个重载构造方法的参数值，然后调用父类的构造方法，额外传入一个 netty定义的类似JDK线程池拒绝策略-RejectedExecutionHandler
         super(nThreads, executor, selectorProvider, selectStrategyFactory, RejectedExecutionHandlers.reject());
     }
 
@@ -137,6 +142,11 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     @Override
     protected EventLoop newChild(Executor executor, Object... args) throws Exception {
         EventLoopTaskQueueFactory queueFactory = args.length == 4 ? (EventLoopTaskQueueFactory) args[3] : null;
+        // 实际上就是new一个NioEventLoop实例返回. args参数就是调用上面构造方法时传过来的参数, 有3个值, 依次是：
+        // 1.nio中的SelectorProvider - 根据操作系统不同采用不同的实现;
+        // 2.netty的选择策略工厂 - DefaultSelectStrategyFactory实现;
+        // 3.netty的拒绝执行处理器 - RejectedExecutionHandlers.REJECT实现.
+        // 实际就是创建NioEventLoop对象, 调用它的构造方法, 跳转创建事件执行器
         return new NioEventLoop(this, executor, (SelectorProvider) args[0],
             ((SelectStrategyFactory) args[1]).newSelectStrategy(), (RejectedExecutionHandler) args[2], queueFactory);
     }

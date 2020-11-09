@@ -34,11 +34,19 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
      * @see AbstractNioChannel#AbstractNioChannel(Channel, SelectableChannel, int)
      */
     protected AbstractNioMessageChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
+        // 三个方法参数含义依次是：
+        // 1.parent为null
+        // 2.ch为ServerSocketChannel实例
+        // 3.readInterestOp为SelectionKey.OP_ACCEPT, 值为16, 表示对接收连接事情感兴趣
+        // 然后调用父类AbstractNioChannel的构造方法,
         super(parent, ch, readInterestOp);
     }
 
     @Override
     protected AbstractNioUnsafe newUnsafe() {
+        // 它是创建一个NioMessageUnsafe实例. Unsafe类的操作不允许被用户代码使用。这些函数是真
+        // 正用于数据传输操作，必须被IO线程调用. 实际上, Channel 真正的具体操作, 通过调用对应
+        // 的 Unsafe 实现. 这边创建AbstractNioMessageChannel的内部类NioMessageUnsafe
         return new NioMessageUnsafe();
     }
 

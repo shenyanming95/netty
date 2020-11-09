@@ -118,11 +118,21 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
     @Override
     void init(Channel channel) {
+        // 设置保存在AbstractBootstrap的options变量, 专门用来给通道设置选项.
+        // 在之前创建通道时, 调用NioServerSocketChannel()构造方法会为通道创建一个配置类.实际
+        // 是在DefaultServerSocketChannelConfig 和 DefaultChannelConfig 分别为
+        // java.net.ServerSocket 和 io.netty.channel.Channel 设置属性...
         setChannelOptions(channel, newOptionsArray(), logger);
+
+        // 保存在AbstractBootstrap的attrs变量, 专门给通道设置自定义的属性.
+        // 它与ChannelOption的区别是, option是给Channel(和其底层ServerSocket)做配置的,
+        // 而AttributeKey主要可以设置用户自定义的一些属性值, 可以在全局使用.
         setAttributes(channel, attrs0().entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY));
 
+        // 获取与当前Channel绑定的管道对象ChannelPipeline
         ChannelPipeline p = channel.pipeline();
 
+        // 记录当前的属性
         final EventLoopGroup currentChildGroup = childGroup;
         final ChannelHandler currentChildHandler = childHandler;
         final Entry<ChannelOption<?>, Object>[] currentChildOptions;
@@ -131,15 +141,22 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         }
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs = childAttrs.entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY);
 
+        // 为管道添加一个通道处理器, 是匿名的ChannelInitializer实现, 它会在管道第一次调用时
+        // 起作用, 而后会自己从管道的处理器链中自我移除. 这些代码需要在服务端启动后第一次接收
+        // 客户端请求才会执行.
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) {
                 final ChannelPipeline pipeline = ch.pipeline();
+                // 获取使用ServerBootstrap.handler()为bossGroup服务的处理器, 如果它不为空
+                // 将其添加到管道中. ChannelPipeline的addLast()方法还是值得研究一波的.
                 ChannelHandler handler = config.handler();
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
-
+                // 通过Channel获取与其对应的事件循环组(一个Channel只有一个EventLoop), 向其
+                // 提交一个任务：主要为ChannelPipeline添加一个ChannelHandler具体实现类 -
+                // ServerBootstrapAcceptor
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
@@ -196,14 +213,20 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         @Override
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            // 会接收ServerSocketChannel获取到的SocketChannel，也就是参数msg
             final Channel child = (Channel) msg;
-
+            // 加入我们在ServerBootstrap设置的childHandler
             child.pipeline().addLast(childHandler);
-
+            // 设置一些属性和参数值
             setChannelOptions(child, childOptions, logger);
             setAttributes(child, childAttrs);
 
             try {
+                // 注意：然后会将当前获取到的SocketChannel注册到childGroup中，这个childGroup
+                // 就是我们在ServerBootstrap初始化的时候创建的：
+                // EventLoopGroup workerGroup = new NioEventLoopGroup();
+                // 即证明了Netty确实是使用了主从Reactor模式，把Channel的监听交给BossGroup就是Main
+                // Reactor，把Channel的读写交给WorkerGroup就是Sub Reactor
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
