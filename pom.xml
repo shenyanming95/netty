@@ -374,7 +374,7 @@
     <module>resolver</module>
     <module>resolver-dns</module>
     <module>resolver-dns-native-macos</module>
-    <module>tarball</module>
+<!--    <module>tarball</module>-->
     <module>transport</module>
     <module>transport-native-unix-common-tests</module>
     <module>transport-native-unix-common</module>

@@ -88,6 +88,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             if (value == null) {
                 childOptions.remove(childOption);
             } else {
+                // 设置通道参数, netty会将配置放到 childOptions中,
+                // 然后一次性赋值给 ServerBootstrapAcceptor
+                // 赋值代码:currentChildOptions = childOptions.entrySet().toArray(EMPTY_OPTION_ARRAY);
                 childOptions.put(childOption, value);
             }
         }

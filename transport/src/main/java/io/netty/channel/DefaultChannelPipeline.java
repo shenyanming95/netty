@@ -64,7 +64,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     final AbstractChannelHandlerContext head;
     final AbstractChannelHandlerContext tail;
 
-    // 每个上下文都与一个通道关联
+    // 每个管道都与一个通道关联
     private final Channel channel;
 
     // 成功的 Promise 对象

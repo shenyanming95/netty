@@ -377,6 +377,8 @@ public abstract class AbstractNioChannel extends AbstractChannel {
                 // 一般nio注册, 都会指定SelectionKey.OP_ACCEPT类似值, 但netty这边指定为0. 原因：
                 // SelectionKey#interestOps(int ops)方法可以方便地修改监听操作位, 所以, 这边会将
                 // 注册返回的SelectionKey 赋给AbstractNioChannel的成员变量 selectionKey.
+                // 还要注意一点, 这边是把当前这个Channel当做nio注册事件的附件, 一旦这个SelectionKey有感兴趣的事件发生,
+                // 就可以拿到这个附件.
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {

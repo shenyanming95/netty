@@ -97,7 +97,6 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {
-                // TODO: Think about if this is a good exception type
                 throw new IllegalStateException("failed to create a child event loop", e);
             } finally {
                 // 只要有一个创建失败了, 执行下面的逻辑

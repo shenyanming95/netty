@@ -592,6 +592,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 invokeLater(new Runnable() {
                     @Override
                     public void run() {
+                        // 执行事件触发调用链,当前事件为ChannelActive,在这里会重新设置
+                        // ServerSocketChannel的感兴趣事件.
                         pipeline.fireChannelActive();
                     }
                 });

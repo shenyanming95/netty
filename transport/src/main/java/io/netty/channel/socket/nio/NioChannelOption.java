@@ -67,6 +67,7 @@ public final class NioChannelOption<T> extends ChannelOption<T> {
             return false;
         }
         try {
+            // 直接调用JDK API来设置通道参数
             channel.setOption(option.option, value);
             return true;
         } catch (IOException e) {
