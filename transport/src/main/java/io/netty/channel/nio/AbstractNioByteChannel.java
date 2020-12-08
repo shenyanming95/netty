@@ -90,11 +90,14 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     protected class NioByteUnsafe extends AbstractNioUnsafe {
 
         private void closeOnRead(ChannelPipeline pipeline) {
+            // 因为TCP是双通道的, 所以这边判断input这一方向是否关闭, 正常关闭流程中, 这边肯定为false, 所以走下面这个if语句
             if (!isInputShutdown0()) {
+                // 判断是否支持半关？如果是, 关闭读, 触发事件
                 if (isAllowHalfClosure(config())) {
                     shutdownInput();
                     pipeline.fireUserEventTriggered(ChannelInputShutdownEvent.INSTANCE);
                 } else {
+                    // 大部分情况下是不支持半关, 调用close()方法
                     close(voidPromise());
                 }
             } else {
@@ -132,20 +135,26 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                 return;
             }
             final ChannelPipeline pipeline = pipeline();
+            // 获取ByteBuf分配器
             final ByteBufAllocator allocator = config.getAllocator();
+            // RecvByteBufAllocator可以动态地分配内存缓冲池
             final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
             allocHandle.reset(config);
 
             ByteBuf byteBuf = null;
             boolean close = false;
             try {
+                // do..while循环, 重复多次读
                 do {
+                    // 首先获取一个ByteBuf
                     byteBuf = allocHandle.allocate(allocator);
+                    // 调用doReadBytes()将数据装入byteBuf中, 然后记录读取的字节数
                     allocHandle.lastBytesRead(doReadBytes(byteBuf));
                     if (allocHandle.lastBytesRead() <= 0) {
-                        // nothing was read. release the buffer.
+                        // 未读取到任何数据, 则释放byteBuf
                         byteBuf.release();
                         byteBuf = null;
+                        // 判断是否要关闭通道
                         close = allocHandle.lastBytesRead() < 0;
                         if (close) {
                             // There is nothing left to read as we received an EOF.
@@ -153,17 +162,22 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                         }
                         break;
                     }
-
+                    // 如果读取到数据了, 则计数+1
                     allocHandle.incMessagesRead(1);
                     readPending = false;
+                    // 触发业务读事件, 即netty会回调用户写的handler
                     pipeline.fireChannelRead(byteBuf);
                     byteBuf = null;
                 } while (allocHandle.continueReading());
 
+                // 跳出循环, 说明不需要再读取数据, 结束此次读事件, 同时记录读取了多少字节.
+                // 用于下次分配byteBuf大小使用
                 allocHandle.readComplete();
+                // 触发读取完毕事件, 即完成本次读取事件的处理
                 pipeline.fireChannelReadComplete();
 
                 if (close) {
+                    // 如果需要关闭, 关闭通道
                     closeOnRead(pipeline);
                 }
             } catch (Throwable t) {
@@ -282,6 +296,8 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     protected final void incompleteWrite(boolean setOpWrite) {
         // Did not write completely.
         if (setOpWrite) {
+            // 设置一个OP_WRITE事件, 这个事件会在 NioEventLoop中被selector捕获调用,
+            // 相应代码在：io.netty.channel.nio.NioEventLoop.processSelectedKey中, 实际调用：ch.unsafe().forceFlush();
             setOpWrite();
         } else {
             // It is possible that we have set the write OP, woken up by NIO because the socket is writable, and then

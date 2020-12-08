@@ -226,10 +226,9 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
             try {
                 // 注意：然后会将当前获取到的SocketChannel注册到childGroup中，这个childGroup
-                // 就是我们在ServerBootstrap初始化的时候创建的：
-                // EventLoopGroup workerGroup = new NioEventLoopGroup();
-                // 即证明了Netty确实是使用了主从Reactor模式，把Channel的监听交给BossGroup就是Main
-                // Reactor，把Channel的读写交给WorkerGroup就是Sub Reactor
+                // 就是我们在ServerBootstrap初始化的时候创建的：EventLoopGroup workerGroup = new NioEventLoopGroup();
+                // 即证明了Netty确实是使用了主从Reactor模式，把Channel的监听交给BossGroup就是Main Reactor,
+                // 把Channel的读写交给WorkerGroup就是Sub Reactor.
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {

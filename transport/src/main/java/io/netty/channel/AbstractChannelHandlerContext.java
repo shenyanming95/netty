@@ -330,12 +330,16 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     @Override
     public ChannelHandlerContext fireChannelRead(final Object msg) {
+        // 先通过findContextInbound()方法找出下一个能够有读取数据的AbstractChannelHandlerContext
+        // 然后再触发回调它包裹的ChannelInboundHandler, 回调channelRead()方法
         invokeChannelRead(findContextInbound(MASK_CHANNEL_READ), msg);
         return this;
     }
 
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
+        // 如果在添加 handler 进入 pipeline 指定了对应的 EventExecutor, 那么这里就会返回;
+        // 否则默认返回 channel 绑定的那个 EventExecutor. 最终都会调用 io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(java.lang.Object)
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
             next.invokeChannelRead(m);
@@ -351,12 +355,14 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     private void invokeChannelRead(Object msg) {
         if (invokeHandler()) {
+            // 如果符合读取数据数据的条件, 就会在本 handler 读取
             try {
                 ((ChannelInboundHandler) handler()).channelRead(this, msg);
             } catch (Throwable t) {
                 invokeExceptionCaught(t);
             }
         } else {
+            // 若是不符合读取数据的条件, 那么就触发给下一个 ChannelInboundHandler 读取
             fireChannelRead(msg);
         }
     }
@@ -700,6 +706,8 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     private void invokeWrite0(Object msg, ChannelPromise promise) {
         try {
+            // 转换成 ChannelOutboundHandler 回调write()方法.
+            // 第一个被调用的：io.netty.channel.DefaultChannelPipeline.HeadContext.write()
             ((ChannelOutboundHandler) handler()).write(this, msg, promise);
         } catch (Throwable t) {
             notifyOutboundHandlerException(t, promise);
@@ -708,9 +716,11 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     @Override
     public ChannelHandlerContext flush() {
+        // 找到pipeline中第一个要处理写请求的handler
         final AbstractChannelHandlerContext next = findContextOutbound(MASK_FLUSH);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
+            // 调用flush()方法
             next.invokeFlush();
         } else {
             Tasks tasks = next.invokeTasks;
@@ -756,25 +766,27 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     private void write(Object msg, boolean flush, ChannelPromise promise) {
         ObjectUtil.checkNotNull(msg, "msg");
+        // 对象引用标记清除
         try {
             if (isNotValidPromise(promise, true)) {
                 ReferenceCountUtil.release(msg);
-                // cancelled
                 return;
             }
         } catch (RuntimeException e) {
             ReferenceCountUtil.release(msg);
             throw e;
         }
-
-        final AbstractChannelHandlerContext next = findContextOutbound(flush ?
-                (MASK_WRITE | MASK_FLUSH) : MASK_WRITE);
+        // 找到pipeline中第一个要处理写请求的handler
+        final AbstractChannelHandlerContext next = findContextOutbound(flush ? (MASK_WRITE | MASK_FLUSH) : MASK_WRITE);
+        // 引用计数, 一般用于检测内存泄露的问题
         final Object m = pipeline.touch(msg, next);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
             if (flush) {
+                // 如果是flush, 写并且立刻发送
                 next.invokeWriteAndFlush(m, promise);
             } else {
+                // 如果非flush, 只写
                 next.invokeWrite(m, promise);
             }
         } else {

@@ -594,10 +594,15 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    /**
+     * 处理I/O事件
+     */
     private void processSelectedKeys() {
         if (selectedKeys != null) {
+            // 使用netty优化过的Selector来处理
             processSelectedKeysOptimized();
         } else {
+            // 使用JDK默认的selector来处理
             processSelectedKeysPlain(selector.selectedKeys());
         }
     }
@@ -667,9 +672,12 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             // See https://github.com/netty/netty/issues/2363
             selectedKeys.keys[i] = null;
 
+            // 获取附件对象, 即：io.netty.channel.nio.AbstractNioChannel.doRegister()方法注册的附件.
+            // 大部分是 NioServerSocketChannel
             final Object a = k.attachment();
 
             if (a instanceof AbstractNioChannel) {
+                // 处理I/O事件
                 processSelectedKey(k, (AbstractNioChannel) a);
             } else {
                 @SuppressWarnings("unchecked")
@@ -689,7 +697,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
+        // 如果是创建连接事件, 那么 ch 就是：io.netty.channel.socket.nio.NioServerSocketChannel
+        // 如果是读取数据事件, 那么 ch 就是：io.netty.channel.socket.nio.NioSocketChannel
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
+        // 非合法的key直接取消
         if (!k.isValid()) {
             final EventLoop eventLoop;
             try {
@@ -712,6 +723,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
 
         try {
+            // readyOps指：当前是何种I/O事件发生
             int readyOps = k.readyOps();
             // We first need to call finishConnect() before try to trigger a read(...) or write(...) as otherwise
             // the NIO JDK channel implementation may throw a NotYetConnectedException.
@@ -721,19 +733,21 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 int ops = k.interestOps();
                 ops &= ~SelectionKey.OP_CONNECT;
                 k.interestOps(ops);
-
                 unsafe.finishConnect();
             }
 
-            // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
+            // 首先处理OP_WRITE, 可以写一些排队的缓冲区, 从而释放内存
             if ((readyOps & SelectionKey.OP_WRITE) != 0) {
                 // Call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to write
                 ch.unsafe().forceFlush();
             }
 
-            // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
-            // to a spin loop
+            // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead to a spin loop
+            // 处理读请求(包括断开连接) 和 建立连接请求
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
+                // 不同的channel获取到的UnSafe不一样, 所以：
+                // 如果是连接请求：io.netty.channel.nio.AbstractNioMessageChannel.NioMessageUnsafe.read()
+                // 如果是读取请求：io.netty.channel.nio.AbstractNioByteChannel.NioByteUnsafe.read()
                 unsafe.read();
             }
         } catch (CancelledKeyException ignored) {

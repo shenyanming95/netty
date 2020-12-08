@@ -69,15 +69,17 @@ public final class ChannelOutboundBuffer {
 
     private final Channel channel;
 
-    // Entry(flushedEntry) --> ... Entry(unflushedEntry) --> ... Entry(tailEntry)
-    //
-    // The Entry that is the first in the linked-list structure that was flushed
+    /*
+     * Entry(flushedEntry) --> ... Entry(unflushedEntry) --> ... Entry(tailEntry)
+     */
+
+    // 链表结构中, 第一个待flush的entry
     private Entry flushedEntry;
-    // The Entry which is the first unflushed in the linked-list structure
+    //  链表结构中, 第一个未flush的entry
     private Entry unflushedEntry;
-    // The Entry which represents the tail of the buffer
+    // 代表缓冲区尾部的条目
     private Entry tailEntry;
-    // The number of flushed entries that are not written yet
+    // 尚未写入的刷新条目数
     private int flushed;
 
     private int nioBufferCount;
@@ -94,6 +96,9 @@ public final class ChannelOutboundBuffer {
     private static final AtomicIntegerFieldUpdater<ChannelOutboundBuffer> UNWRITABLE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "unwritable");
 
+    /**
+     * 标识是否可写的变量, 默认为0标识可写, 当不可写时置为1
+     */
     @SuppressWarnings("UnusedDeclaration")
     private volatile int unwritable;
 
@@ -104,10 +109,11 @@ public final class ChannelOutboundBuffer {
     }
 
     /**
-     * Add given message to this {@link ChannelOutboundBuffer}. The given {@link ChannelPromise} will be notified once
-     * the message was written.
+     * Add given message to this {@link ChannelOutboundBuffer}. The given {@link ChannelPromise}
+     * will be notified once the message was written.
      */
     public void addMessage(Object msg, int size, ChannelPromise promise) {
+        // 流程就是创建一个新的Entry, 然后将其设置为链表尾节点.
         Entry entry = Entry.newInstance(msg, size, total(msg), promise);
         if (tailEntry == null) {
             flushedEntry = null;
@@ -119,8 +125,7 @@ public final class ChannelOutboundBuffer {
         if (unflushedEntry == null) {
             unflushedEntry = entry;
         }
-
-        // increment pending bytes after adding message to the unflushed arrays.
+        // 将消息添加到未刷新的数组后, 增加待处理字节, 然后还会判断待写数据是否大于高水位
         // See https://github.com/netty/netty/issues/1619
         incrementPendingOutboundBytes(entry.pendingSize, false);
     }
@@ -130,9 +135,7 @@ public final class ChannelOutboundBuffer {
      * and so you will be able to handle them.
      */
     public void addFlush() {
-        // There is no need to process all entries if there was already a flush before and no new messages
-        // where added in the meantime.
-        //
+        // There is no need to process all entries if there was already a flush before and no new messages where added in the meantime.
         // See https://github.com/netty/netty/issues/2577
         Entry entry = unflushedEntry;
         if (entry != null) {
@@ -169,7 +172,9 @@ public final class ChannelOutboundBuffer {
         }
 
         long newWriteBufferSize = TOTAL_PENDING_SIZE_UPDATER.addAndGet(this, size);
+        // 判断待发送的数据size是否大于高水位线
         if (newWriteBufferSize > channel.config().getWriteBufferHighWaterMark()) {
+            // 如果确实大于了, 设置unwritable为不可写状态, 并触发回调, 让用户自己判断要不要继续写
             setUnwritable(invokeLater);
         }
     }

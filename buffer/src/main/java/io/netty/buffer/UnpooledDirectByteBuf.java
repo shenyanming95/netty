@@ -564,11 +564,14 @@ public class UnpooledDirectByteBuf extends AbstractReferenceCountedByteBuf {
     @Override
     public int setBytes(int index, ScatteringByteChannel in, int length) throws IOException {
         ensureAccessible();
+        // 获取NIO的ByteBuffer
         ByteBuffer tmpBuf = internalNioBuffer();
         tmpBuf.clear().position(index).limit(index + length);
         try {
+            // 直接调用jdk的channel, 将数据读取到ByteBuffer中
             return in.read(tmpBuf);
         } catch (ClosedChannelException ignored) {
+            // 如果通道关闭, 会返回-1
             return -1;
         }
     }

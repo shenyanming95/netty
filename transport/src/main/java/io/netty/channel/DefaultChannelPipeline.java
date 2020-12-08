@@ -951,6 +951,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline fireChannelRead(Object msg) {
+        // 触发读事件, msg为读到的数据, 最开始接触到这批数据的为 HeadContext
         AbstractChannelHandlerContext.invokeChannelRead(head, msg);
         return this;
     }
@@ -1395,6 +1396,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void read(ChannelHandlerContext ctx) {
+            // 触发读请求
             unsafe.beginRead();
         }
 

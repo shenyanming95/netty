@@ -1125,6 +1125,9 @@ public abstract class AbstractByteBuf extends ByteBuf {
     @Override
     public int writeBytes(ScatteringByteChannel in, int length) throws IOException {
         ensureWritable(length);
+        // 调用setBytes()写入数据, 会返回实际写入的值, netty规定如果返回-1,
+        // 就代表EOF, 表示正常关闭. 如果抛出IO Exception表示读数据时被关闭(非正常关闭)
+        // 这边实际会调用io.netty.buffer.UnpooledDirectByteBuf.setBytes()方法
         int writtenBytes = setBytes(writerIndex, in, length);
         if (writtenBytes > 0) {
             writerIndex += writtenBytes;

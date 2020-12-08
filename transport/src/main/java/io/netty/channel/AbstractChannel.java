@@ -18,6 +18,7 @@ package io.netty.channel;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.socket.ChannelOutputShutdownEvent;
 import io.netty.channel.socket.ChannelOutputShutdownException;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.DefaultAttributeMap;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.internal.ObjectUtil;
@@ -419,7 +420,11 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      */
     protected abstract class AbstractUnsafe implements Unsafe {
 
+        /**
+         * 用来缓存执行write事件时的数据字节流
+         */
         private volatile ChannelOutboundBuffer outboundBuffer = new ChannelOutboundBuffer(AbstractChannel.this);
+
         private RecvByteBufAllocator.Handle recvHandle;
         private boolean inFlush0;
         /** true if the channel has never been registered, false otherwise */
@@ -534,8 +539,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 // 如果通道已经激活且已经在等待客户端连接
                 if (isActive()) {
                     if (firstRegistration) {
-                        // 仅当从未注册过通道时才触发channelActive, 这是为了防止在通道注销并
-                        // 重新注册情况下, 导致触发多次触发channelActive事件
+                        // 仅当从未注册过通道时才触发channelActive, 这是为了防止在通道注销并重新注册情况下, 导致触发多次触发channelActive事件.
+                        // pipeline.fireChannelActive()首次调用的handler永远都是 io.netty.channel.DefaultChannelPipeline.HeadContext
                         pipeline.fireChannelActive();
                     } else if (config().isAutoRead()) {
                         // This channel was registered before and autoRead() is set. This means we need to begin read
@@ -741,7 +746,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
             final boolean wasActive = isActive();
             final ChannelOutboundBuffer outboundBuffer = this.outboundBuffer;
-            this.outboundBuffer = null; // Disallow adding any messages and flushes to outboundBuffer.
+            // 禁止任何消息刷新到outboundBuffer中, 这个值如果被置为null, 说明channel要被关闭了
+            this.outboundBuffer = null;
+            // 获取要执行关闭的Executor, 如果为null说明就用当前的EventLoop的线程来关闭, 反之
+            // 用它返回的线程来关闭, 这边会涉及一个TCP参数的设置..点进去详细分析, 一般这里会返回null
             Executor closeExecutor = prepareToClose();
             if (closeExecutor != null) {
                 closeExecutor.execute(new Runnable() {
@@ -768,11 +776,13 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 });
             } else {
                 try {
-                    // Close the channel and fail the queued messages in all cases.
+                    // 关闭通道并在所有情况下都使排队的消息失败。
                     doClose0(promise);
                 } finally {
                     if (outboundBuffer != null) {
                         // Fail all the queued messages.
+                        // 这边会把 outboundBuffer 直接关掉, 可能会导致某些数据还在发送, 但是就被关闭了,
+                        // netty这样处理的原因：如果一直等待数据发送完才关闭, 会导致关闭Future迟迟不能返回
                         outboundBuffer.failFlushed(cause, notify);
                         outboundBuffer.close(closeCause);
                     }
@@ -785,6 +795,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         }
                     });
                 } else {
+                    // 触发两个事件：ChannelInactive和ChannelDeregister
                     fireChannelInactiveAndDeregister(wasActive);
                 }
             }
@@ -792,6 +803,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
         private void doClose0(ChannelPromise promise) {
             try {
+                // 如果是NIO, 调用io.netty.channel.socket.nio.NioSocketChannel.doClose()
+                // 关闭AVA底层的Channel通道, 然后jdk的实现会把这个通道的SelectionKey都取消掉, 即调用它们的cancel()方法
                 doClose();
                 closeFuture.setClosed();
                 safeSetSuccess(promise);
@@ -846,6 +859,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 @Override
                 public void run() {
                     try {
+                        // 取消注册
                         doDeregister();
                     } catch (Throwable t) {
                         logger.warn("Unexpected exception occurred while deregistering a channel.", t);
@@ -891,13 +905,12 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         @Override
         public final void write(Object msg, ChannelPromise promise) {
             assertEventLoop();
-
+            // 获取write缓冲区
             ChannelOutboundBuffer outboundBuffer = this.outboundBuffer;
             if (outboundBuffer == null) {
-                // If the outboundBuffer is null we know the channel was closed and so
-                // need to fail the future right away. If it is not null the handling of the rest
-                // will be done in flush0()
                 // See https://github.com/netty/netty/issues/2362
+                // 如果outboundBuffer为null, 则说明该通道已关闭, 将其设置失败;
+                // 如果不为null, 则其余的处理将在flush0（）中完成.
                 safeSetFailure(promise, newClosedChannelException(initialCloseCause));
                 // release message now to prevent resource-leak
                 ReferenceCountUtil.release(msg);
@@ -906,6 +919,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
             int size;
             try {
+                // 计算发送数据msg大概大小
                 msg = filterOutboundMessage(msg);
                 size = pipeline.estimatorHandle().size(msg);
                 if (size < 0) {
@@ -916,20 +930,21 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 ReferenceCountUtil.release(msg);
                 return;
             }
-
+            // 将其加入到outboundBuffer中, 它底层是一个链表, 每笔数据都是一个Entry
             outboundBuffer.addMessage(msg, size, promise);
         }
 
         @Override
         public final void flush() {
             assertEventLoop();
-
             ChannelOutboundBuffer outboundBuffer = this.outboundBuffer;
+            // outboundBuffer为空说明通道channel关闭了
             if (outboundBuffer == null) {
                 return;
             }
-
+            // 内部将 unflushedEntry 的数据转移到 flushedEntry中, 以便后面可以发送
             outboundBuffer.addFlush();
+            // flush0()就是真正将数据发送给对端
             flush0();
         }
 
@@ -963,10 +978,12 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
 
             try {
+                // 真正写入数据, client与server建立通信是通过使用NioSocketChannel,
+                // 所以这边一般是调用NioSocketChannel.doWrite()方法执行数据写出
                 doWrite(outboundBuffer);
             } catch (Throwable t) {
                 if (t instanceof IOException && config().isAutoClose()) {
-                    /**
+                    /*
                      * Just call {@link #close(ChannelPromise, Throwable, boolean)} here which will take care of
                      * failing all flushed messages and also ensure the actual close of the underlying transport
                      * will happen before the promises are notified.
@@ -985,6 +1002,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     }
                 }
             } finally {
+                // 写操作完事以后, 将 inFlush0 标志置为false, 表示已经flush完毕,
+                // 如果正在flush, 这个标志会被置为true
                 inFlush0 = false;
             }
         }

@@ -60,6 +60,9 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
 
     private final class NioMessageUnsafe extends AbstractNioUnsafe {
 
+        /**
+         * 用来保存当前 ServerSocketChannel 接收到的客户端连接通道
+         */
         private final List<Object> readBuf = new ArrayList<Object>();
 
         @Override
@@ -75,6 +78,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
             try {
                 try {
                     do {
+                        // 读取数据, 其返回值如果大于1, 说明成功创建了一个连接
                         int localRead = doReadMessages(readBuf);
                         if (localRead == 0) {
                             break;
@@ -83,16 +87,21 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                             closed = true;
                             break;
                         }
-
+                        // 统计读取次数
                         allocHandle.incMessagesRead(localRead);
+
+                        // do..while循环, 调用 allocHandle.continueReading() 判断是否需要继续读
                     } while (allocHandle.continueReading());
                 } catch (Throwable t) {
                     exception = t;
                 }
-
+                // 跳出do..while循环, 拿到的 readBuf 主要是与客户端连接的通道对象
                 int size = readBuf.size();
+                // 触发管道的 ChannelRead 事件
                 for (int i = 0; i < size; i ++) {
                     readPending = false;
+                    // 在创建连接的时候, 客户端的通道都是交由
+                    // io.netty.bootstrap.ServerBootstrap.ServerBootstrapAcceptor 来处理
                     pipeline.fireChannelRead(readBuf.get(i));
                 }
                 readBuf.clear();
