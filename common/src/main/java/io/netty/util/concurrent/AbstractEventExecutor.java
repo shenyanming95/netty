@@ -34,7 +34,16 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractEventExecutor extends AbstractExecutorService implements EventExecutor {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractEventExecutor.class);
 
+    /**
+     * 如果没有超过 DEFAULT_SHUTDOWN_TIMEOUT 指定的时间, netty会等待一定时间,
+     * 观察是否有任务执行, 若没有的话, 就关闭服务; 如果有, 则会重新进入关闭逻辑.
+     * 这个参数就是来指定等待的时间
+     */
     static final long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2;
+
+    /**
+     * 优雅关闭的最大等待时间, 超过此时间, netty会直接关闭服务
+     */
     static final long DEFAULT_SHUTDOWN_TIMEOUT = 15;
 
     private final EventExecutorGroup parent;

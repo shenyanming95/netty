@@ -707,7 +707,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private void invokeWrite0(Object msg, ChannelPromise promise) {
         try {
             // 转换成 ChannelOutboundHandler 回调write()方法.
-            // 第一个被调用的：io.netty.channel.DefaultChannelPipeline.HeadContext.write()
+            // 第一个被调用的：io.netty.channel.DefaultChannelPipeline.HeadContext#write()
             ((ChannelOutboundHandler) handler()).write(this, msg, promise);
         } catch (Throwable t) {
             notifyOutboundHandlerException(t, promise);

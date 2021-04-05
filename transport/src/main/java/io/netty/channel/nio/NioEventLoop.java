@@ -454,6 +454,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+
+    // 死循环方法, 用来处理网络读写请求
     @Override
     protected void run() {
         int selectCnt = 0;
@@ -504,6 +506,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 if (ioRatio == 100) {
                     try {
                         if (strategy > 0) {
+                            // 选择键有事件发生, netty就会处理此事件
                             processSelectedKeys();
                         }
                     } finally {
@@ -513,6 +516,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 } else if (strategy > 0) {
                     final long ioStartTime = System.nanoTime();
                     try {
+                        // 选择键有事件发生, netty就会处理此事件
                         processSelectedKeys();
                     } finally {
                         // Ensure we always run tasks.
@@ -543,8 +547,12 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
             // Always handle shutdown even if the loop processing threw an exception.
             try {
+                // 判断是否正在准备关闭服务, 当调用io.netty.util.concurrent.EventExecutorGroup.shutdownGracefully()后
+                // 就会进入下面的if语句块
                 if (isShuttingDown()) {
+                    // 关闭通道 AbstractNioChannel
                     closeAll();
+                    // 如果确认能关闭, 就退出循环.
                     if (confirmShutdown()) {
                         return;
                     }
@@ -599,7 +607,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
      */
     private void processSelectedKeys() {
         if (selectedKeys != null) {
-            // 使用netty优化过的Selector来处理
+            // 使用netty优化过的Selector来处理(优化过的性能提高1%-2%, 且垃圾回收更少)
             processSelectedKeysOptimized();
         } else {
             // 使用JDK默认的selector来处理
@@ -666,14 +674,15 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private void processSelectedKeysOptimized() {
+        // 处理每个I/O事件
         for (int i = 0; i < selectedKeys.size; ++i) {
             final SelectionKey k = selectedKeys.keys[i];
             // null out entry in the array to allow to have it GC'ed once the Channel close
             // See https://github.com/netty/netty/issues/2363
             selectedKeys.keys[i] = null;
 
-            // 获取附件对象, 即：io.netty.channel.nio.AbstractNioChannel.doRegister()方法注册的附件.
-            // 大部分是 NioServerSocketChannel
+            // 获取附件对象, 是在io.netty.channel.nio.AbstractNioChannel#doRegister()方法注册的附件.
+            // 一般情况下都是NioServerSocketChannel
             final Object a = k.attachment();
 
             if (a instanceof AbstractNioChannel) {
@@ -742,7 +751,6 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 ch.unsafe().forceFlush();
             }
 
-            // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead to a spin loop
             // 处理读请求(包括断开连接) 和 建立连接请求
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
                 // 不同的channel获取到的UnSafe不一样, 所以：
@@ -782,9 +790,12 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private void closeAll() {
+        // 这步是为了去除cancel的key
         selectAgain();
+        // 获取所有的选择键
         Set<SelectionKey> keys = selector.keys();
         Collection<AbstractNioChannel> channels = new ArrayList<AbstractNioChannel>(keys.size());
+        // 从选择键中获取 AbstractNioChannel 对象
         for (SelectionKey k: keys) {
             Object a = k.attachment();
             if (a instanceof AbstractNioChannel) {
@@ -796,7 +807,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 invokeChannelUnregistered(task, k, null);
             }
         }
-
+        // 最后关闭这些通道
         for (AbstractNioChannel ch: channels) {
             ch.unsafe().close(ch.unsafe().voidPromise());
         }

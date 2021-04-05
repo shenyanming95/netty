@@ -1402,6 +1402,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
+            // io.netty.channel.AbstractChannel.AbstractUnsafe#write()
             unsafe.write(msg, promise);
         }
 

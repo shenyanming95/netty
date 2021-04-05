@@ -380,6 +380,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
         do {
             fetchedAll = fetchFromScheduledTaskQueue();
+            // 如果有任务执行成功, 就返回true, 外层就不会关闭服务
             if (runAllTasksFrom(taskQueue)) {
                 ranAtLeastOne = true;
             }
@@ -631,7 +632,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                     "timeout: " + timeout + " (expected >= quietPeriod (" + quietPeriod + "))");
         }
         ObjectUtil.checkNotNull(unit, "unit");
-
+        // 如果已经关闭, 判断状态 state 是否大于 ST_SHUTTING_DOWN
         if (isShuttingDown()) {
             return terminationFuture();
         }
@@ -640,6 +641,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         boolean wakeup;
         int oldState;
         for (;;) {
+            // 若已经关闭, 直接返回
             if (isShuttingDown()) {
                 return terminationFuture();
             }
@@ -659,6 +661,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                         wakeup = false;
                 }
             }
+            // 修改状态值state, 将其改为 ST_SHUTTING_DOWN,
+            // 然后再 NioEventLoop#Run()方法中, 就会来判断这个状态是否被改为 ST_SHUTTING_DOWN,
+            // 是的话就会执行关闭的逻辑
             if (STATE_UPDATER.compareAndSet(this, oldState, newState)) {
                 break;
             }
@@ -759,13 +764,14 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (!inEventLoop()) {
             throw new IllegalStateException("must be invoked from an event loop");
         }
-
+        // 取消定时任务
         cancelScheduledTasks();
 
+        // 记录关闭的开始时间
         if (gracefulShutdownStartTime == 0) {
             gracefulShutdownStartTime = ScheduledFutureTask.nanoTime();
         }
-
+        // 执行定时队列里所有任务
         if (runAllTasks() || runShutdownHooks()) {
             if (isShutdown()) {
                 // Executor shut down - no new tasks anymore.
@@ -781,9 +787,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             taskQueue.offer(WAKEUP_TASK);
             return false;
         }
-
+        // 如果没有任务可以执行, 就会走到这边的代码
         final long nanoTime = ScheduledFutureTask.nanoTime();
-
+        // 判断是否已经关闭成功, 或者是否已经超过最大的等待时间, 是的话, 都返回true
         if (isShutdown() || nanoTime - gracefulShutdownStartTime > gracefulShutdownTimeout) {
             return true;
         }

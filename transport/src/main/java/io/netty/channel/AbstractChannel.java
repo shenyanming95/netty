@@ -506,8 +506,6 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
         private void register0(ChannelPromise promise) {
             try {
-                // check if the channel is still open as it could be closed in the mean time when the register
-                // call was outside of the eventLoop
                 // setUncancellable()是设置当前Future不能被取消, 当它返回false意味着该Future
                 // 已经被取消了; ensureOpen()是保证通道Channel时开着的. 当这两个方法有一个返回
                 // false, 则register0()直接结束执行.
@@ -523,8 +521,6 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 neverRegistered = false;
                 registered = true;
 
-                // Ensure we call handlerAdded(...) before we actually notify the promise. This is needed as the
-                // user may already fire events through the pipeline in the ChannelFutureListener.
                 // 之前在创建ChannelPipeline时, 曾分析过一个变量pendingHandlerCallbackHead,
                 // 它是预防Channel还未注册到EventLoop中就回调ChannelHandler的handlerAdded()
                 // 方法, 所以DefaultChannelPipeline将其用一个任务链表缓存起来. 下面这行代码就是
@@ -543,9 +539,6 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         // pipeline.fireChannelActive()首次调用的handler永远都是 io.netty.channel.DefaultChannelPipeline.HeadContext
                         pipeline.fireChannelActive();
                     } else if (config().isAutoRead()) {
-                        // This channel was registered before and autoRead() is set. This means we need to begin read
-                        // again so that we process inbound data.
-                        //
                         // See https://github.com/netty/netty/issues/4805
                         // config().isAutoRead()当且仅当ChannelHandlerContext.read()会自动被
                         // 调用而无需用户程序主动调时, 返回true(即当前通道可以自动读取)

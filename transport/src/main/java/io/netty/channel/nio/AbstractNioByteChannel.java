@@ -154,7 +154,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                         // 未读取到任何数据, 则释放byteBuf
                         byteBuf.release();
                         byteBuf = null;
-                        // 判断是否要关闭通道
+                        // 判断是否要关闭通道, 当接收的数据小于0, 说明就是要关闭通道了
                         close = allocHandle.lastBytesRead() < 0;
                         if (close) {
                             // There is nothing left to read as we received an EOF.
@@ -165,13 +165,13 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                     // 如果读取到数据了, 则计数+1
                     allocHandle.incMessagesRead(1);
                     readPending = false;
-                    // 触发业务读事件, 即netty会回调用户写的handler
+                    // 触发业务读事件, 即netty会回调用户写的handler（业务逻辑处理就从这里开始调用）
                     pipeline.fireChannelRead(byteBuf);
                     byteBuf = null;
                 } while (allocHandle.continueReading());
 
                 // 跳出循环, 说明不需要再读取数据, 结束此次读事件, 同时记录读取了多少字节.
-                // 用于下次分配byteBuf大小使用
+                // 用于下次OP_READ事件来临时分配byteBuf大小使用
                 allocHandle.readComplete();
                 // 触发读取完毕事件, 即完成本次读取事件的处理
                 pipeline.fireChannelReadComplete();

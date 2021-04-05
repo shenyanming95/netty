@@ -180,6 +180,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 
     @Override
     public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+        // 依次关闭每个EventExecutor
         for (EventExecutor l: children) {
             l.shutdownGracefully(quietPeriod, timeout, unit);
         }
