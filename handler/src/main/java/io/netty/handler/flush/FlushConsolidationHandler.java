@@ -54,7 +54,10 @@ public class FlushConsolidationHandler extends ChannelDuplexHandler {
     private final boolean consolidateWhenNoReadInProgress;
     private final Runnable flushTask;
     private int flushPendingCount;
+
+    // // 当回调channelRead()的时候, readInProgress 就会被置为true
     private boolean readInProgress;
+
     private ChannelHandlerContext ctx;
     private Future<?> nextScheduledFlush;
 
@@ -113,21 +116,36 @@ public class FlushConsolidationHandler extends ChannelDuplexHandler {
 
     @Override
     public void flush(ChannelHandlerContext ctx) throws Exception {
+
+        /*
+         * 根据业务线程是否复用nioEventLoop的I/O线程
+         */
+
+        // 如果业务线程复用了I/O线程, 那么就会先执行channelRead()方法, 那么这个参数
+        // readInProgress 就一定会被设置为true.
         if (readInProgress) {
-            // If there is still a read in progress we are sure we will see a channelReadComplete(...) call. Thus
-            // we only need to flush if we reach the explicitFlushAfterFlushes limit.
+            // flushPendingCount 表示每次ChannelRead事件的累积计数, 当它累加到explicitFlushAfterFlushes时,
+            // 那么就立即执行一次刷新. 但是呢, 有可能 flushPendingCount 到后面会累加不足, 举个例子我们定义每读3次
+            // 刷新一次, 但是总共就读了5次, 后面两次如果只有这个逻辑那就不会在执行flush了. 然而netty设计很巧妙, 它
+            // 完美地在readComplete事件中, 将剩下的刷新, 可以看下这个类的channelReadComplete()方法.
             if (++flushPendingCount == explicitFlushAfterFlushes) {
                 flushNow(ctx);
             }
+        // 如果业务线程没有复用I/O线程, 那么就有可能在ChannelReadComplete()调用后才来调用channelRead()方法,
+        // 此时 readInProgress 就会为false, 然后来到这个代码逻辑, 通过显示指定 consolidateWhenNoReadInProgress 参数,
+        // 来判断是否要增强写.
         } else if (consolidateWhenNoReadInProgress) {
-            // Flush immediately if we reach the threshold, otherwise schedule
+            // 业务线程独立出来, 并且开启了 consolidateWhenNoReadInProgress 参数,
+            // 它的处理方式是和上面一样的, 等待一定次数再执行flush,
             if (++flushPendingCount == explicitFlushAfterFlushes) {
                 flushNow(ctx);
             } else {
+                // 如果次数不到, 那么开启一个延迟任务, 在延迟的过程中, 就又可以有减少 flush的机会
                 scheduleFlush(ctx);
             }
         } else {
-            // Always flush directly
+            // 业务线程独立出来, 如果没有开启 consolidateWhenNoReadInProgress 参数,
+            // 那么就和每次writeAndFlush()效果一样, 直接刷新
             flushNow(ctx);
         }
     }

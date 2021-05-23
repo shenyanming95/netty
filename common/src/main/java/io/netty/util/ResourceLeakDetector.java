@@ -58,31 +58,27 @@ public class ResourceLeakDetector<T> {
      */
     public enum Level {
         /**
-         * Disables resource leak detection.
+         * 禁用内存泄露检测
          */
         DISABLED,
+
         /**
-         * Enables simplistic sampling resource leak detection which reports there is a leak or not,
-         * at the cost of small overhead (default).
+         * 启用简单的采样内存泄漏检测, 仅仅只是给出是否存在内存泄露, 而不糊给出内存泄露的位置在哪里,
+         * 因此这个级别占用的空间比较小, 是默认配置
          */
         SIMPLE,
+
         /**
-         * Enables advanced sampling resource leak detection which reports where the leaked object was accessed
-         * recently at the cost of high overhead.
+         * 启用高级的采样内存泄漏检测, 它会记录泄漏对象的访问位置, 相反地它就比上面的SIMPLE级别开销大.
          */
         ADVANCED,
+
         /**
-         * Enables paranoid resource leak detection which reports where the leaked object was accessed recently,
-         * at the cost of the highest possible overhead (for testing purposes only).
+         * 不同于前三个级别, 都是采样, 这个级别会对所有对象进行内存泄露检测
          */
         PARANOID;
 
-        /**
-         * Returns level based on string value. Accepts also string that represents ordinal number of enum.
-         *
-         * @param levelStr - level string : DISABLED, SIMPLE, ADVANCED, PARANOID. Ignores case.
-         * @return corresponding level or SIMPLE level in case of no match.
-         */
+
         static Level parseLevel(String levelStr) {
             String trimmedLevelStr = levelStr.trim();
             for (Level l : values()) {
@@ -159,12 +155,10 @@ public class ResourceLeakDetector<T> {
     }
 
     /** the collection of active resources */
-    private final Set<DefaultResourceLeak<?>> allLeaks =
-            Collections.newSetFromMap(new ConcurrentHashMap<DefaultResourceLeak<?>, Boolean>());
+    private final Set<DefaultResourceLeak<?>> allLeaks = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-    private final ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
-    private final Set<String> reportedLeaks =
-            Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    private final ReferenceQueue<Object> refQueue = new ReferenceQueue<>();
+    private final Set<String> reportedLeaks = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private final String resourceType;
     private final int samplingInterval;
@@ -233,6 +227,7 @@ public class ResourceLeakDetector<T> {
     }
 
     /**
+     * 在分配ByteBuf的时候就会调用这个方法.
      * Creates a new {@link ResourceLeakTracker} which is expected to be closed via
      * {@link ResourceLeakTracker#close(Object)} when the related resource is deallocated.
      *
@@ -246,10 +241,11 @@ public class ResourceLeakDetector<T> {
     @SuppressWarnings("unchecked")
     private DefaultResourceLeak track0(T obj) {
         Level level = ResourceLeakDetector.level;
+        // 关闭内存检测
         if (level == Level.DISABLED) {
             return null;
         }
-
+        // 如果不是全部采样, 那就选用随机采样
         if (level.ordinal() < Level.PARANOID.ordinal()) {
             if ((PlatformDependent.threadLocalRandom().nextInt(samplingInterval)) == 0) {
                 reportLeak();
@@ -290,10 +286,11 @@ public class ResourceLeakDetector<T> {
         // Detect and report previous leaks.
         for (;;) {
             DefaultResourceLeak ref = (DefaultResourceLeak) refQueue.poll();
+            // 为null说明这个弱引用还没有被GC, 所以ReferenceQueue拿不到这个弱引用
             if (ref == null) {
                 break;
             }
-
+            // 判断有无内存泄露的关键
             if (!ref.dispose()) {
                 continue;
             }
@@ -447,6 +444,10 @@ public class ResourceLeakDetector<T> {
 
         boolean dispose() {
             clear();
+            // 当ByteBuf被GC以后, 意味着它对应的弱引用不能在allLeaks出现(
+            // 因为如果按部就班, 每次用完ByteBuf时就release(), 则它的计数肯定为0,
+            // 一旦它的计数为0, 那它就会从allLeaks中清除)
+            // 所以如果在GC后, 该弱引用还存在allLeaks, 说明肯定没有释放它.
             return allLeaks.remove(this);
         }
 
@@ -585,6 +586,9 @@ public class ResourceLeakDetector<T> {
         } while (!excludedMethods.compareAndSet(oldMethods, newMethods));
     }
 
+    /**
+     * 继承{@link Throwable}就可以拿到调用的链栈
+     */
     private static final class TraceRecord extends Throwable {
         private static final long serialVersionUID = 6065153674892850720L;
 

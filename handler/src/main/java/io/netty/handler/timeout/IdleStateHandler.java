@@ -407,6 +407,15 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     private boolean hasOutputChanged(ChannelHandlerContext ctx, boolean first) {
         if (observeOutput) {
 
+            /*
+             * 正常情况下, 参数first=false, 它在idle检测中指的是写成功, 但在netty实现上, 写数据是
+             * 存在下面两种情况的：
+             *  1.写了, 但是缓冲区满了, 写不出去;
+             *  2.写了一个“大”数据, 写操作确实在执行, 但是还没有完成
+             * 所以这个参数, 只是用来判断是否有写的意图, 而不是来判断是否写成功了.
+             */
+
+
             // We can take this shortcut if the ChannelPromises that got passed into write()
             // appear to complete. It indicates "change" on message level and we simply assume
             // that there's change happening on byte level. If the user doesn't observe channel
@@ -438,6 +447,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
                     }
                 }
 
+                // netty写回数据给对端, 一般都是优先放到 ChannelOutboundBuffer, 所以它在这边先获取下写的进度
                 long flushProgress = buf.currentProgress();
                 if (flushProgress != lastFlushProgress) {
                     lastFlushProgress = flushProgress;
@@ -472,6 +482,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         protected abstract void run(ChannelHandlerContext ctx);
     }
 
+    /**
+     * 读心跳检测的任务
+     */
     private final class ReaderIdleTimeoutTask extends AbstractIdleTask {
 
         ReaderIdleTimeoutTask(ChannelHandlerContext ctx) {
@@ -480,31 +493,40 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
         @Override
         protected void run(ChannelHandlerContext ctx) {
+            // 读idle的超时时间
             long nextDelay = readerIdleTimeNanos;
             if (!reading) {
+                // 当前时间减去上次读的时间, 表示多长时间未读了,
+                // 最后再减去读idle的超时间时间
                 nextDelay -= ticksInNanos() - lastReadTime;
             }
 
+            // 如果减去后的值小于等于0, 说明就是读idle超时了, 即读空闲
             if (nextDelay <= 0) {
-                // Reader is idle - set a new timeout and notify the callback.
+                // 发生读空闲后, 需要重新启动一个定时任务, 延迟 readerIdleTimeNanos 时间后执行
                 readerIdleTimeout = schedule(ctx, this, readerIdleTimeNanos, TimeUnit.NANOSECONDS);
 
+                // firstReaderIdleEvent 表示是否是第一次读空闲, 当被调用以后, 肯定就置为false了
                 boolean first = firstReaderIdleEvent;
                 firstReaderIdleEvent = false;
 
                 try {
+                    // 创建一个读空闲事件, 发布出去
                     IdleStateEvent event = newIdleStateEvent(IdleState.READER_IDLE, first);
                     channelIdle(ctx, event);
                 } catch (Throwable t) {
                     ctx.fireExceptionCaught(t);
                 }
             } else {
-                // Read occurred before the timeout - set a new timeout with shorter delay.
+                // 如果没有发生读空闲, 就重新启动一个定时任务, 延迟剩下的 nextDelay 时间后执行
                 readerIdleTimeout = schedule(ctx, this, nextDelay, TimeUnit.NANOSECONDS);
             }
         }
     }
 
+    /**
+     * 写心跳检测的任务
+     */
     private final class WriterIdleTimeoutTask extends AbstractIdleTask {
 
         WriterIdleTimeoutTask(ChannelHandlerContext ctx) {
@@ -524,6 +546,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
                 firstWriterIdleEvent = false;
 
                 try {
+                    // 写空闲的实现逻辑和上面的读空闲逻辑类似, 除了下面这行判断,
+                    // 当这个方法返回true的时候, netty就认定没有发生写空闲, 直接返回
+                    // 反之说明写空闲了, 也会发布一个写空闲事件.
                     if (hasOutputChanged(ctx, first)) {
                         return;
                     }
