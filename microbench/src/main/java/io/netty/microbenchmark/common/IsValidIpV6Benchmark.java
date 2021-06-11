@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbenchmark.common;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
@@ -27,10 +12,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public class IsValidIpV6Benchmark extends AbstractMicrobenchmark {
 
-    @Param({
-            "127.0.0.1", "fdf8:f53b:82e4::53", "2001::1",
-            "2001:0000:4136:e378:8000:63bf:3fff:fdd2", "0:0:0:0:0:0:10.0.0.1"
-    })
+    @Param({"127.0.0.1", "fdf8:f53b:82e4::53", "2001::1", "2001:0000:4136:e378:8000:63bf:3fff:fdd2", "0:0:0:0:0:0:10.0.0.1"})
     private String ip;
 
     private static boolean isValidIp4Word(String word) {
@@ -89,98 +71,92 @@ public class IsValidIpV6Benchmark extends AbstractMicrobenchmark {
             prevChar = c;
             c = ipAddress.charAt(i);
             switch (c) {
-            // case for the last 32-bits represented as IPv4 x:x:x:x:x:x:d.d.d.d
-            case '.':
-                numberOfPeriods++;
-                if (numberOfPeriods > 3) {
-                    return false;
-                }
-                if (numberOfPeriods == 1) {
-                    // Verify this address is of the correct structure to contain an IPv4 address.
-                    // It must be IPv4-Mapped or IPv4-Compatible
-                    // (see https://tools.ietf.org/html/rfc4291#section-2.5.5).
-                    int j = i - word.length() - 2; // index of character before the previous ':'.
-                    final int beginColonIndex = ipAddress.lastIndexOf(':', j);
-                    if (beginColonIndex == -1) {
+                // case for the last 32-bits represented as IPv4 x:x:x:x:x:x:d.d.d.d
+                case '.':
+                    numberOfPeriods++;
+                    if (numberOfPeriods > 3) {
                         return false;
                     }
-                    char tmpChar = ipAddress.charAt(j);
-                    if (isValidIPv4MappedChar(tmpChar)) {
-                        if (j - beginColonIndex != 4 ||
-                            !isValidIPv4MappedChar(ipAddress.charAt(j - 1)) ||
-                            !isValidIPv4MappedChar(ipAddress.charAt(j - 2)) ||
-                            !isValidIPv4MappedChar(ipAddress.charAt(j - 3))) {
+                    if (numberOfPeriods == 1) {
+                        // Verify this address is of the correct structure to contain an IPv4 address.
+                        // It must be IPv4-Mapped or IPv4-Compatible
+                        // (see https://tools.ietf.org/html/rfc4291#section-2.5.5).
+                        int j = i - word.length() - 2; // index of character before the previous ':'.
+                        final int beginColonIndex = ipAddress.lastIndexOf(':', j);
+                        if (beginColonIndex == -1) {
                             return false;
                         }
-                        j -= 5;
-                    } else if (tmpChar == '0' || tmpChar == ':') {
-                        --j;
-                    } else {
-                        return false;
-                    }
-
-                    // a special case ::1:2:3:4:5:d.d.d.d allows 7 colons with an
-                    // IPv4 ending, otherwise 7 :'s is bad
-                    if ((numberOfColons != 6 && !doubleColon) || numberOfColons > 7 ||
-                        (numberOfColons == 7 && (ipAddress.charAt(startOffset) != ':' ||
-                                                 ipAddress.charAt(1 + startOffset) != ':'))) {
-                        return false;
-                    }
-
-                    for (; j >= startOffset; --j) {
-                        tmpChar = ipAddress.charAt(j);
-                        if (tmpChar != '0' && tmpChar != ':') {
+                        char tmpChar = ipAddress.charAt(j);
+                        if (isValidIPv4MappedChar(tmpChar)) {
+                            if (j - beginColonIndex != 4 || !isValidIPv4MappedChar(ipAddress.charAt(j - 1)) || !isValidIPv4MappedChar(ipAddress.charAt(j - 2)) || !isValidIPv4MappedChar(ipAddress.charAt(j - 3))) {
+                                return false;
+                            }
+                            j -= 5;
+                        } else if (tmpChar == '0' || tmpChar == ':') {
+                            --j;
+                        } else {
                             return false;
                         }
+
+                        // a special case ::1:2:3:4:5:d.d.d.d allows 7 colons with an
+                        // IPv4 ending, otherwise 7 :'s is bad
+                        if ((numberOfColons != 6 && !doubleColon) || numberOfColons > 7 || (numberOfColons == 7 && (ipAddress.charAt(startOffset) != ':' || ipAddress.charAt(1 + startOffset) != ':'))) {
+                            return false;
+                        }
+
+                        for (; j >= startOffset; --j) {
+                            tmpChar = ipAddress.charAt(j);
+                            if (tmpChar != '0' && tmpChar != ':') {
+                                return false;
+                            }
+                        }
                     }
-                }
 
-                if (!isValidIp4Word(word.toString())) {
-                    return false;
-                }
-                word.delete(0, word.length());
-                break;
-
-            case ':':
-                // FIX "IP6 mechanism syntax #ip6-bad1"
-                // An IPV6 address cannot start with a single ":".
-                // Either it can start with "::" or with a number.
-                if (i == startOffset && (endOffset <= i || ipAddress.charAt(i + 1) != ':')) {
-                    return false;
-                }
-                // END FIX "IP6 mechanism syntax #ip6-bad1"
-                numberOfColons++;
-                if (numberOfColons > 8) {
-                    return false;
-                }
-                if (numberOfPeriods > 0) {
-                    return false;
-                }
-                if (prevChar == ':') {
-                    if (doubleColon) {
+                    if (!isValidIp4Word(word.toString())) {
                         return false;
                     }
-                    doubleColon = true;
-                }
-                word.delete(0, word.length());
-                break;
+                    word.delete(0, word.length());
+                    break;
 
-            default:
-                if (word != null && word.length() > 3) {
-                    return false;
-                }
-                if (!isValidHexChar(c)) {
-                    return false;
-                }
-                word.append(c);
+                case ':':
+                    // FIX "IP6 mechanism syntax #ip6-bad1"
+                    // An IPV6 address cannot start with a single ":".
+                    // Either it can start with "::" or with a number.
+                    if (i == startOffset && (endOffset <= i || ipAddress.charAt(i + 1) != ':')) {
+                        return false;
+                    }
+                    // END FIX "IP6 mechanism syntax #ip6-bad1"
+                    numberOfColons++;
+                    if (numberOfColons > 8) {
+                        return false;
+                    }
+                    if (numberOfPeriods > 0) {
+                        return false;
+                    }
+                    if (prevChar == ':') {
+                        if (doubleColon) {
+                            return false;
+                        }
+                        doubleColon = true;
+                    }
+                    word.delete(0, word.length());
+                    break;
+
+                default:
+                    if (word != null && word.length() > 3) {
+                        return false;
+                    }
+                    if (!isValidHexChar(c)) {
+                        return false;
+                    }
+                    word.append(c);
             }
         }
 
         // Check if we have an IPv4 ending
         if (numberOfPeriods > 0) {
             // There is a test case with 7 colons and valid ipv4 this should resolve it
-            if (numberOfPeriods != 3 ||
-                !(isValidIp4Word(word.toString()) && (numberOfColons < 7 || doubleColon))) {
+            if (numberOfPeriods != 3 || !(isValidIp4Word(word.toString()) && (numberOfColons < 7 || doubleColon))) {
                 return false;
             }
         } else {
@@ -194,8 +170,7 @@ public class IsValidIpV6Benchmark extends AbstractMicrobenchmark {
                 // If we have an empty word at the end, it means we ended in either
                 // a : or a .
                 // If we did not end in :: then this is invalid
-                if (ipAddress.charAt(endOffset - 1) == ':' &&
-                    ipAddress.charAt(endOffset - 2) != ':') {
+                if (ipAddress.charAt(endOffset - 1) == ':' && ipAddress.charAt(endOffset - 2) != ':') {
                     return false;
                 }
             } else if (numberOfColons == 8 && ipAddress.charAt(startOffset) != ':') {

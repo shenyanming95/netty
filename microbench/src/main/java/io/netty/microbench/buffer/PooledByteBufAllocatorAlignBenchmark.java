@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbench.buffer;
 
 import io.netty.buffer.ByteBuf;
@@ -28,8 +13,7 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 5, time = 100, timeUnit = TimeUnit.MILLISECONDS)
 @Fork(5)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-public class PooledByteBufAllocatorAlignBenchmark extends
-        AbstractMicrobenchmark {
+public class PooledByteBufAllocatorAlignBenchmark extends AbstractMicrobenchmark {
 
     private static final Random rand = new Random();
 
@@ -48,10 +32,10 @@ public class PooledByteBufAllocatorAlignBenchmark extends
      */
     private static final int BLOCK = 4;
 
-    @Param({ "0", "64" })
+    @Param({"0", "64"})
     private int cacheAlign;
 
-    @Param({ "01024", "04096", "16384", "65536", "1048576" })
+    @Param({"01024", "04096", "16384", "65536", "1048576"})
     private int size;
 
     private ByteBuf pooledDirectBuffer;
@@ -64,8 +48,7 @@ public class PooledByteBufAllocatorAlignBenchmark extends
 
     @Setup
     public void doSetup() {
-        PooledByteBufAllocator pooledAllocator = new PooledByteBufAllocator(true, 4, 4, 8192, 11, 0,
-                0, 0, true, cacheAlign);
+        PooledByteBufAllocator pooledAllocator = new PooledByteBufAllocator(true, 4, 4, 8192, 11, 0, 0, 0, true, cacheAlign);
         pooledDirectBuffer = pooledAllocator.directBuffer(size + 64);
         sizeMask = size - 1;
         if (cacheAlign == 0) {
@@ -78,8 +61,7 @@ public class PooledByteBufAllocatorAlignBenchmark extends
             for (int c = 0; c < size; c++) {
                 off = (off + OFFSET_ADD) & sizeMask;
                 if ((addr + off + alignOffset) % BLOCK == 0) {
-                    throw new IllegalStateException(
-                            "Misaligned address is not really aligned");
+                    throw new IllegalStateException("Misaligned address is not really aligned");
                 }
             }
         } else {
@@ -89,8 +71,7 @@ public class PooledByteBufAllocatorAlignBenchmark extends
             for (int c = 0; c < size; c++) {
                 off = (off + OFFSET_ADD) & sizeMask;
                 if ((addr + off) % BLOCK != 0) {
-                    throw new IllegalStateException(
-                            "Aligned address is not really aligned");
+                    throw new IllegalStateException("Aligned address is not really aligned");
                 }
             }
         }

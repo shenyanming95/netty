@@ -28,56 +28,18 @@ import org.openjdk.jmh.annotations.*;
 @Threads(1)
 @State(Scope.Benchmark)
 public class NoPriorityByteDistributionBenchmark extends AbstractMicrobenchmark {
-    public enum Algorithm {
-        WFQ,
-        UNIFORM
-    }
-
-    @Param({ "100", "10000" })
+    @Param({"100", "10000"})
     private int numStreams;
-
-    @Param({ "1024", "65536", "1048576" })
+    @Param({"1024", "65536", "1048576"})
     private int windowSize;
-
     @Param
     private Algorithm algorithm;
-
     private Http2Connection connection;
     private Http2Connection.PropertyKey dataRefresherKey;
     private Http2RemoteFlowController controller;
     private StreamByteDistributor distributor;
     private AdditionalCounters counters;
     private ChannelHandlerContext ctx;
-
-    public NoPriorityByteDistributionBenchmark() {
-        super(true);
-    }
-
-    /**
-     * Additional counters for a single iteration.
-     */
-    @AuxCounters
-    @State(Scope.Thread)
-    public static class AdditionalCounters {
-        int minWriteSize = Integer.MAX_VALUE;
-        int maxWriteSize = Integer.MIN_VALUE;
-        long totalBytes;
-        long numWrites;
-        int invocations;
-
-        public int minWriteSize() {
-            return minWriteSize;
-        }
-
-        public int avgWriteSize() {
-            return (int) (totalBytes / numWrites);
-        }
-
-        public int maxWriteSize() {
-            return maxWriteSize;
-        }
-    }
-
     private Http2StreamVisitor invocationVisitor = new Http2StreamVisitor() {
         @Override
         public boolean visit(Http2Stream stream) throws Http2Exception {
@@ -89,6 +51,14 @@ public class NoPriorityByteDistributionBenchmark extends AbstractMicrobenchmark 
             return true;
         }
     };
+
+    public NoPriorityByteDistributionBenchmark() {
+        super(true);
+    }
+
+    private static int toStreamId(int i) {
+        return 2 * i + 1;
+    }
 
     @TearDown(Level.Trial)
     public void tearDownTrial() throws Exception {
@@ -111,11 +81,7 @@ public class NoPriorityByteDistributionBenchmark extends AbstractMicrobenchmark 
         }
         controller = new DefaultHttp2RemoteFlowController(connection, new ByteCounter(distributor));
         connection.remote().flowController(controller);
-        Http2ConnectionHandler handler = new Http2ConnectionHandlerBuilder()
-            .encoderEnforceMaxConcurrentStreams(false).validateHeaders(false)
-            .frameListener(new Http2FrameAdapter())
-            .connection(connection)
-            .build();
+        Http2ConnectionHandler handler = new Http2ConnectionHandlerBuilder().encoderEnforceMaxConcurrentStreams(false).validateHeaders(false).frameListener(new Http2FrameAdapter()).connection(connection).build();
         ctx = new EmbeddedChannelWriteReleaseHandlerContext(PooledByteBufAllocator.DEFAULT, handler) {
             @Override
             protected void handleException(Throwable t) {
@@ -183,8 +149,7 @@ public class NoPriorityByteDistributionBenchmark extends AbstractMicrobenchmark 
             }
 
             @Override
-            public boolean merge(ChannelHandlerContext ctx,
-                                 Http2RemoteFlowController.FlowControlled next) {
+            public boolean merge(ChannelHandlerContext ctx, Http2RemoteFlowController.FlowControlled next) {
                 int nextSize = next.size();
                 if (Integer.MAX_VALUE - nextSize < size) {
                     // Disallow merge to avoid integer overflow.
@@ -198,8 +163,33 @@ public class NoPriorityByteDistributionBenchmark extends AbstractMicrobenchmark 
         });
     }
 
-    private static int toStreamId(int i) {
-        return 2 * i + 1;
+    public enum Algorithm {
+        WFQ, UNIFORM
+    }
+
+    /**
+     * Additional counters for a single iteration.
+     */
+    @AuxCounters
+    @State(Scope.Thread)
+    public static class AdditionalCounters {
+        int minWriteSize = Integer.MAX_VALUE;
+        int maxWriteSize = Integer.MIN_VALUE;
+        long totalBytes;
+        long numWrites;
+        int invocations;
+
+        public int minWriteSize() {
+            return minWriteSize;
+        }
+
+        public int avgWriteSize() {
+            return (int) (totalBytes / numWrites);
+        }
+
+        public int maxWriteSize() {
+            return maxWriteSize;
+        }
     }
 
     private final class DataRefresher {

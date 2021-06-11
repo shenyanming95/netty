@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.stomp;
 
 import io.netty.buffer.ByteBuf;
@@ -56,16 +41,6 @@ public class StompSubframeDecoder extends ReplayingDecoder<State> {
 
     private static final int DEFAULT_CHUNK_SIZE = 8132;
     private static final int DEFAULT_MAX_LINE_LENGTH = 1024;
-
-    enum State {
-        SKIP_CONTROL_CHARACTERS,
-        READ_HEADERS,
-        READ_CONTENT,
-        FINALIZE_FRAME_READ,
-        BAD_FRAME,
-        INVALID_CHUNK
-    }
-
     private final Utf8LineParser commandParser;
     private final HeaderParser headerParser;
     private final int maxChunkSize;
@@ -92,6 +67,32 @@ public class StompSubframeDecoder extends ReplayingDecoder<State> {
         this.maxChunkSize = maxChunkSize;
         commandParser = new Utf8LineParser(new AppendableCharSequence(16), maxLineLength);
         headerParser = new HeaderParser(new AppendableCharSequence(128), maxLineLength, validateHeaders);
+    }
+
+    private static long getContentLength(StompHeaders headers) {
+        long contentLength = headers.getLong(StompHeaders.CONTENT_LENGTH, 0L);
+        if (contentLength < 0) {
+            throw new DecoderException(StompHeaders.CONTENT_LENGTH + " must be non-negative");
+        }
+        return contentLength;
+    }
+
+    private static void skipNullCharacter(ByteBuf buffer) {
+        byte b = buffer.readByte();
+        if (b != StompConstants.NUL) {
+            throw new IllegalStateException("unexpected byte in buffer " + b + " while expecting NULL byte");
+        }
+    }
+
+    private static void skipControlCharacters(ByteBuf buffer) {
+        byte b;
+        for (; ; ) {
+            b = buffer.readByte();
+            if (b != StompConstants.CR && b != StompConstants.LF) {
+                buffer.readerIndex(buffer.readerIndex() - 1);
+                break;
+            }
+        }
     }
 
     @Override
@@ -198,7 +199,7 @@ public class StompSubframeDecoder extends ReplayingDecoder<State> {
     }
 
     private State readHeaders(ByteBuf buffer, StompHeaders headers) {
-        for (;;) {
+        for (; ; ) {
             boolean headerRead = headerParser.parseHeader(headers, buffer);
             if (!headerRead) {
                 if (headers.contains(StompHeaders.CONTENT_LENGTH)) {
@@ -212,37 +213,15 @@ public class StompSubframeDecoder extends ReplayingDecoder<State> {
         }
     }
 
-    private static long getContentLength(StompHeaders headers) {
-        long contentLength = headers.getLong(StompHeaders.CONTENT_LENGTH, 0L);
-        if (contentLength < 0) {
-            throw new DecoderException(StompHeaders.CONTENT_LENGTH + " must be non-negative");
-        }
-        return contentLength;
-    }
-
-    private static void skipNullCharacter(ByteBuf buffer) {
-        byte b = buffer.readByte();
-        if (b != StompConstants.NUL) {
-            throw new IllegalStateException("unexpected byte in buffer " + b + " while expecting NULL byte");
-        }
-    }
-
-    private static void skipControlCharacters(ByteBuf buffer) {
-        byte b;
-        for (;;) {
-            b = buffer.readByte();
-            if (b != StompConstants.CR && b != StompConstants.LF) {
-                buffer.readerIndex(buffer.readerIndex() - 1);
-                break;
-            }
-        }
-    }
-
     private void resetDecoder() {
         checkpoint(State.SKIP_CONTROL_CHARACTERS);
         contentLength = -1;
         alreadyReadChunkSize = 0;
         lastContent = null;
+    }
+
+    enum State {
+        SKIP_CONTROL_CHARACTERS, READ_HEADERS, READ_CONTENT, FINALIZE_FRAME_READ, BAD_FRAME, INVALID_CHUNK
     }
 
     private static class Utf8LineParser implements ByteProcessor {
@@ -347,8 +326,7 @@ public class StompSubframeDecoder extends ReplayingDecoder<State> {
                     throw new IllegalArgumentException("received an invalid header line '" + value.toString() + '\'');
                 }
                 String line = name + ':' + value.toString();
-                throw new IllegalArgumentException("a header value or name contains a prohibited character ':'"
-                                                   + ", " + line);
+                throw new IllegalArgumentException("a header value or name contains a prohibited character ':'" + ", " + line);
             }
             return true;
         }

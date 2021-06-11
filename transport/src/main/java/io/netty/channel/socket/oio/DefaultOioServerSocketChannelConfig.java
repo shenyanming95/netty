@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.socket.oio;
 
 import io.netty.buffer.ByteBufAllocator;
@@ -32,8 +17,7 @@ import static io.netty.channel.ChannelOption.SO_TIMEOUT;
  * @deprecated use NIO / EPOLL / KQUEUE transport.
  */
 @Deprecated
-public class DefaultOioServerSocketChannelConfig extends DefaultServerSocketChannelConfig implements
-        OioServerSocketChannelConfig {
+public class DefaultOioServerSocketChannelConfig extends DefaultServerSocketChannelConfig implements OioServerSocketChannelConfig {
 
     @Deprecated
     public DefaultOioServerSocketChannelConfig(ServerSocketChannel channel, ServerSocket javaSocket) {
@@ -48,8 +32,7 @@ public class DefaultOioServerSocketChannelConfig extends DefaultServerSocketChan
 
     @Override
     public Map<ChannelOption<?>, Object> getOptions() {
-        return getOptions(
-                super.getOptions(), SO_TIMEOUT);
+        return getOptions(super.getOptions(), SO_TIMEOUT);
     }
 
     @SuppressWarnings("unchecked")

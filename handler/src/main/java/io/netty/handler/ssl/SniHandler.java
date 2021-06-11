@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.buffer.ByteBufAllocator;
@@ -98,8 +83,7 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
     }
 
     @Override
-    protected final void onLookupComplete(ChannelHandlerContext ctx,
-                                          String hostname, Future<SslContext> future) throws Exception {
+    protected final void onLookupComplete(ChannelHandlerContext ctx, String hostname, Future<SslContext> future) throws Exception {
         if (!future.isSuccess()) {
             final Throwable cause = future.cause();
             if (cause instanceof Error) {
@@ -121,10 +105,10 @@ public class SniHandler extends AbstractSniHandler<SslContext> {
     /**
      * The default implementation of this method will simply replace {@code this} {@link SniHandler}
      * instance with a {@link SslHandler}. Users may override this method to implement custom behavior.
-     *
+     * <p>
      * Please be aware that this method may get called after a client has already disconnected and
      * custom implementations must take it into consideration when overriding this method.
-     *
+     * <p>
      * It's also possible for the hostname argument to be {@code null}.
      */
     protected void replaceHandler(ChannelHandlerContext ctx, String hostname, SslContext sslContext) throws Exception {

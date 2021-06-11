@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.util.internal.ObjectUtil;
@@ -41,10 +26,10 @@ public class DefaultHttpRequest extends DefaultHttpMessage implements HttpReques
     /**
      * Creates a new instance.
      *
-     * @param httpVersion       the HTTP version of the request
-     * @param method            the HTTP method of the request
-     * @param uri               the URI or path of the request
-     * @param validateHeaders   validate the header names and values when adding them to the {@link HttpHeaders}
+     * @param httpVersion     the HTTP version of the request
+     * @param method          the HTTP method of the request
+     * @param uri             the URI or path of the request
+     * @param validateHeaders validate the header names and values when adding them to the {@link HttpHeaders}
      */
     public DefaultHttpRequest(HttpVersion httpVersion, HttpMethod method, String uri, boolean validateHeaders) {
         super(httpVersion, validateHeaders, false);
@@ -55,10 +40,10 @@ public class DefaultHttpRequest extends DefaultHttpMessage implements HttpReques
     /**
      * Creates a new instance.
      *
-     * @param httpVersion       the HTTP version of the request
-     * @param method            the HTTP method of the request
-     * @param uri               the URI or path of the request
-     * @param headers           the Headers for this Request
+     * @param httpVersion the HTTP version of the request
+     * @param method      the HTTP method of the request
+     * @param uri         the URI or path of the request
+     * @param headers     the Headers for this Request
      */
     public DefaultHttpRequest(HttpVersion httpVersion, HttpMethod method, String uri, HttpHeaders headers) {
         super(httpVersion, headers);
@@ -123,9 +108,7 @@ public class DefaultHttpRequest extends DefaultHttpMessage implements HttpReques
 
         DefaultHttpRequest other = (DefaultHttpRequest) o;
 
-        return method().equals(other.method()) &&
-               uri().equalsIgnoreCase(other.uri()) &&
-               super.equals(o);
+        return method().equals(other.method()) && uri().equalsIgnoreCase(other.uri()) && super.equals(o);
     }
 
     @Override

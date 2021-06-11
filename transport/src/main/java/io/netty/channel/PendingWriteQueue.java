@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel;
 
 import io.netty.util.ReferenceCountUtil;
@@ -35,8 +20,7 @@ public final class PendingWriteQueue {
     //  - 16 bytes object header
     //  - 4 reference fields
     //  - 1 long fields
-    private static final int PENDING_WRITE_OVERHEAD =
-            SystemPropertyUtil.getInt("io.netty.transport.pendingWriteSizeOverhead", 64);
+    private static final int PENDING_WRITE_OVERHEAD = SystemPropertyUtil.getInt("io.netty.transport.pendingWriteSizeOverhead", 64);
 
     private final ChannelHandlerContext ctx;
     private final PendingBytesTracker tracker;
@@ -50,6 +34,12 @@ public final class PendingWriteQueue {
     public PendingWriteQueue(ChannelHandlerContext ctx) {
         tracker = PendingBytesTracker.newTracker(ctx.channel());
         this.ctx = ctx;
+    }
+
+    private static void safeFail(ChannelPromise promise, Throwable cause) {
+        if (!(promise instanceof VoidChannelPromise) && !promise.tryFailure(cause)) {
+            logger.warn("Failed to mark a promise as failure because it's done already: {}", promise, cause);
+        }
     }
 
     /**
@@ -107,7 +97,7 @@ public final class PendingWriteQueue {
             currentTail.next = write;
             tail = write;
         }
-        size ++;
+        size++;
         bytes += messageSize;
         tracker.incrementPendingOutboundBytes(write.size);
     }
@@ -116,8 +106,8 @@ public final class PendingWriteQueue {
      * Remove all pending write operation and performs them via
      * {@link ChannelHandlerContext#write(Object, ChannelPromise)}.
      *
-     * @return  {@link ChannelFuture} if something was written and {@code null}
-     *          if the {@link PendingWriteQueue} is empty.
+     * @return {@link ChannelFuture} if something was written and {@code null}
+     * if the {@link PendingWriteQueue} is empty.
      */
     public ChannelFuture removeAndWriteAll() {
         assert ctx.executor().inEventLoop();
@@ -207,8 +197,8 @@ public final class PendingWriteQueue {
      * Removes a pending write operation and performs it via
      * {@link ChannelHandlerContext#write(Object, ChannelPromise)}.
      *
-     * @return  {@link ChannelFuture} if something was written and {@code null}
-     *          if the {@link PendingWriteQueue} is empty.
+     * @return {@link ChannelFuture} if something was written and {@code null}
+     * if the {@link PendingWriteQueue} is empty.
      */
     public ChannelFuture removeAndWrite() {
         assert ctx.executor().inEventLoop();
@@ -225,8 +215,7 @@ public final class PendingWriteQueue {
     /**
      * Removes a pending write operation and release it's message via {@link ReferenceCountUtil#safeRelease(Object)}.
      *
-     * @return  {@link ChannelPromise} of the pending write or {@code null} if the queue is empty.
-     *
+     * @return {@link ChannelPromise} of the pending write or {@code null} if the queue is empty.
      */
     public ChannelPromise remove() {
         assert ctx.executor().inEventLoop();
@@ -265,7 +254,7 @@ public final class PendingWriteQueue {
                 bytes = 0;
             } else {
                 head = next;
-                size --;
+                size--;
                 bytes -= writeSize;
                 assert size > 0 && bytes >= 0;
             }
@@ -273,12 +262,6 @@ public final class PendingWriteQueue {
 
         write.recycle();
         tracker.decrementPendingOutboundBytes(writeSize);
-    }
-
-    private static void safeFail(ChannelPromise promise, Throwable cause) {
-        if (!(promise instanceof VoidChannelPromise) && !promise.tryFailure(cause)) {
-            logger.warn("Failed to mark a promise as failure because it's done already: {}", promise, cause);
-        }
     }
 
     /**

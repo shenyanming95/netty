@@ -39,29 +39,57 @@ final class BsdSocket extends Socket {
         super(fd);
     }
 
-    void setAcceptFilter(AcceptFilter acceptFilter) throws IOException {
-        setAcceptFilter(intValue(), acceptFilter.filterName(), acceptFilter.filterArgs());
+    public static BsdSocket newSocketStream() {
+        return new BsdSocket(newSocketStream0());
+    }
+
+    public static BsdSocket newSocketDgram() {
+        return new BsdSocket(newSocketDgram0());
+    }
+
+    public static BsdSocket newSocketDomain() {
+        return new BsdSocket(newSocketDomain0());
+    }
+
+    private static native long sendFile(int socketFd, DefaultFileRegion src, long baseOffset, long offset, long length) throws IOException;
+
+    private static native String[] getAcceptFilter(int fd) throws IOException;
+
+    private static native int getTcpNoPush(int fd) throws IOException;
+
+    private static native int getSndLowAt(int fd) throws IOException;
+
+    private static native PeerCredentials getPeerCredentials(int fd) throws IOException;
+
+    private static native void setAcceptFilter(int fd, String filterName, String filterArgs) throws IOException;
+
+    private static native void setTcpNoPush(int fd, int tcpNoPush) throws IOException;
+
+    private static native void setSndLowAt(int fd, int lowAt) throws IOException;
+
+    boolean isTcpNoPush() throws IOException {
+        return getTcpNoPush(intValue()) != 0;
     }
 
     void setTcpNoPush(boolean tcpNoPush) throws IOException {
         setTcpNoPush(intValue(), tcpNoPush ? 1 : 0);
     }
 
-    void setSndLowAt(int lowAt) throws IOException {
-        setSndLowAt(intValue(), lowAt);
-    }
-
-    boolean isTcpNoPush() throws IOException  {
-        return getTcpNoPush(intValue()) != 0;
-    }
-
     int getSndLowAt() throws IOException {
         return getSndLowAt(intValue());
+    }
+
+    void setSndLowAt(int lowAt) throws IOException {
+        setSndLowAt(intValue(), lowAt);
     }
 
     AcceptFilter getAcceptFilter() throws IOException {
         String[] result = getAcceptFilter(intValue());
         return result == null ? PLATFORM_UNSUPPORTED : new AcceptFilter(result[0], result[1]);
+    }
+
+    void setAcceptFilter(AcceptFilter acceptFilter) throws IOException {
+        setAcceptFilter(intValue(), acceptFilter.filterName(), acceptFilter.filterArgs());
     }
 
     PeerCredentials getPeerCredentials() throws IOException {
@@ -79,28 +107,4 @@ final class BsdSocket extends Socket {
         }
         return ioResult("sendfile", (int) res);
     }
-
-    public static BsdSocket newSocketStream() {
-        return new BsdSocket(newSocketStream0());
-    }
-
-    public static BsdSocket newSocketDgram() {
-        return new BsdSocket(newSocketDgram0());
-    }
-
-    public static BsdSocket newSocketDomain() {
-        return new BsdSocket(newSocketDomain0());
-    }
-
-    private static native long sendFile(int socketFd, DefaultFileRegion src, long baseOffset,
-                                        long offset, long length) throws IOException;
-
-    private static native String[] getAcceptFilter(int fd) throws IOException;
-    private static native int getTcpNoPush(int fd) throws IOException;
-    private static native int getSndLowAt(int fd) throws IOException;
-    private static native PeerCredentials getPeerCredentials(int fd) throws IOException;
-
-    private static native void setAcceptFilter(int fd, String filterName, String filterArgs) throws IOException;
-    private static native void setTcpNoPush(int fd, int tcpNoPush) throws IOException;
-    private static native void setSndLowAt(int fd, int lowAt) throws IOException;
 }

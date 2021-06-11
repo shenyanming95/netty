@@ -50,22 +50,7 @@ public final class WebSocketClientProtocolConfig {
     private final long forceCloseTimeoutMillis;
     private final boolean absoluteUpgradeUrl;
 
-    private WebSocketClientProtocolConfig(
-        URI webSocketUri,
-        String subprotocol,
-        WebSocketVersion version,
-        boolean allowExtensions,
-        HttpHeaders customHeaders,
-        int maxFramePayloadLength,
-        boolean performMasking,
-        boolean allowMaskMismatch,
-        boolean handleCloseFrames,
-        WebSocketCloseStatus sendCloseFrame,
-        boolean dropPongFrames,
-        long handshakeTimeoutMillis,
-        long forceCloseTimeoutMillis,
-        boolean absoluteUpgradeUrl
-    ) {
+    private WebSocketClientProtocolConfig(URI webSocketUri, String subprotocol, WebSocketVersion version, boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength, boolean performMasking, boolean allowMaskMismatch, boolean handleCloseFrames, WebSocketCloseStatus sendCloseFrame, boolean dropPongFrames, long handshakeTimeoutMillis, long forceCloseTimeoutMillis, boolean absoluteUpgradeUrl) {
         this.webSocketUri = webSocketUri;
         this.subprotocol = subprotocol;
         this.version = version;
@@ -80,6 +65,10 @@ public final class WebSocketClientProtocolConfig {
         this.dropPongFrames = dropPongFrames;
         this.handshakeTimeoutMillis = checkPositive(handshakeTimeoutMillis, "handshakeTimeoutMillis");
         this.absoluteUpgradeUrl = absoluteUpgradeUrl;
+    }
+
+    public static Builder newBuilder() {
+        return new Builder(URI.create("https://localhost/"), null, WebSocketVersion.V13, false, EmptyHttpHeaders.INSTANCE, 65536, DEFAULT_PERFORM_MASKING, DEFAULT_ALLOW_MASK_MISMATCH, DEFAULT_HANDLE_CLOSE_FRAMES, WebSocketCloseStatus.NORMAL_CLOSURE, DEFAULT_DROP_PONG_FRAMES, DEFAULT_HANDSHAKE_TIMEOUT_MILLIS, -1, false);
     }
 
     public URI webSocketUri() {
@@ -140,44 +129,11 @@ public final class WebSocketClientProtocolConfig {
 
     @Override
     public String toString() {
-        return "WebSocketClientProtocolConfig" +
-            " {webSocketUri=" + webSocketUri +
-            ", subprotocol=" + subprotocol +
-            ", version=" + version +
-            ", allowExtensions=" + allowExtensions +
-            ", customHeaders=" + customHeaders +
-            ", maxFramePayloadLength=" + maxFramePayloadLength +
-            ", performMasking=" + performMasking +
-            ", allowMaskMismatch=" + allowMaskMismatch +
-            ", handleCloseFrames=" + handleCloseFrames +
-            ", sendCloseFrame=" + sendCloseFrame +
-            ", dropPongFrames=" + dropPongFrames +
-            ", handshakeTimeoutMillis=" + handshakeTimeoutMillis +
-            ", forceCloseTimeoutMillis=" + forceCloseTimeoutMillis +
-            ", absoluteUpgradeUrl=" + absoluteUpgradeUrl +
-            "}";
+        return "WebSocketClientProtocolConfig" + " {webSocketUri=" + webSocketUri + ", subprotocol=" + subprotocol + ", version=" + version + ", allowExtensions=" + allowExtensions + ", customHeaders=" + customHeaders + ", maxFramePayloadLength=" + maxFramePayloadLength + ", performMasking=" + performMasking + ", allowMaskMismatch=" + allowMaskMismatch + ", handleCloseFrames=" + handleCloseFrames + ", sendCloseFrame=" + sendCloseFrame + ", dropPongFrames=" + dropPongFrames + ", handshakeTimeoutMillis=" + handshakeTimeoutMillis + ", forceCloseTimeoutMillis=" + forceCloseTimeoutMillis + ", absoluteUpgradeUrl=" + absoluteUpgradeUrl + "}";
     }
 
     public Builder toBuilder() {
         return new Builder(this);
-    }
-
-    public static Builder newBuilder() {
-        return new Builder(
-                URI.create("https://localhost/"),
-                null,
-                WebSocketVersion.V13,
-                false,
-                EmptyHttpHeaders.INSTANCE,
-                65536,
-                DEFAULT_PERFORM_MASKING,
-                DEFAULT_ALLOW_MASK_MISMATCH,
-                DEFAULT_HANDLE_CLOSE_FRAMES,
-                WebSocketCloseStatus.NORMAL_CLOSURE,
-                DEFAULT_DROP_PONG_FRAMES,
-                DEFAULT_HANDSHAKE_TIMEOUT_MILLIS,
-                -1,
-                false);
     }
 
     public static final class Builder {
@@ -197,36 +153,10 @@ public final class WebSocketClientProtocolConfig {
         private boolean absoluteUpgradeUrl;
 
         private Builder(WebSocketClientProtocolConfig clientConfig) {
-            this(ObjectUtil.checkNotNull(clientConfig, "clientConfig").webSocketUri(),
-                 clientConfig.subprotocol(),
-                 clientConfig.version(),
-                 clientConfig.allowExtensions(),
-                 clientConfig.customHeaders(),
-                 clientConfig.maxFramePayloadLength(),
-                 clientConfig.performMasking(),
-                 clientConfig.allowMaskMismatch(),
-                 clientConfig.handleCloseFrames(),
-                 clientConfig.sendCloseFrame(),
-                 clientConfig.dropPongFrames(),
-                 clientConfig.handshakeTimeoutMillis(),
-                 clientConfig.forceCloseTimeoutMillis(),
-                 clientConfig.absoluteUpgradeUrl());
+            this(ObjectUtil.checkNotNull(clientConfig, "clientConfig").webSocketUri(), clientConfig.subprotocol(), clientConfig.version(), clientConfig.allowExtensions(), clientConfig.customHeaders(), clientConfig.maxFramePayloadLength(), clientConfig.performMasking(), clientConfig.allowMaskMismatch(), clientConfig.handleCloseFrames(), clientConfig.sendCloseFrame(), clientConfig.dropPongFrames(), clientConfig.handshakeTimeoutMillis(), clientConfig.forceCloseTimeoutMillis(), clientConfig.absoluteUpgradeUrl());
         }
 
-        private Builder(URI webSocketUri,
-                        String subprotocol,
-                        WebSocketVersion version,
-                        boolean allowExtensions,
-                        HttpHeaders customHeaders,
-                        int maxFramePayloadLength,
-                        boolean performMasking,
-                        boolean allowMaskMismatch,
-                        boolean handleCloseFrames,
-                        WebSocketCloseStatus sendCloseFrame,
-                        boolean dropPongFrames,
-                        long handshakeTimeoutMillis,
-                        long forceCloseTimeoutMillis,
-                        boolean absoluteUpgradeUrl) {
+        private Builder(URI webSocketUri, String subprotocol, WebSocketVersion version, boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength, boolean performMasking, boolean allowMaskMismatch, boolean handleCloseFrames, WebSocketCloseStatus sendCloseFrame, boolean dropPongFrames, long handshakeTimeoutMillis, long forceCloseTimeoutMillis, boolean absoluteUpgradeUrl) {
             this.webSocketUri = webSocketUri;
             this.subprotocol = subprotocol;
             this.version = version;
@@ -371,22 +301,7 @@ public final class WebSocketClientProtocolConfig {
          * Build unmodifiable client protocol configuration.
          */
         public WebSocketClientProtocolConfig build() {
-            return new WebSocketClientProtocolConfig(
-                webSocketUri,
-                subprotocol,
-                version,
-                allowExtensions,
-                customHeaders,
-                maxFramePayloadLength,
-                performMasking,
-                allowMaskMismatch,
-                handleCloseFrames,
-                sendCloseFrame,
-                dropPongFrames,
-                handshakeTimeoutMillis,
-                forceCloseTimeoutMillis,
-                absoluteUpgradeUrl
-            );
+            return new WebSocketClientProtocolConfig(webSocketUri, subprotocol, version, allowExtensions, customHeaders, maxFramePayloadLength, performMasking, allowMaskMismatch, handleCloseFrames, sendCloseFrame, dropPongFrames, handshakeTimeoutMillis, forceCloseTimeoutMillis, absoluteUpgradeUrl);
         }
     }
 }

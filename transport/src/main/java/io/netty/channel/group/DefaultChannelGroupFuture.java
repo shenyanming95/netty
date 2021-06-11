@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.group;
 
 import io.netty.channel.Channel;
@@ -41,9 +26,9 @@ final class DefaultChannelGroupFuture extends DefaultPromise<Void> implements Ch
             boolean callSetDone;
             synchronized (DefaultChannelGroupFuture.this) {
                 if (success) {
-                    successCount ++;
+                    successCount++;
                 } else {
-                    failureCount ++;
+                    failureCount++;
                 }
 
                 callSetDone = successCount + failureCount == futures.size();
@@ -52,9 +37,8 @@ final class DefaultChannelGroupFuture extends DefaultPromise<Void> implements Ch
 
             if (callSetDone) {
                 if (failureCount > 0) {
-                    List<Map.Entry<Channel, Throwable>> failed =
-                            new ArrayList<Map.Entry<Channel, Throwable>>(failureCount);
-                    for (ChannelFuture f: futures.values()) {
+                    List<Map.Entry<Channel, Throwable>> failed = new ArrayList<Map.Entry<Channel, Throwable>>(failureCount);
+                    for (ChannelFuture f : futures.values()) {
                         if (!f.isSuccess()) {
                             failed.add(new DefaultEntry<Channel, Throwable>(f.channel(), f.cause()));
                         }
@@ -70,19 +54,19 @@ final class DefaultChannelGroupFuture extends DefaultPromise<Void> implements Ch
     /**
      * Creates a new instance.
      */
-    DefaultChannelGroupFuture(ChannelGroup group, Collection<ChannelFuture> futures,  EventExecutor executor) {
+    DefaultChannelGroupFuture(ChannelGroup group, Collection<ChannelFuture> futures, EventExecutor executor) {
         super(executor);
         this.group = ObjectUtil.checkNotNull(group, "group");
         ObjectUtil.checkNotNull(futures, "futures");
 
         Map<Channel, ChannelFuture> futureMap = new LinkedHashMap<Channel, ChannelFuture>();
-        for (ChannelFuture f: futures) {
+        for (ChannelFuture f : futures) {
             futureMap.put(f.channel(), f);
         }
 
         this.futures = Collections.unmodifiableMap(futureMap);
 
-        for (ChannelFuture f: this.futures.values()) {
+        for (ChannelFuture f : this.futures.values()) {
             f.addListener(childListener);
         }
 
@@ -96,7 +80,7 @@ final class DefaultChannelGroupFuture extends DefaultPromise<Void> implements Ch
         super(executor);
         this.group = group;
         this.futures = Collections.unmodifiableMap(futures);
-        for (ChannelFuture f: this.futures.values()) {
+        for (ChannelFuture f : this.futures.values()) {
             f.addListener(childListener);
         }
 
@@ -150,8 +134,7 @@ final class DefaultChannelGroupFuture extends DefaultPromise<Void> implements Ch
     }
 
     @Override
-    public DefaultChannelGroupFuture removeListeners(
-            GenericFutureListener<? extends Future<? super Void>>... listeners) {
+    public DefaultChannelGroupFuture removeListeners(GenericFutureListener<? extends Future<? super Void>>... listeners) {
         super.removeListeners(listeners);
         return this;
     }

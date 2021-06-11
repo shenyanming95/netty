@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.websocketx.extensions.compression;
 
 import io.netty.buffer.ByteBuf;
@@ -50,13 +35,13 @@ abstract class DeflateEncoder extends WebSocketExtensionEncoder {
 
     /**
      * Constructor
-     * @param compressionLevel compression level of the compressor.
-     * @param windowSize maximum size of the window compressor buffer.
-     * @param noContext true to disable context takeover.
+     *
+     * @param compressionLevel       compression level of the compressor.
+     * @param windowSize             maximum size of the window compressor buffer.
+     * @param noContext              true to disable context takeover.
      * @param extensionEncoderFilter extension encoder filter.
      */
-    DeflateEncoder(int compressionLevel, int windowSize, boolean noContext,
-                   WebSocketExtensionFilter extensionEncoderFilter) {
+    DeflateEncoder(int compressionLevel, int windowSize, boolean noContext, WebSocketExtensionFilter extensionEncoderFilter) {
         this.compressionLevel = compressionLevel;
         this.windowSize = windowSize;
         this.noContext = noContext;
@@ -117,14 +102,13 @@ abstract class DeflateEncoder extends WebSocketExtensionEncoder {
 
     private ByteBuf compressContent(ChannelHandlerContext ctx, WebSocketFrame msg) {
         if (encoder == null) {
-            encoder = new EmbeddedChannel(ZlibCodecFactory.newZlibEncoder(
-                    ZlibWrapper.NONE, compressionLevel, windowSize, 8));
+            encoder = new EmbeddedChannel(ZlibCodecFactory.newZlibEncoder(ZlibWrapper.NONE, compressionLevel, windowSize, 8));
         }
 
         encoder.writeOutbound(msg.content().retain());
 
         CompositeByteBuf fullCompressedContent = ctx.alloc().compositeBuffer();
-        for (;;) {
+        for (; ; ) {
             ByteBuf partCompressedContent = encoder.readOutbound();
             if (partCompressedContent == null) {
                 break;

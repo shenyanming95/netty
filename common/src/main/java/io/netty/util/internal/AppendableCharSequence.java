@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.internal;
 
 
@@ -35,6 +20,24 @@ public final class AppendableCharSequence implements CharSequence, Appendable {
         }
         this.chars = chars;
         pos = chars.length;
+    }
+
+    private static char[] expand(char[] array, int neededSpace, int size) {
+        int newCapacity = array.length;
+        do {
+            // double capacity until it is big enough
+            newCapacity <<= 1;
+
+            if (newCapacity < 0) {
+                throw new IllegalStateException();
+            }
+
+        } while (neededSpace > newCapacity);
+
+        char[] newArray = new char[newCapacity];
+        System.arraycopy(array, 0, newArray, 0, size);
+
+        return newArray;
     }
 
     public void setLength(int length) {
@@ -61,6 +64,7 @@ public final class AppendableCharSequence implements CharSequence, Appendable {
      * Access a value in this {@link CharSequence}.
      * This method is considered unsafe as index values are assumed to be legitimate.
      * Only underlying array bounds checking is done.
+     *
      * @param index The index to access the underlying array at.
      * @return The value at {@code index}.
      */
@@ -98,8 +102,7 @@ public final class AppendableCharSequence implements CharSequence, Appendable {
     @Override
     public AppendableCharSequence append(CharSequence csq, int start, int end) {
         if (csq.length() < end) {
-            throw new IndexOutOfBoundsException("expected: csq.length() >= ("
-                    + end + "),but actual is (" + csq.length() + ")");
+            throw new IndexOutOfBoundsException("expected: csq.length() >= (" + end + "),but actual is (" + csq.length() + ")");
         }
         int length = end - start;
         if (length > chars.length - pos) {
@@ -139,8 +142,7 @@ public final class AppendableCharSequence implements CharSequence, Appendable {
     public String substring(int start, int end) {
         int length = end - start;
         if (start > pos || length > pos) {
-            throw new IndexOutOfBoundsException("expected: start and length <= ("
-                    + pos + ")");
+            throw new IndexOutOfBoundsException("expected: start and length <= (" + pos + ")");
         }
         return new String(chars, start, length);
     }
@@ -152,23 +154,5 @@ public final class AppendableCharSequence implements CharSequence, Appendable {
      */
     public String subStringUnsafe(int start, int end) {
         return new String(chars, start, end - start);
-    }
-
-    private static char[] expand(char[] array, int neededSpace, int size) {
-        int newCapacity = array.length;
-        do {
-            // double capacity until it is big enough
-            newCapacity <<= 1;
-
-            if (newCapacity < 0) {
-                throw new IllegalStateException();
-            }
-
-        } while (neededSpace > newCapacity);
-
-        char[] newArray = new char[newCapacity];
-        System.arraycopy(array, 0, newArray, 0, size);
-
-        return newArray;
     }
 }

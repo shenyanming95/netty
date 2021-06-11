@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http2;
 
 import io.netty.channel.*;
@@ -51,6 +36,30 @@ public final class Http2StreamChannelBootstrap {
 
     public Http2StreamChannelBootstrap(Channel channel) {
         this.channel = ObjectUtil.checkNotNull(channel, "channel");
+    }
+
+    private static void setChannelOptions(Channel channel, Map.Entry<ChannelOption<?>, Object>[] options) {
+        for (Map.Entry<ChannelOption<?>, Object> e : options) {
+            setChannelOption(channel, e.getKey(), e.getValue());
+        }
+    }
+
+    private static void setChannelOption(Channel channel, ChannelOption<?> option, Object value) {
+        try {
+            @SuppressWarnings("unchecked") ChannelOption<Object> opt = (ChannelOption<Object>) option;
+            if (!channel.config().setOption(opt, value)) {
+                logger.warn("Unknown channel option '{}' for channel '{}'", option, channel);
+            }
+        } catch (Throwable t) {
+            logger.warn("Failed to set channel option '{}' with value '{}' for channel '{}'", option, value, channel, t);
+        }
+    }
+
+    private static void setAttributes(Channel channel, Map.Entry<AttributeKey<?>, Object>[] options) {
+        for (Map.Entry<AttributeKey<?>, Object> e : options) {
+            @SuppressWarnings("unchecked") AttributeKey<Object> key = (AttributeKey<Object>) e.getKey();
+            channel.attr(key).set(e.getValue());
+        }
     }
 
     /**
@@ -96,6 +105,7 @@ public final class Http2StreamChannelBootstrap {
 
     /**
      * Open a new {@link Http2StreamChannel} to use.
+     *
      * @return the {@link Future} that will be notified once the channel was opened successfully or it failed.
      */
     public Future<Http2StreamChannel> open() {
@@ -104,6 +114,7 @@ public final class Http2StreamChannelBootstrap {
 
     /**
      * Open a new {@link Http2StreamChannel} to use and notifies the given {@link Promise}.
+     *
      * @return the {@link Future} that will be notified once the channel was opened successfully or it failed.
      */
     @SuppressWarnings("deprecation")
@@ -145,9 +156,7 @@ public final class Http2StreamChannelBootstrap {
         }
         if (ctx == null) {
             if (channel.isActive()) {
-                throw new IllegalStateException(StringUtil.simpleClassName(Http2MultiplexCodec.class) + " or "
-                        + StringUtil.simpleClassName(Http2MultiplexHandler.class)
-                        + " must be in the ChannelPipeline of Channel " + channel);
+                throw new IllegalStateException(StringUtil.simpleClassName(Http2MultiplexCodec.class) + " or " + StringUtil.simpleClassName(Http2MultiplexHandler.class) + " must be in the ChannelPipeline of Channel " + channel);
             } else {
                 throw new ClosedChannelException();
             }
@@ -211,42 +220,12 @@ public final class Http2StreamChannelBootstrap {
         if (handler != null) {
             p.addLast(handler);
         }
-        final Map.Entry<ChannelOption<?>, Object> [] optionArray;
+        final Map.Entry<ChannelOption<?>, Object>[] optionArray;
         synchronized (options) {
             optionArray = options.entrySet().toArray(EMPTY_OPTION_ARRAY);
         }
 
         setChannelOptions(channel, optionArray);
         setAttributes(channel, attrs.entrySet().toArray(EMPTY_ATTRIBUTE_ARRAY));
-    }
-
-    private static void setChannelOptions(
-            Channel channel, Map.Entry<ChannelOption<?>, Object>[] options) {
-        for (Map.Entry<ChannelOption<?>, Object> e: options) {
-            setChannelOption(channel, e.getKey(), e.getValue());
-        }
-    }
-
-    private static void setChannelOption(
-            Channel channel, ChannelOption<?> option, Object value) {
-        try {
-            @SuppressWarnings("unchecked")
-            ChannelOption<Object> opt = (ChannelOption<Object>) option;
-            if (!channel.config().setOption(opt, value)) {
-                logger.warn("Unknown channel option '{}' for channel '{}'", option, channel);
-            }
-        } catch (Throwable t) {
-            logger.warn(
-                    "Failed to set channel option '{}' with value '{}' for channel '{}'", option, value, channel, t);
-        }
-    }
-
-    private static void setAttributes(
-            Channel channel, Map.Entry<AttributeKey<?>, Object>[] options) {
-        for (Map.Entry<AttributeKey<?>, Object> e: options) {
-            @SuppressWarnings("unchecked")
-            AttributeKey<Object> key = (AttributeKey<Object>) e.getKey();
-            channel.attr(key).set(e.getValue());
-        }
     }
 }

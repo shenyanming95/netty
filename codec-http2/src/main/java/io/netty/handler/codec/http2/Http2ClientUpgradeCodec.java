@@ -69,19 +69,18 @@ public class Http2ClientUpgradeCodec implements HttpClientUpgradeHandler.Upgrade
      * Creates the codec using a default name for the connection handler when adding to the
      * pipeline.
      *
-     * @param connectionHandler the HTTP/2 connection handler
+     * @param connectionHandler     the HTTP/2 connection handler
      * @param http2MultiplexHandler the Http2 Multiplexer handler to work with Http2FrameCodec
      */
-    public Http2ClientUpgradeCodec(Http2ConnectionHandler connectionHandler,
-        Http2MultiplexHandler http2MultiplexHandler) {
+    public Http2ClientUpgradeCodec(Http2ConnectionHandler connectionHandler, Http2MultiplexHandler http2MultiplexHandler) {
         this((String) null, connectionHandler, http2MultiplexHandler);
     }
 
     /**
      * Creates the codec providing an upgrade to the given handler for HTTP/2.
      *
-     * @param handlerName the name of the HTTP/2 connection handler to be used in the pipeline,
-     *                    or {@code null} to auto-generate the name
+     * @param handlerName       the name of the HTTP/2 connection handler to be used in the pipeline,
+     *                          or {@code null} to auto-generate the name
      * @param connectionHandler the HTTP/2 connection handler
      */
     public Http2ClientUpgradeCodec(String handlerName, Http2ConnectionHandler connectionHandler) {
@@ -91,17 +90,15 @@ public class Http2ClientUpgradeCodec implements HttpClientUpgradeHandler.Upgrade
     /**
      * Creates the codec providing an upgrade to the given handler for HTTP/2.
      *
-     * @param handlerName the name of the HTTP/2 connection handler to be used in the pipeline,
-     *                    or {@code null} to auto-generate the name
+     * @param handlerName       the name of the HTTP/2 connection handler to be used in the pipeline,
+     *                          or {@code null} to auto-generate the name
      * @param connectionHandler the HTTP/2 connection handler
      */
-    public Http2ClientUpgradeCodec(String handlerName, Http2ConnectionHandler connectionHandler,
-        Http2MultiplexHandler http2MultiplexHandler) {
+    public Http2ClientUpgradeCodec(String handlerName, Http2ConnectionHandler connectionHandler, Http2MultiplexHandler http2MultiplexHandler) {
         this(handlerName, connectionHandler, connectionHandler, http2MultiplexHandler);
     }
 
-    private Http2ClientUpgradeCodec(String handlerName, Http2ConnectionHandler connectionHandler, ChannelHandler
-        upgradeToHandler, Http2MultiplexHandler http2MultiplexHandler) {
+    private Http2ClientUpgradeCodec(String handlerName, Http2ConnectionHandler connectionHandler, ChannelHandler upgradeToHandler, Http2MultiplexHandler http2MultiplexHandler) {
         this.handlerName = handlerName;
         this.connectionHandler = checkNotNull(connectionHandler, "connectionHandler");
         this.upgradeToHandler = checkNotNull(upgradeToHandler, "upgradeToHandler");
@@ -114,16 +111,14 @@ public class Http2ClientUpgradeCodec implements HttpClientUpgradeHandler.Upgrade
     }
 
     @Override
-    public Collection<CharSequence> setUpgradeHeaders(ChannelHandlerContext ctx,
-        HttpRequest upgradeRequest) {
+    public Collection<CharSequence> setUpgradeHeaders(ChannelHandlerContext ctx, HttpRequest upgradeRequest) {
         CharSequence settingsValue = getSettingsHeaderValue(ctx);
         upgradeRequest.headers().set(HTTP_UPGRADE_SETTINGS_HEADER, settingsValue);
         return UPGRADE_HEADERS;
     }
 
     @Override
-    public void upgradeTo(ChannelHandlerContext ctx, FullHttpResponse upgradeResponse)
-        throws Exception {
+    public void upgradeTo(ChannelHandlerContext ctx, FullHttpResponse upgradeResponse) throws Exception {
         try {
             // Add the handler to the pipeline.
             ctx.pipeline().addAfter(ctx.name(), handlerName, upgradeToHandler);

@@ -47,6 +47,32 @@ public class HttpServerKeepAliveHandler extends ChannelDuplexHandler {
     // Track pending responses to support client pipelining: https://tools.ietf.org/html/rfc7230#section-6.3.2
     private int pendingResponses;
 
+    /**
+     * Keep-alive only works if the client can detect when the message has ended without relying on the connection being
+     * closed.
+     * <p>
+     * <ul>
+     *     <li>See <a href="https://tools.ietf.org/html/rfc7230#section-6.3"/></li>
+     *     <li>See <a href="https://tools.ietf.org/html/rfc7230#section-3.3.2"/></li>
+     *     <li>See <a href="https://tools.ietf.org/html/rfc7230#section-3.3.3"/></li>
+     * </ul>
+     *
+     * @param response The HttpResponse to check
+     * @return true if the response has a self defined message length.
+     */
+    private static boolean isSelfDefinedMessageLength(HttpResponse response) {
+        return isContentLengthSet(response) || isTransferEncodingChunked(response) || isMultipart(response) || isInformational(response) || response.status().code() == HttpResponseStatus.NO_CONTENT.code();
+    }
+
+    private static boolean isInformational(HttpResponse response) {
+        return response.status().codeClass() == HttpStatusClass.INFORMATIONAL;
+    }
+
+    private static boolean isMultipart(HttpResponse response) {
+        String contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE);
+        return contentType != null && contentType.regionMatches(true, 0, MULTIPART_PREFIX, 0, MULTIPART_PREFIX.length());
+    }
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         // read message and track if it was keepAlive
@@ -91,34 +117,5 @@ public class HttpServerKeepAliveHandler extends ChannelDuplexHandler {
 
     private boolean shouldKeepAlive() {
         return pendingResponses != 0 || persistentConnection;
-    }
-
-    /**
-     * Keep-alive only works if the client can detect when the message has ended without relying on the connection being
-     * closed.
-     * <p>
-     * <ul>
-     *     <li>See <a href="https://tools.ietf.org/html/rfc7230#section-6.3"/></li>
-     *     <li>See <a href="https://tools.ietf.org/html/rfc7230#section-3.3.2"/></li>
-     *     <li>See <a href="https://tools.ietf.org/html/rfc7230#section-3.3.3"/></li>
-     * </ul>
-     *
-     * @param response The HttpResponse to check
-     *
-     * @return true if the response has a self defined message length.
-     */
-    private static boolean isSelfDefinedMessageLength(HttpResponse response) {
-        return isContentLengthSet(response) || isTransferEncodingChunked(response) || isMultipart(response) ||
-               isInformational(response) || response.status().code() == HttpResponseStatus.NO_CONTENT.code();
-    }
-
-    private static boolean isInformational(HttpResponse response) {
-        return response.status().codeClass() == HttpStatusClass.INFORMATIONAL;
-    }
-
-    private static boolean isMultipart(HttpResponse response) {
-        String contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE);
-        return contentType != null &&
-               contentType.regionMatches(true, 0, MULTIPART_PREFIX, 0, MULTIPART_PREFIX.length());
     }
 }

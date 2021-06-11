@@ -37,6 +37,14 @@ public abstract class Http2ChannelDuplexHandler extends ChannelDuplexHandler {
 
     private volatile Http2FrameCodec frameCodec;
 
+    private static Http2FrameCodec requireHttp2FrameCodec(ChannelHandlerContext ctx) {
+        ChannelHandlerContext frameCodecCtx = ctx.pipeline().context(Http2FrameCodec.class);
+        if (frameCodecCtx == null) {
+            throw new IllegalArgumentException(Http2FrameCodec.class.getSimpleName() + " was not found in the channel pipeline.");
+        }
+        return (Http2FrameCodec) frameCodecCtx.handler();
+    }
+
     @Override
     public final void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         frameCodec = requireHttp2FrameCodec(ctx);
@@ -68,8 +76,7 @@ public abstract class Http2ChannelDuplexHandler extends ChannelDuplexHandler {
     public final Http2FrameStream newStream() {
         Http2FrameCodec codec = frameCodec;
         if (codec == null) {
-            throw new IllegalStateException(StringUtil.simpleClassName(Http2FrameCodec.class) + " not found." +
-                    " Has the handler been added to a pipeline?");
+            throw new IllegalStateException(StringUtil.simpleClassName(Http2FrameCodec.class) + " not found." + " Has the handler been added to a pipeline?");
         }
         return codec.newStream();
     }
@@ -81,14 +88,5 @@ public abstract class Http2ChannelDuplexHandler extends ChannelDuplexHandler {
      */
     protected final void forEachActiveStream(Http2FrameStreamVisitor streamVisitor) throws Http2Exception {
         frameCodec.forEachActiveStream(streamVisitor);
-    }
-
-    private static Http2FrameCodec requireHttp2FrameCodec(ChannelHandlerContext ctx) {
-        ChannelHandlerContext frameCodecCtx = ctx.pipeline().context(Http2FrameCodec.class);
-        if (frameCodecCtx == null) {
-            throw new IllegalArgumentException(Http2FrameCodec.class.getSimpleName()
-                                               + " was not found in the channel pipeline.");
-        }
-        return (Http2FrameCodec) frameCodecCtx.handler();
     }
 }

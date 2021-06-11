@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.concurrent;
 
 import java.util.concurrent.CancellationException;
@@ -41,8 +26,8 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * failed.
      *
      * @return the cause of the failure.
-     *         {@code null} if succeeded or this future is not
-     *         completed yet.
+     * {@code null} if succeeded or this future is not
+     * completed yet.
      */
     Throwable cause();
 
@@ -95,8 +80,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
     /**
      * Waits for this future to be completed.
      *
-     * @throws InterruptedException
-     *         if the current thread was interrupted
+     * @throws InterruptedException if the current thread was interrupted
      */
     Future<V> await() throws InterruptedException;
 
@@ -112,10 +96,8 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * specified time limit.
      *
      * @return {@code true} if and only if the future was completed within
-     *         the specified time limit
-     *
-     * @throws InterruptedException
-     *         if the current thread was interrupted
+     * the specified time limit
+     * @throws InterruptedException if the current thread was interrupted
      */
     boolean await(long timeout, TimeUnit unit) throws InterruptedException;
 
@@ -124,10 +106,8 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * specified time limit.
      *
      * @return {@code true} if and only if the future was completed within
-     *         the specified time limit
-     *
-     * @throws InterruptedException
-     *         if the current thread was interrupted
+     * the specified time limit
+     * @throws InterruptedException if the current thread was interrupted
      */
     boolean await(long timeoutMillis) throws InterruptedException;
 
@@ -137,7 +117,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * {@link InterruptedException} and discards it silently.
      *
      * @return {@code true} if and only if the future was completed within
-     *         the specified time limit
+     * the specified time limit
      */
     boolean awaitUninterruptibly(long timeout, TimeUnit unit);
 
@@ -147,13 +127,13 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * {@link InterruptedException} and discards it silently.
      *
      * @return {@code true} if and only if the future was completed within
-     *         the specified time limit
+     * the specified time limit
      */
     boolean awaitUninterruptibly(long timeoutMillis);
 
     /**
      * Return the result without blocking. If the future is not done yet this will return {@code null}.
-     *
+     * <p>
      * As it is possible that a {@code null} value is used to mark the future as successful you also need to check
      * if the future is really done with {@link #isDone()} and not rely on the returned {@code null} value.
      */
@@ -161,7 +141,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
 
     /**
      * {@inheritDoc}
-     *
+     * <p>
      * If the cancellation was successful it will fail the future with a {@link CancellationException}.
      */
     @Override

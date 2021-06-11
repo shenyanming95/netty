@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * Decodes the Redis protocol into {@link RedisMessage} objects following
  * <a href="http://redis.io/topics/protocol">RESP (REdis Serialization Protocol)</a>.
- *
+ * <p>
  * {@link RedisMessage} parts can be aggregated to {@link RedisMessage} using
  * {@link RedisArrayAggregator} or processed directly.
  */
@@ -45,14 +45,6 @@ public final class RedisDecoder extends ByteToMessageDecoder {
     private RedisMessageType type;
     private int remainingBulkLength;
 
-    private enum State {
-        DECODE_TYPE,
-        DECODE_INLINE, // SIMPLE_STRING, ERROR, INTEGER
-        DECODE_LENGTH, // BULK_STRING, ARRAY_HEADER
-        DECODE_BULK_STRING_EOL,
-        DECODE_BULK_STRING_CONTENT,
-    }
-
     /**
      * Creates a new instance with default {@code maxInlineMessageLength} and {@code messagePool}
      * and inline command decoding disabled.
@@ -63,6 +55,7 @@ public final class RedisDecoder extends ByteToMessageDecoder {
 
     /**
      * Creates a new instance with default {@code maxInlineMessageLength} and {@code messagePool}.
+     *
      * @param decodeInlineCommands if {@code true}, inline commands will be decoded.
      */
     public RedisDecoder(boolean decodeInlineCommands) {
@@ -71,8 +64,9 @@ public final class RedisDecoder extends ByteToMessageDecoder {
 
     /**
      * Creates a new instance with inline command decoding disabled.
+     *
      * @param maxInlineMessageLength the maximum length of inline message.
-     * @param messagePool the predefined message pool.
+     * @param messagePool            the predefined message pool.
      */
     public RedisDecoder(int maxInlineMessageLength, RedisMessagePool messagePool) {
         this(maxInlineMessageLength, messagePool, false);
@@ -80,52 +74,74 @@ public final class RedisDecoder extends ByteToMessageDecoder {
 
     /**
      * Creates a new instance.
+     *
      * @param maxInlineMessageLength the maximum length of inline message.
-     * @param messagePool the predefined message pool.
-     * @param decodeInlineCommands if {@code true}, inline commands will be decoded.
+     * @param messagePool            the predefined message pool.
+     * @param decodeInlineCommands   if {@code true}, inline commands will be decoded.
      */
     public RedisDecoder(int maxInlineMessageLength, RedisMessagePool messagePool, boolean decodeInlineCommands) {
         if (maxInlineMessageLength <= 0 || maxInlineMessageLength > RedisConstants.REDIS_MESSAGE_MAX_LENGTH) {
-            throw new RedisCodecException("maxInlineMessageLength: " + maxInlineMessageLength +
-                                          " (expected: <= " + RedisConstants.REDIS_MESSAGE_MAX_LENGTH + ")");
+            throw new RedisCodecException("maxInlineMessageLength: " + maxInlineMessageLength + " (expected: <= " + RedisConstants.REDIS_MESSAGE_MAX_LENGTH + ")");
         }
         this.maxInlineMessageLength = maxInlineMessageLength;
         this.messagePool = messagePool;
         this.decodeInlineCommands = decodeInlineCommands;
     }
 
+    private static void readEndOfLine(final ByteBuf in) {
+        final short delim = in.readShort();
+        if (RedisConstants.EOL_SHORT == delim) {
+            return;
+        }
+        final byte[] bytes = RedisCodecUtil.shortToBytes(delim);
+        throw new RedisCodecException("delimiter: [" + bytes[0] + "," + bytes[1] + "] (expected: \\r\\n)");
+    }
+
+    private static ByteBuf readLine(ByteBuf in) {
+        if (!in.isReadable(RedisConstants.EOL_LENGTH)) {
+            return null;
+        }
+        final int lfIndex = in.forEachByte(ByteProcessor.FIND_LF);
+        if (lfIndex < 0) {
+            return null;
+        }
+        ByteBuf data = in.readSlice(lfIndex - in.readerIndex() - 1); // `-1` is for CR
+        readEndOfLine(in); // validate CR LF
+        return data;
+    }
+
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         try {
-            for (;;) {
+            for (; ; ) {
                 switch (state) {
-                case DECODE_TYPE:
-                    if (!decodeType(in)) {
-                        return;
-                    }
-                    break;
-                case DECODE_INLINE:
-                    if (!decodeInline(in, out)) {
-                        return;
-                    }
-                    break;
-                case DECODE_LENGTH:
-                    if (!decodeLength(in, out)) {
-                        return;
-                    }
-                    break;
-                case DECODE_BULK_STRING_EOL:
-                    if (!decodeBulkStringEndOfLine(in, out)) {
-                        return;
-                    }
-                    break;
-                case DECODE_BULK_STRING_CONTENT:
-                    if (!decodeBulkStringContent(in, out)) {
-                        return;
-                    }
-                    break;
-                default:
-                    throw new RedisCodecException("Unknown state: " + state);
+                    case DECODE_TYPE:
+                        if (!decodeType(in)) {
+                            return;
+                        }
+                        break;
+                    case DECODE_INLINE:
+                        if (!decodeInline(in, out)) {
+                            return;
+                        }
+                        break;
+                    case DECODE_LENGTH:
+                        if (!decodeLength(in, out)) {
+                            return;
+                        }
+                        break;
+                    case DECODE_BULK_STRING_EOL:
+                        if (!decodeBulkStringEndOfLine(in, out)) {
+                            return;
+                        }
+                        break;
+                    case DECODE_BULK_STRING_CONTENT:
+                        if (!decodeBulkStringContent(in, out)) {
+                            return;
+                        }
+                        break;
+                    default:
+                        throw new RedisCodecException("Unknown state: " + state);
                 }
             }
         } catch (RedisCodecException e) {
@@ -156,8 +172,7 @@ public final class RedisDecoder extends ByteToMessageDecoder {
         ByteBuf lineBytes = readLine(in);
         if (lineBytes == null) {
             if (in.readableBytes() > maxInlineMessageLength) {
-                throw new RedisCodecException("length: " + in.readableBytes() +
-                                              " (expected: <= " + maxInlineMessageLength + ")");
+                throw new RedisCodecException("length: " + in.readableBytes() + " (expected: <= " + maxInlineMessageLength + ")");
             }
             return false;
         }
@@ -176,35 +191,34 @@ public final class RedisDecoder extends ByteToMessageDecoder {
             throw new RedisCodecException("length: " + length + " (expected: >= " + RedisConstants.NULL_VALUE + ")");
         }
         switch (type) {
-        case ARRAY_HEADER:
-            out.add(new ArrayHeaderRedisMessage(length));
-            resetDecoder();
-            return true;
-        case BULK_STRING:
-            if (length > RedisConstants.REDIS_MESSAGE_MAX_LENGTH) {
-                throw new RedisCodecException("length: " + length + " (expected: <= " +
-                                              RedisConstants.REDIS_MESSAGE_MAX_LENGTH + ")");
-            }
-            remainingBulkLength = (int) length; // range(int) is already checked.
-            return decodeBulkString(in, out);
-        default:
-            throw new RedisCodecException("bad type: " + type);
+            case ARRAY_HEADER:
+                out.add(new ArrayHeaderRedisMessage(length));
+                resetDecoder();
+                return true;
+            case BULK_STRING:
+                if (length > RedisConstants.REDIS_MESSAGE_MAX_LENGTH) {
+                    throw new RedisCodecException("length: " + length + " (expected: <= " + RedisConstants.REDIS_MESSAGE_MAX_LENGTH + ")");
+                }
+                remainingBulkLength = (int) length; // range(int) is already checked.
+                return decodeBulkString(in, out);
+            default:
+                throw new RedisCodecException("bad type: " + type);
         }
     }
 
     private boolean decodeBulkString(ByteBuf in, List<Object> out) throws Exception {
         switch (remainingBulkLength) {
-        case RedisConstants.NULL_VALUE: // $-1\r\n
-            out.add(FullBulkStringRedisMessage.NULL_INSTANCE);
-            resetDecoder();
-            return true;
-        case 0:
-            state = State.DECODE_BULK_STRING_EOL;
-            return decodeBulkStringEndOfLine(in, out);
-        default: // expectedBulkLength is always positive.
-            out.add(new BulkStringHeaderRedisMessage(remainingBulkLength));
-            state = State.DECODE_BULK_STRING_CONTENT;
-            return decodeBulkStringContent(in, out);
+            case RedisConstants.NULL_VALUE: // $-1\r\n
+                out.add(FullBulkStringRedisMessage.NULL_INSTANCE);
+                resetDecoder();
+                return true;
+            case 0:
+                state = State.DECODE_BULK_STRING_EOL;
+                return decodeBulkStringEndOfLine(in, out);
+            default: // expectedBulkLength is always positive.
+                out.add(new BulkStringHeaderRedisMessage(remainingBulkLength));
+                state = State.DECODE_BULK_STRING_CONTENT;
+                return decodeBulkStringContent(in, out);
         }
     }
 
@@ -243,47 +257,25 @@ public final class RedisDecoder extends ByteToMessageDecoder {
         return true;
     }
 
-    private static void readEndOfLine(final ByteBuf in) {
-        final short delim = in.readShort();
-        if (RedisConstants.EOL_SHORT == delim) {
-            return;
-        }
-        final byte[] bytes = RedisCodecUtil.shortToBytes(delim);
-        throw new RedisCodecException("delimiter: [" + bytes[0] + "," + bytes[1] + "] (expected: \\r\\n)");
-    }
-
     private RedisMessage newInlineRedisMessage(RedisMessageType messageType, ByteBuf content) {
         switch (messageType) {
-        case INLINE_COMMAND:
-            return new InlineCommandRedisMessage(content.toString(CharsetUtil.UTF_8));
-        case SIMPLE_STRING: {
-            SimpleStringRedisMessage cached = messagePool.getSimpleString(content);
-            return cached != null ? cached : new SimpleStringRedisMessage(content.toString(CharsetUtil.UTF_8));
+            case INLINE_COMMAND:
+                return new InlineCommandRedisMessage(content.toString(CharsetUtil.UTF_8));
+            case SIMPLE_STRING: {
+                SimpleStringRedisMessage cached = messagePool.getSimpleString(content);
+                return cached != null ? cached : new SimpleStringRedisMessage(content.toString(CharsetUtil.UTF_8));
+            }
+            case ERROR: {
+                ErrorRedisMessage cached = messagePool.getError(content);
+                return cached != null ? cached : new ErrorRedisMessage(content.toString(CharsetUtil.UTF_8));
+            }
+            case INTEGER: {
+                IntegerRedisMessage cached = messagePool.getInteger(content);
+                return cached != null ? cached : new IntegerRedisMessage(parseRedisNumber(content));
+            }
+            default:
+                throw new RedisCodecException("bad type: " + messageType);
         }
-        case ERROR: {
-            ErrorRedisMessage cached = messagePool.getError(content);
-            return cached != null ? cached : new ErrorRedisMessage(content.toString(CharsetUtil.UTF_8));
-        }
-        case INTEGER: {
-            IntegerRedisMessage cached = messagePool.getInteger(content);
-            return cached != null ? cached : new IntegerRedisMessage(parseRedisNumber(content));
-        }
-        default:
-            throw new RedisCodecException("bad type: " + messageType);
-        }
-    }
-
-    private static ByteBuf readLine(ByteBuf in) {
-        if (!in.isReadable(RedisConstants.EOL_LENGTH)) {
-            return null;
-        }
-        final int lfIndex = in.forEachByte(ByteProcessor.FIND_LF);
-        if (lfIndex < 0) {
-            return null;
-        }
-        ByteBuf data = in.readSlice(lfIndex - in.readerIndex() - 1); // `-1` is for CR
-        readEndOfLine(in); // validate CR LF
-        return data;
     }
 
     private long parseRedisNumber(ByteBuf byteBuf) {
@@ -294,8 +286,7 @@ public final class RedisDecoder extends ByteToMessageDecoder {
             throw new RedisCodecException("no number to parse: " + byteBuf.toString(CharsetUtil.US_ASCII));
         }
         if (readableBytes > RedisConstants.POSITIVE_LONG_MAX_LENGTH + extraOneByteForNegative) {
-            throw new RedisCodecException("too many characters to be a valid RESP Integer: " +
-                                          byteBuf.toString(CharsetUtil.US_ASCII));
+            throw new RedisCodecException("too many characters to be a valid RESP Integer: " + byteBuf.toString(CharsetUtil.US_ASCII));
         }
         if (negative) {
             return -parsePositiveNumber(byteBuf.skipBytes(extraOneByteForNegative));
@@ -307,6 +298,12 @@ public final class RedisDecoder extends ByteToMessageDecoder {
         toPositiveLongProcessor.reset();
         byteBuf.forEachByte(toPositiveLongProcessor);
         return toPositiveLongProcessor.content();
+    }
+
+    private enum State {
+        DECODE_TYPE, DECODE_INLINE, // SIMPLE_STRING, ERROR, INTEGER
+        DECODE_LENGTH, // BULK_STRING, ARRAY_HEADER
+        DECODE_BULK_STRING_EOL, DECODE_BULK_STRING_CONTENT,
     }
 
     private static final class ToPositiveLongProcessor implements ByteProcessor {

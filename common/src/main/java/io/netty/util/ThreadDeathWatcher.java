@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.util;
 
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -46,10 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Deprecated
 public final class ThreadDeathWatcher {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ThreadDeathWatcher.class);
     // visible for testing
     static final ThreadFactory threadFactory;
-
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ThreadDeathWatcher.class);
     // Use a MPMC queue as we may end up checking isEmpty() from multiple threads which may not be allowed to do
     // concurrently depending on the implementation of it in a MPSC queue.
     private static final Queue<Entry> pendingEntries = new ConcurrentLinkedQueue<Entry>();
@@ -69,12 +52,14 @@ public final class ThreadDeathWatcher {
         threadFactory = new DefaultThreadFactory(poolName, true, Thread.MIN_PRIORITY, null);
     }
 
+    private ThreadDeathWatcher() {
+    }
+
     /**
      * Schedules the specified {@code task} to run when the specified {@code thread} dies.
      *
      * @param thread the {@link Thread} to watch
-     * @param task the {@link Runnable} to run when the {@code thread} dies
-     *
+     * @param task   the {@link Runnable} to run when the {@code thread} dies
      * @throws IllegalArgumentException if the specified {@code thread} is not alive
      */
     public static void watch(Thread thread, Runnable task) {
@@ -92,9 +77,7 @@ public final class ThreadDeathWatcher {
      * Cancels the task scheduled via {@link #watch(Thread, Runnable)}.
      */
     public static void unwatch(Thread thread, Runnable task) {
-        schedule(ObjectUtil.checkNotNull(thread, "thread"),
-                ObjectUtil.checkNotNull(task, "task"),
-                false);
+        schedule(ObjectUtil.checkNotNull(thread, "thread"), ObjectUtil.checkNotNull(task, "task"), false);
     }
 
     private static void schedule(Thread thread, Runnable task, boolean isWatch) {
@@ -141,15 +124,13 @@ public final class ThreadDeathWatcher {
         }
     }
 
-    private ThreadDeathWatcher() { }
-
     private static final class Watcher implements Runnable {
 
         private final List<Entry> watchees = new ArrayList<Entry>();
 
         @Override
         public void run() {
-            for (;;) {
+            for (; ; ) {
                 fetchWatchees();
                 notifyWatchees();
 
@@ -195,7 +176,7 @@ public final class ThreadDeathWatcher {
         }
 
         private void fetchWatchees() {
-            for (;;) {
+            for (; ; ) {
                 Entry e = pendingEntries.poll();
                 if (e == null) {
                     break;
@@ -211,7 +192,7 @@ public final class ThreadDeathWatcher {
 
         private void notifyWatchees() {
             List<Entry> watchees = this.watchees;
-            for (int i = 0; i < watchees.size();) {
+            for (int i = 0; i < watchees.size(); ) {
                 Entry e = watchees.get(i);
                 if (!e.thread.isAlive()) {
                     watchees.remove(i);
@@ -221,7 +202,7 @@ public final class ThreadDeathWatcher {
                         logger.warn("Thread death watcher task raised an exception:", t);
                     }
                 } else {
-                    i ++;
+                    i++;
                 }
             }
         }

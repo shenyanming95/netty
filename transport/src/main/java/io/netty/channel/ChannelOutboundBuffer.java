@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel;
 
 import io.netty.buffer.ByteBuf;
@@ -55,8 +40,7 @@ public final class ChannelOutboundBuffer {
     //  - 2 int fields
     //  - 1 boolean field
     //  - padding
-    static final int CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD =
-            SystemPropertyUtil.getInt("io.netty.transport.outboundBufferEntrySizeOverhead", 96);
+    static final int CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD = SystemPropertyUtil.getInt("io.netty.transport.outboundBufferEntrySizeOverhead", 96);
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ChannelOutboundBuffer.class);
 
@@ -66,13 +50,13 @@ public final class ChannelOutboundBuffer {
             return new ByteBuffer[1024];
         }
     };
-
-    private final Channel channel;
+    private static final AtomicLongFieldUpdater<ChannelOutboundBuffer> TOTAL_PENDING_SIZE_UPDATER = AtomicLongFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "totalPendingSize");
 
     /*
      * Entry(flushedEntry) --> ... Entry(unflushedEntry) --> ... Entry(tailEntry)
      */
-
+    private static final AtomicIntegerFieldUpdater<ChannelOutboundBuffer> UNWRITABLE_UPDATER = AtomicIntegerFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "unwritable");
+    private final Channel channel;
     // 链表结构中, 第一个待flush的entry
     private Entry flushedEntry;
     //  链表结构中, 第一个未flush的entry
@@ -81,21 +65,11 @@ public final class ChannelOutboundBuffer {
     private Entry tailEntry;
     // 尚未写入的刷新条目数
     private int flushed;
-
     private int nioBufferCount;
     private long nioBufferSize;
-
     private boolean inFail;
-
-    private static final AtomicLongFieldUpdater<ChannelOutboundBuffer> TOTAL_PENDING_SIZE_UPDATER =
-            AtomicLongFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "totalPendingSize");
-
     @SuppressWarnings("UnusedDeclaration")
     private volatile long totalPendingSize;
-
-    private static final AtomicIntegerFieldUpdater<ChannelOutboundBuffer> UNWRITABLE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "unwritable");
-
     /**
      * 标识是否可写的变量, 默认为0标识可写, 当不可写时置为1
      */
@@ -106,6 +80,76 @@ public final class ChannelOutboundBuffer {
 
     ChannelOutboundBuffer(AbstractChannel channel) {
         this.channel = channel;
+    }
+
+    private static long total(Object msg) {
+        if (msg instanceof ByteBuf) {
+            return ((ByteBuf) msg).readableBytes();
+        }
+        if (msg instanceof FileRegion) {
+            return ((FileRegion) msg).count();
+        }
+        if (msg instanceof ByteBufHolder) {
+            return ((ByteBufHolder) msg).content().readableBytes();
+        }
+        return -1;
+    }
+
+    private static int nioBuffers(Entry entry, ByteBuf buf, ByteBuffer[] nioBuffers, int nioBufferCount, int maxCount) {
+        ByteBuffer[] nioBufs = entry.bufs;
+        if (nioBufs == null) {
+            // cached ByteBuffers as they may be expensive to create in terms
+            // of Object allocation
+            entry.bufs = nioBufs = buf.nioBuffers();
+        }
+        for (int i = 0; i < nioBufs.length && nioBufferCount < maxCount; ++i) {
+            ByteBuffer nioBuf = nioBufs[i];
+            if (nioBuf == null) {
+                break;
+            } else if (!nioBuf.hasRemaining()) {
+                continue;
+            }
+            nioBuffers[nioBufferCount++] = nioBuf;
+        }
+        return nioBufferCount;
+    }
+
+    private static ByteBuffer[] expandNioBufferArray(ByteBuffer[] array, int neededSpace, int size) {
+        int newCapacity = array.length;
+        do {
+            // double capacity until it is big enough
+            // See https://github.com/netty/netty/issues/1890
+            newCapacity <<= 1;
+
+            if (newCapacity < 0) {
+                throw new IllegalStateException();
+            }
+
+        } while (neededSpace > newCapacity);
+
+        ByteBuffer[] newArray = new ByteBuffer[newCapacity];
+        System.arraycopy(array, 0, newArray, 0, size);
+
+        return newArray;
+    }
+
+    private static int writabilityMask(int index) {
+        if (index < 1 || index > 31) {
+            throw new IllegalArgumentException("index: " + index + " (expected: 1~31)");
+        }
+        return 1 << index;
+    }
+
+    private static void safeSuccess(ChannelPromise promise) {
+        // Only log if the given promise is not of type VoidChannelPromise as trySuccess(...) is expected to return
+        // false.
+        PromiseNotificationUtil.trySuccess(promise, null, promise instanceof VoidChannelPromise ? null : logger);
+    }
+
+    private static void safeFail(ChannelPromise promise, Throwable cause) {
+        // Only log if the given promise is not of type VoidChannelPromise as tryFailure(...) is expected to return
+        // false.
+        PromiseNotificationUtil.tryFailure(promise, cause, promise instanceof VoidChannelPromise ? null : logger);
     }
 
     /**
@@ -144,7 +188,7 @@ public final class ChannelOutboundBuffer {
                 flushedEntry = entry;
             }
             do {
-                flushed ++;
+                flushed++;
                 if (!entry.promise.setUncancellable()) {
                     // Was cancelled so make sure we free up memory and notify about the freed bytes
                     int pending = entry.cancel();
@@ -198,19 +242,6 @@ public final class ChannelOutboundBuffer {
         }
     }
 
-    private static long total(Object msg) {
-        if (msg instanceof ByteBuf) {
-            return ((ByteBuf) msg).readableBytes();
-        }
-        if (msg instanceof FileRegion) {
-            return ((FileRegion) msg).count();
-        }
-        if (msg instanceof ByteBufHolder) {
-            return ((ByteBufHolder) msg).content().readableBytes();
-        }
-        return -1;
-    }
-
     /**
      * Return the current message to write or {@code null} if nothing was flushed before and so is ready to be written.
      */
@@ -225,6 +256,7 @@ public final class ChannelOutboundBuffer {
 
     /**
      * Return the current message flush progress.
+     *
      * @return {@code 0} if nothing was flushed before for the current message or there is no current message
      */
     public long currentProgress() {
@@ -317,7 +349,7 @@ public final class ChannelOutboundBuffer {
     }
 
     private void removeEntry(Entry e) {
-        if (-- flushed == 0) {
+        if (--flushed == 0) {
             // processed everything
             flushedEntry = null;
             if (e == tailEntry) {
@@ -334,7 +366,7 @@ public final class ChannelOutboundBuffer {
      * This operation assumes all messages in this buffer is {@link ByteBuf}.
      */
     public void removeBytes(long writtenBytes) {
-        for (;;) {
+        for (; ; ) {
             Object msg = current();
             if (!(msg instanceof ByteBuf)) {
                 assert writtenBytes == 0;
@@ -395,6 +427,7 @@ public final class ChannelOutboundBuffer {
      * {@link AbstractChannel#doWrite(ChannelOutboundBuffer)}.
      * Refer to {@link NioSocketChannel#doWrite(ChannelOutboundBuffer)} for an example.
      * </p>
+     *
      * @param maxCount The maximum amount of buffers that will be added to the return value.
      * @param maxBytes A hint toward the maximum number of bytes to include as part of the return value. Note that this
      *                 value maybe exceeded because we make a best effort to include at least 1 {@link ByteBuffer}
@@ -466,44 +499,6 @@ public final class ChannelOutboundBuffer {
         return nioBuffers;
     }
 
-    private static int nioBuffers(Entry entry, ByteBuf buf, ByteBuffer[] nioBuffers, int nioBufferCount, int maxCount) {
-        ByteBuffer[] nioBufs = entry.bufs;
-        if (nioBufs == null) {
-            // cached ByteBuffers as they may be expensive to create in terms
-            // of Object allocation
-            entry.bufs = nioBufs = buf.nioBuffers();
-        }
-        for (int i = 0; i < nioBufs.length && nioBufferCount < maxCount; ++i) {
-            ByteBuffer nioBuf = nioBufs[i];
-            if (nioBuf == null) {
-                break;
-            } else if (!nioBuf.hasRemaining()) {
-                continue;
-            }
-            nioBuffers[nioBufferCount++] = nioBuf;
-        }
-        return nioBufferCount;
-    }
-
-    private static ByteBuffer[] expandNioBufferArray(ByteBuffer[] array, int neededSpace, int size) {
-        int newCapacity = array.length;
-        do {
-            // double capacity until it is big enough
-            // See https://github.com/netty/netty/issues/1890
-            newCapacity <<= 1;
-
-            if (newCapacity < 0) {
-                throw new IllegalStateException();
-            }
-
-        } while (neededSpace > newCapacity);
-
-        ByteBuffer[] newArray = new ByteBuffer[newCapacity];
-        System.arraycopy(array, 0, newArray, 0, size);
-
-        return newArray;
-    }
-
     /**
      * Returns the number of {@link ByteBuffer} that can be written out of the {@link ByteBuffer} array that was
      * obtained via {@link #nioBuffers()}. This method <strong>MUST</strong> be called after {@link #nioBuffers()}
@@ -532,6 +527,19 @@ public final class ChannelOutboundBuffer {
         return unwritable == 0;
     }
 
+    private void setWritable(boolean invokeLater) {
+        for (; ; ) {
+            final int oldValue = unwritable;
+            final int newValue = oldValue & ~1;
+            if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
+                if (oldValue != 0 && newValue == 0) {
+                    fireChannelWritabilityChanged(invokeLater);
+                }
+                break;
+            }
+        }
+    }
+
     /**
      * Returns {@code true} if and only if the user-defined writability flag at the specified index is set to
      * {@code true}.
@@ -553,7 +561,7 @@ public final class ChannelOutboundBuffer {
 
     private void setUserDefinedWritability(int index) {
         final int mask = ~writabilityMask(index);
-        for (;;) {
+        for (; ; ) {
             final int oldValue = unwritable;
             final int newValue = oldValue & mask;
             if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
@@ -567,7 +575,7 @@ public final class ChannelOutboundBuffer {
 
     private void clearUserDefinedWritability(int index) {
         final int mask = writabilityMask(index);
-        for (;;) {
+        for (; ; ) {
             final int oldValue = unwritable;
             final int newValue = oldValue | mask;
             if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
@@ -579,28 +587,8 @@ public final class ChannelOutboundBuffer {
         }
     }
 
-    private static int writabilityMask(int index) {
-        if (index < 1 || index > 31) {
-            throw new IllegalArgumentException("index: " + index + " (expected: 1~31)");
-        }
-        return 1 << index;
-    }
-
-    private void setWritable(boolean invokeLater) {
-        for (;;) {
-            final int oldValue = unwritable;
-            final int newValue = oldValue & ~1;
-            if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
-                if (oldValue != 0 && newValue == 0) {
-                    fireChannelWritabilityChanged(invokeLater);
-                }
-                break;
-            }
-        }
-    }
-
     private void setUnwritable(boolean invokeLater) {
-        for (;;) {
+        for (; ; ) {
             final int oldValue = unwritable;
             final int newValue = oldValue | 1;
             if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
@@ -657,7 +645,7 @@ public final class ChannelOutboundBuffer {
 
         try {
             inFail = true;
-            for (;;) {
+            for (; ; ) {
                 if (!remove0(cause, notify)) {
                     break;
                 }
@@ -710,18 +698,6 @@ public final class ChannelOutboundBuffer {
 
     void close(ClosedChannelException cause) {
         close(cause, false);
-    }
-
-    private static void safeSuccess(ChannelPromise promise) {
-        // Only log if the given promise is not of type VoidChannelPromise as trySuccess(...) is expected to return
-        // false.
-        PromiseNotificationUtil.trySuccess(promise, null, promise instanceof VoidChannelPromise ? null : logger);
-    }
-
-    private static void safeFail(ChannelPromise promise, Throwable cause) {
-        // Only log if the given promise is not of type VoidChannelPromise as tryFailure(...) is expected to return
-        // false.
-        PromiseNotificationUtil.tryFailure(promise, cause, promise instanceof VoidChannelPromise ? null : logger);
     }
 
     @Deprecated

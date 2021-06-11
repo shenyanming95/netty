@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ipfilter;
 
 import io.netty.util.internal.ObjectUtil;
@@ -72,13 +57,33 @@ public final class IpSubnetFilterRule implements IpFilterRule {
 
         private Ip4SubnetFilterRule(Inet4Address ipAddress, int cidrPrefix, IpFilterRuleType ruleType) {
             if (cidrPrefix < 0 || cidrPrefix > 32) {
-                throw new IllegalArgumentException(String.format("IPv4 requires the subnet prefix to be in range of " +
-                                                                    "[0,32]. The prefix was: %d", cidrPrefix));
+                throw new IllegalArgumentException(String.format("IPv4 requires the subnet prefix to be in range of " + "[0,32]. The prefix was: %d", cidrPrefix));
             }
 
             subnetMask = prefixToSubnetMask(cidrPrefix);
             networkAddress = ipToInt(ipAddress) & subnetMask;
             this.ruleType = ruleType;
+        }
+
+        private static int ipToInt(Inet4Address ipAddress) {
+            byte[] octets = ipAddress.getAddress();
+            assert octets.length == 4;
+
+            return (octets[0] & 0xff) << 24 | (octets[1] & 0xff) << 16 | (octets[2] & 0xff) << 8 | octets[3] & 0xff;
+        }
+
+        private static int prefixToSubnetMask(int cidrPrefix) {
+            /**
+             * Perform the shift on a long and downcast it to int afterwards.
+             * This is necessary to handle a cidrPrefix of zero correctly.
+             * The left shift operator on an int only uses the five least
+             * significant bits of the right-hand operand. Thus -1 << 32 evaluates
+             * to -1 instead of 0. The left shift operator applied on a long
+             * uses the six least significant bits.
+             *
+             * Also see https://github.com/netty/netty/issues/2767
+             */
+            return (int) ((-1L << 32 - cidrPrefix) & 0xffffffff);
         }
 
         @Override
@@ -95,30 +100,6 @@ public final class IpSubnetFilterRule implements IpFilterRule {
         public IpFilterRuleType ruleType() {
             return ruleType;
         }
-
-        private static int ipToInt(Inet4Address ipAddress) {
-            byte[] octets = ipAddress.getAddress();
-            assert octets.length == 4;
-
-            return (octets[0] & 0xff) << 24 |
-                   (octets[1] & 0xff) << 16 |
-                   (octets[2] & 0xff) << 8 |
-                    octets[3] & 0xff;
-        }
-
-        private static int prefixToSubnetMask(int cidrPrefix) {
-            /**
-             * Perform the shift on a long and downcast it to int afterwards.
-             * This is necessary to handle a cidrPrefix of zero correctly.
-             * The left shift operator on an int only uses the five least
-             * significant bits of the right-hand operand. Thus -1 << 32 evaluates
-             * to -1 instead of 0. The left shift operator applied on a long
-             * uses the six least significant bits.
-             *
-             * Also see https://github.com/netty/netty/issues/2767
-             */
-            return (int) ((-1L << 32 - cidrPrefix) & 0xffffffff);
-        }
     }
 
     private static final class Ip6SubnetFilterRule implements IpFilterRule {
@@ -131,13 +112,23 @@ public final class IpSubnetFilterRule implements IpFilterRule {
 
         private Ip6SubnetFilterRule(Inet6Address ipAddress, int cidrPrefix, IpFilterRuleType ruleType) {
             if (cidrPrefix < 0 || cidrPrefix > 128) {
-                throw new IllegalArgumentException(String.format("IPv6 requires the subnet prefix to be in range of " +
-                                                                    "[0,128]. The prefix was: %d", cidrPrefix));
+                throw new IllegalArgumentException(String.format("IPv6 requires the subnet prefix to be in range of " + "[0,128]. The prefix was: %d", cidrPrefix));
             }
 
             subnetMask = prefixToSubnetMask(cidrPrefix);
             networkAddress = ipToInt(ipAddress).and(subnetMask);
             this.ruleType = ruleType;
+        }
+
+        private static BigInteger ipToInt(Inet6Address ipAddress) {
+            byte[] octets = ipAddress.getAddress();
+            assert octets.length == 16;
+
+            return new BigInteger(octets);
+        }
+
+        private static BigInteger prefixToSubnetMask(int cidrPrefix) {
+            return MINUS_ONE.shiftLeft(128 - cidrPrefix);
         }
 
         @Override
@@ -153,17 +144,6 @@ public final class IpSubnetFilterRule implements IpFilterRule {
         @Override
         public IpFilterRuleType ruleType() {
             return ruleType;
-        }
-
-        private static BigInteger ipToInt(Inet6Address ipAddress) {
-            byte[] octets = ipAddress.getAddress();
-            assert octets.length == 16;
-
-            return new BigInteger(octets);
-        }
-
-        private static BigInteger prefixToSubnetMask(int cidrPrefix) {
-            return MINUS_ONE.shiftLeft(128 - cidrPrefix);
         }
     }
 }

@@ -82,15 +82,11 @@ public final class DefaultSmtpResponse implements SmtpResponse {
 
         DefaultSmtpResponse other = (DefaultSmtpResponse) o;
 
-        return code() == other.code() &&
-                details().equals(other.details());
+        return code() == other.code() && details().equals(other.details());
     }
 
     @Override
     public String toString() {
-        return "DefaultSmtpResponse{" +
-                "code=" + code +
-                ", details=" + details +
-                '}';
+        return "DefaultSmtpResponse{" + "code=" + code + ", details=" + details + '}';
     }
 }

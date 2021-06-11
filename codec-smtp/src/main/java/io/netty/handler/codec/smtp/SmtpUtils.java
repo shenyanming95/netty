@@ -21,12 +21,13 @@ import java.util.List;
 
 final class SmtpUtils {
 
+    private SmtpUtils() {
+    }
+
     static List<CharSequence> toUnmodifiableList(CharSequence... sequences) {
         if (sequences == null || sequences.length == 0) {
             return Collections.emptyList();
         }
         return Collections.unmodifiableList(Arrays.asList(sequences));
     }
-
-    private SmtpUtils() { }
 }

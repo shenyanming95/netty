@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.resolver.dns;
 
 import io.netty.channel.*;
@@ -41,11 +26,7 @@ abstract class DnsQueryContext implements FutureListener<AddressedEnvelope<DnsRe
     private final boolean recursionDesired;
     private volatile ScheduledFuture<?> timeoutFuture;
 
-    DnsQueryContext(DnsNameResolver parent,
-                    InetSocketAddress nameServerAddr,
-                    DnsQuestion question,
-                    DnsRecord[] additionals,
-                    Promise<AddressedEnvelope<DnsResponse, InetSocketAddress>> promise) {
+    DnsQueryContext(DnsNameResolver parent, InetSocketAddress nameServerAddr, DnsQuestion question, DnsRecord[] additionals, Promise<AddressedEnvelope<DnsResponse, InetSocketAddress>> promise) {
 
         this.parent = checkNotNull(parent, "parent");
         this.nameServerAddr = checkNotNull(nameServerAddr, "nameServerAddr");
@@ -80,7 +61,9 @@ abstract class DnsQueryContext implements FutureListener<AddressedEnvelope<DnsRe
     }
 
     protected abstract DnsQuery newQuery(int id);
+
     protected abstract Channel channel();
+
     protected abstract String protocol();
 
     void query(boolean flush, ChannelPromise writePromise) {
@@ -92,7 +75,7 @@ abstract class DnsQueryContext implements FutureListener<AddressedEnvelope<DnsRe
 
         query.addRecord(DnsSection.QUESTION, question);
 
-        for (DnsRecord record: additionals) {
+        for (DnsRecord record : additionals) {
             query.addRecord(DnsSection.ADDITIONAL, record);
         }
 
@@ -130,8 +113,7 @@ abstract class DnsQueryContext implements FutureListener<AddressedEnvelope<DnsRe
     }
 
     private void writeQuery(final DnsQuery query, final boolean flush, final ChannelPromise writePromise) {
-        final ChannelFuture writeFuture = flush ? channel().writeAndFlush(query, writePromise) :
-                channel().write(query, writePromise);
+        final ChannelFuture writeFuture = flush ? channel().writeAndFlush(query, writePromise) : channel().write(query, writePromise);
         if (writeFuture.isDone()) {
             onQueryWriteCompletion(writeFuture);
         } else {
@@ -161,8 +143,7 @@ abstract class DnsQueryContext implements FutureListener<AddressedEnvelope<DnsRe
                         return;
                     }
 
-                    tryFailure("query via " + protocol() + " timed out after " +
-                            queryTimeoutMillis + " milliseconds", null, true);
+                    tryFailure("query via " + protocol() + " timed out after " + queryTimeoutMillis + " milliseconds", null, true);
                 }
             }, queryTimeoutMillis, TimeUnit.MILLISECONDS);
         }
@@ -195,11 +176,7 @@ abstract class DnsQueryContext implements FutureListener<AddressedEnvelope<DnsRe
         final InetSocketAddress nameServerAddr = nameServerAddr();
 
         final StringBuilder buf = new StringBuilder(message.length() + 64);
-        buf.append('[')
-           .append(nameServerAddr)
-           .append("] ")
-           .append(message)
-           .append(" (no stack trace available)");
+        buf.append('[').append(nameServerAddr).append("] ").append(message).append(" (no stack trace available)");
 
         final DnsNameResolverException e;
         if (timeout) {

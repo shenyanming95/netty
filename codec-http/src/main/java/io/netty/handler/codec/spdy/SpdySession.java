@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.spdy;
 
 import io.netty.channel.ChannelPromise;
@@ -29,7 +14,7 @@ import static io.netty.handler.codec.spdy.SpdyCodecUtil.SPDY_SESSION_STREAM_ID;
 
 final class SpdySession {
 
-    private final AtomicInteger activeLocalStreams  = new AtomicInteger();
+    private final AtomicInteger activeLocalStreams = new AtomicInteger();
     private final AtomicInteger activeRemoteStreams = new AtomicInteger();
     private final Map<Integer, StreamState> activeStreams = PlatformDependent.newConcurrentHashMap();
     private final StreamComparator streamComparator = new StreamComparator();
@@ -64,12 +49,9 @@ final class SpdySession {
         return streams;
     }
 
-    void acceptStream(
-            int streamId, byte priority, boolean remoteSideClosed, boolean localSideClosed,
-            int sendWindowSize, int receiveWindowSize, boolean remote) {
+    void acceptStream(int streamId, byte priority, boolean remoteSideClosed, boolean localSideClosed, int sendWindowSize, int receiveWindowSize, boolean remote) {
         if (!remoteSideClosed || !localSideClosed) {
-            StreamState state = activeStreams.put(streamId, new StreamState(
-                    priority, remoteSideClosed, localSideClosed, sendWindowSize, receiveWindowSize));
+            StreamState state = activeStreams.put(streamId, new StreamState(priority, remoteSideClosed, localSideClosed, sendWindowSize, receiveWindowSize));
             if (state == null) {
                 if (remote) {
                     activeRemoteStreams.incrementAndGet();
@@ -188,13 +170,13 @@ final class SpdySession {
     }
 
     void updateAllSendWindowSizes(int deltaWindowSize) {
-        for (StreamState state: activeStreams.values()) {
+        for (StreamState state : activeStreams.values()) {
             state.updateSendWindowSize(deltaWindowSize);
         }
     }
 
     void updateAllReceiveWindowSizes(int deltaWindowSize) {
-        for (StreamState state: activeStreams.values()) {
+        for (StreamState state : activeStreams.values()) {
             state.updateReceiveWindowSize(deltaWindowSize);
             if (deltaWindowSize < 0) {
                 state.setReceiveWindowSizeLowerBound(deltaWindowSize);
@@ -209,7 +191,7 @@ final class SpdySession {
 
     PendingWrite getPendingWrite(int streamId) {
         if (streamId == SPDY_SESSION_STREAM_ID) {
-            for (Map.Entry<Integer, StreamState> e: activeStreams().entrySet()) {
+            for (Map.Entry<Integer, StreamState> e : activeStreams().entrySet()) {
                 StreamState state = e.getValue();
                 if (state.getSendWindowSize() > 0) {
                     PendingWrite pendingWrite = state.getPendingWrite();
@@ -233,17 +215,15 @@ final class SpdySession {
     private static final class StreamState {
 
         private final byte priority;
+        private final AtomicInteger sendWindowSize;
+        private final AtomicInteger receiveWindowSize;
+        private final Queue<PendingWrite> pendingWriteQueue = new ConcurrentLinkedQueue<PendingWrite>();
         private boolean remoteSideClosed;
         private boolean localSideClosed;
         private boolean receivedReply;
-        private final AtomicInteger sendWindowSize;
-        private final AtomicInteger receiveWindowSize;
         private int receiveWindowSizeLowerBound;
-        private final Queue<PendingWrite> pendingWriteQueue = new ConcurrentLinkedQueue<PendingWrite>();
 
-        StreamState(
-                byte priority, boolean remoteSideClosed, boolean localSideClosed,
-                int sendWindowSize, int receiveWindowSize) {
+        StreamState(byte priority, boolean remoteSideClosed, boolean localSideClosed, int sendWindowSize, int receiveWindowSize) {
             this.priority = priority;
             this.remoteSideClosed = remoteSideClosed;
             this.localSideClosed = localSideClosed;
@@ -312,31 +292,13 @@ final class SpdySession {
         }
 
         void clearPendingWrites(Throwable cause) {
-            for (;;) {
+            for (; ; ) {
                 PendingWrite pendingWrite = pendingWriteQueue.poll();
                 if (pendingWrite == null) {
                     break;
                 }
                 pendingWrite.fail(cause);
             }
-        }
-    }
-
-    private final class StreamComparator implements Comparator<Integer> {
-
-        StreamComparator() { }
-
-        @Override
-        public int compare(Integer id1, Integer id2) {
-            StreamState state1 = activeStreams.get(id1);
-            StreamState state2 = activeStreams.get(id2);
-
-            int result = state1.getPriority() - state2.getPriority();
-            if (result != 0) {
-                return result;
-            }
-
-            return id1 - id2;
         }
     }
 
@@ -352,6 +314,25 @@ final class SpdySession {
         void fail(Throwable cause) {
             spdyDataFrame.release();
             promise.setFailure(cause);
+        }
+    }
+
+    private final class StreamComparator implements Comparator<Integer> {
+
+        StreamComparator() {
+        }
+
+        @Override
+        public int compare(Integer id1, Integer id2) {
+            StreamState state1 = activeStreams.get(id1);
+            StreamState state2 = activeStreams.get(id2);
+
+            int result = state1.getPriority() - state2.getPriority();
+            if (result != 0) {
+                return result;
+            }
+
+            return id1 - id2;
         }
     }
 }

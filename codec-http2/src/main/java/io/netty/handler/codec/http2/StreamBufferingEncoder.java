@@ -55,47 +55,6 @@ import static io.netty.handler.codec.http2.Http2Exception.connectionError;
 public class StreamBufferingEncoder extends DecoratingHttp2ConnectionEncoder {
 
     /**
-     * Thrown if buffered streams are terminated due to this encoder being closed.
-     */
-    public static final class Http2ChannelClosedException extends Http2Exception {
-        private static final long serialVersionUID = 4768543442094476971L;
-
-        public Http2ChannelClosedException() {
-            super(Http2Error.REFUSED_STREAM, "Connection closed");
-        }
-    }
-
-    /**
-     * Thrown by {@link StreamBufferingEncoder} if buffered streams are terminated due to
-     * receipt of a {@code GOAWAY}.
-     */
-    public static final class Http2GoAwayException extends Http2Exception {
-        private static final long serialVersionUID = 1326785622777291198L;
-        private final int lastStreamId;
-        private final long errorCode;
-        private final byte[] debugData;
-
-        public Http2GoAwayException(int lastStreamId, long errorCode, byte[] debugData) {
-            super(Http2Error.STREAM_CLOSED);
-            this.lastStreamId = lastStreamId;
-            this.errorCode = errorCode;
-            this.debugData = debugData;
-        }
-
-        public int lastStreamId() {
-            return lastStreamId;
-        }
-
-        public long errorCode() {
-            return errorCode;
-        }
-
-        public byte[] debugData() {
-            return debugData;
-        }
-    }
-
-    /**
      * Buffer for any streams and corresponding frames that could not be created due to the maximum
      * concurrent stream limit being hit.
      */
@@ -132,40 +91,32 @@ public class StreamBufferingEncoder extends DecoratingHttp2ConnectionEncoder {
     }
 
     @Override
-    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId, Http2Headers headers,
-                                      int padding, boolean endStream, ChannelPromise promise) {
-        return writeHeaders(ctx, streamId, headers, 0, Http2CodecUtil.DEFAULT_PRIORITY_WEIGHT,
-                false, padding, endStream, promise);
+    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int padding, boolean endStream, ChannelPromise promise) {
+        return writeHeaders(ctx, streamId, headers, 0, Http2CodecUtil.DEFAULT_PRIORITY_WEIGHT, false, padding, endStream, promise);
     }
 
     @Override
-    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId, Http2Headers headers,
-                                      int streamDependency, short weight, boolean exclusive,
-                                      int padding, boolean endOfStream, ChannelPromise promise) {
+    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int streamDependency, short weight, boolean exclusive, int padding, boolean endOfStream, ChannelPromise promise) {
         if (closed) {
             return promise.setFailure(new Http2ChannelClosedException());
         }
         if (isExistingStream(streamId) || connection().goAwayReceived()) {
-            return super.writeHeaders(ctx, streamId, headers, streamDependency, weight,
-                    exclusive, padding, endOfStream, promise);
+            return super.writeHeaders(ctx, streamId, headers, streamDependency, weight, exclusive, padding, endOfStream, promise);
         }
         if (canCreateStream()) {
-            return super.writeHeaders(ctx, streamId, headers, streamDependency, weight,
-                    exclusive, padding, endOfStream, promise);
+            return super.writeHeaders(ctx, streamId, headers, streamDependency, weight, exclusive, padding, endOfStream, promise);
         }
         PendingStream pendingStream = pendingStreams.get(streamId);
         if (pendingStream == null) {
             pendingStream = new PendingStream(ctx, streamId);
             pendingStreams.put(streamId, pendingStream);
         }
-        pendingStream.frames.add(new HeadersFrame(headers, streamDependency, weight, exclusive,
-                padding, endOfStream, promise));
+        pendingStream.frames.add(new HeadersFrame(headers, streamDependency, weight, exclusive, padding, endOfStream, promise));
         return promise;
     }
 
     @Override
-    public ChannelFuture writeRstStream(ChannelHandlerContext ctx, int streamId, long errorCode,
-                                        ChannelPromise promise) {
+    public ChannelFuture writeRstStream(ChannelHandlerContext ctx, int streamId, long errorCode, ChannelPromise promise) {
         if (isExistingStream(streamId)) {
             return super.writeRstStream(ctx, streamId, errorCode, promise);
         }
@@ -186,8 +137,7 @@ public class StreamBufferingEncoder extends DecoratingHttp2ConnectionEncoder {
     }
 
     @Override
-    public ChannelFuture writeData(ChannelHandlerContext ctx, int streamId, ByteBuf data,
-                                   int padding, boolean endOfStream, ChannelPromise promise) {
+    public ChannelFuture writeData(ChannelHandlerContext ctx, int streamId, ByteBuf data, int padding, boolean endOfStream, ChannelPromise promise) {
         if (isExistingStream(streamId)) {
             return super.writeData(ctx, streamId, data, padding, endOfStream, promise);
         }
@@ -267,6 +217,47 @@ public class StreamBufferingEncoder extends DecoratingHttp2ConnectionEncoder {
         return streamId <= connection().local().lastStreamCreated();
     }
 
+    /**
+     * Thrown if buffered streams are terminated due to this encoder being closed.
+     */
+    public static final class Http2ChannelClosedException extends Http2Exception {
+        private static final long serialVersionUID = 4768543442094476971L;
+
+        public Http2ChannelClosedException() {
+            super(Http2Error.REFUSED_STREAM, "Connection closed");
+        }
+    }
+
+    /**
+     * Thrown by {@link StreamBufferingEncoder} if buffered streams are terminated due to
+     * receipt of a {@code GOAWAY}.
+     */
+    public static final class Http2GoAwayException extends Http2Exception {
+        private static final long serialVersionUID = 1326785622777291198L;
+        private final int lastStreamId;
+        private final long errorCode;
+        private final byte[] debugData;
+
+        public Http2GoAwayException(int lastStreamId, long errorCode, byte[] debugData) {
+            super(Http2Error.STREAM_CLOSED);
+            this.lastStreamId = lastStreamId;
+            this.errorCode = errorCode;
+            this.debugData = debugData;
+        }
+
+        public int lastStreamId() {
+            return lastStreamId;
+        }
+
+        public long errorCode() {
+            return errorCode;
+        }
+
+        public byte[] debugData() {
+            return debugData;
+        }
+    }
+
     private static final class PendingStream {
         final ChannelHandlerContext ctx;
         final int streamId;
@@ -319,8 +310,7 @@ public class StreamBufferingEncoder extends DecoratingHttp2ConnectionEncoder {
         final int padding;
         final boolean endOfStream;
 
-        HeadersFrame(Http2Headers headers, int streamDependency, short weight, boolean exclusive,
-                     int padding, boolean endOfStream, ChannelPromise promise) {
+        HeadersFrame(Http2Headers headers, int streamDependency, short weight, boolean exclusive, int padding, boolean endOfStream, ChannelPromise promise) {
             super(promise);
             this.headers = headers;
             this.streamDependency = streamDependency;

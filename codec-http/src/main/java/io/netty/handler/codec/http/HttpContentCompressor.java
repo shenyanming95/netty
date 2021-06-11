@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -47,10 +32,9 @@ public class HttpContentCompressor extends HttpContentEncoder {
      * Creates a new handler with the specified compression level, default
      * window size (<tt>15</tt>) and default memory level (<tt>8</tt>).
      *
-     * @param compressionLevel
-     *        {@code 1} yields the fastest compression and {@code 9} yields the
-     *        best compression.  {@code 0} means no compression.  The default
-     *        compression level is {@code 6}.
+     * @param compressionLevel {@code 1} yields the fastest compression and {@code 9} yields the
+     *                         best compression.  {@code 0} means no compression.  The default
+     *                         compression level is {@code 6}.
      */
     public HttpContentCompressor(int compressionLevel) {
         this(compressionLevel, 15, 8, 0);
@@ -60,20 +44,17 @@ public class HttpContentCompressor extends HttpContentEncoder {
      * Creates a new handler with the specified compression level, window size,
      * and memory level..
      *
-     * @param compressionLevel
-     *        {@code 1} yields the fastest compression and {@code 9} yields the
-     *        best compression.  {@code 0} means no compression.  The default
-     *        compression level is {@code 6}.
-     * @param windowBits
-     *        The base two logarithm of the size of the history buffer.  The
-     *        value should be in the range {@code 9} to {@code 15} inclusive.
-     *        Larger values result in better compression at the expense of
-     *        memory usage.  The default value is {@code 15}.
-     * @param memLevel
-     *        How much memory should be allocated for the internal compression
-     *        state.  {@code 1} uses minimum memory and {@code 9} uses maximum
-     *        memory.  Larger values result in better and faster compression
-     *        at the expense of memory usage.  The default value is {@code 8}
+     * @param compressionLevel {@code 1} yields the fastest compression and {@code 9} yields the
+     *                         best compression.  {@code 0} means no compression.  The default
+     *                         compression level is {@code 6}.
+     * @param windowBits       The base two logarithm of the size of the history buffer.  The
+     *                         value should be in the range {@code 9} to {@code 15} inclusive.
+     *                         Larger values result in better compression at the expense of
+     *                         memory usage.  The default value is {@code 15}.
+     * @param memLevel         How much memory should be allocated for the internal compression
+     *                         state.  {@code 1} uses minimum memory and {@code 9} uses maximum
+     *                         memory.  Larger values result in better and faster compression
+     *                         at the expense of memory usage.  The default value is {@code 8}
      */
     public HttpContentCompressor(int compressionLevel, int windowBits, int memLevel) {
         this(compressionLevel, windowBits, memLevel, 0);
@@ -83,42 +64,33 @@ public class HttpContentCompressor extends HttpContentEncoder {
      * Creates a new handler with the specified compression level, window size,
      * and memory level..
      *
-     * @param compressionLevel
-     *        {@code 1} yields the fastest compression and {@code 9} yields the
-     *        best compression.  {@code 0} means no compression.  The default
-     *        compression level is {@code 6}.
-     * @param windowBits
-     *        The base two logarithm of the size of the history buffer.  The
-     *        value should be in the range {@code 9} to {@code 15} inclusive.
-     *        Larger values result in better compression at the expense of
-     *        memory usage.  The default value is {@code 15}.
-     * @param memLevel
-     *        How much memory should be allocated for the internal compression
-     *        state.  {@code 1} uses minimum memory and {@code 9} uses maximum
-     *        memory.  Larger values result in better and faster compression
-     *        at the expense of memory usage.  The default value is {@code 8}
-     * @param contentSizeThreshold
-     *        The response body is compressed when the size of the response
-     *        body exceeds the threshold. The value should be a non negative
-     *        number. {@code 0} will enable compression for all responses.
+     * @param compressionLevel     {@code 1} yields the fastest compression and {@code 9} yields the
+     *                             best compression.  {@code 0} means no compression.  The default
+     *                             compression level is {@code 6}.
+     * @param windowBits           The base two logarithm of the size of the history buffer.  The
+     *                             value should be in the range {@code 9} to {@code 15} inclusive.
+     *                             Larger values result in better compression at the expense of
+     *                             memory usage.  The default value is {@code 15}.
+     * @param memLevel             How much memory should be allocated for the internal compression
+     *                             state.  {@code 1} uses minimum memory and {@code 9} uses maximum
+     *                             memory.  Larger values result in better and faster compression
+     *                             at the expense of memory usage.  The default value is {@code 8}
+     * @param contentSizeThreshold The response body is compressed when the size of the response
+     *                             body exceeds the threshold. The value should be a non negative
+     *                             number. {@code 0} will enable compression for all responses.
      */
     public HttpContentCompressor(int compressionLevel, int windowBits, int memLevel, int contentSizeThreshold) {
         if (compressionLevel < 0 || compressionLevel > 9) {
-            throw new IllegalArgumentException(
-                    "compressionLevel: " + compressionLevel +
-                    " (expected: 0-9)");
+            throw new IllegalArgumentException("compressionLevel: " + compressionLevel + " (expected: 0-9)");
         }
         if (windowBits < 9 || windowBits > 15) {
-            throw new IllegalArgumentException(
-                    "windowBits: " + windowBits + " (expected: 9-15)");
+            throw new IllegalArgumentException("windowBits: " + windowBits + " (expected: 9-15)");
         }
         if (memLevel < 1 || memLevel > 9) {
-            throw new IllegalArgumentException(
-                    "memLevel: " + memLevel + " (expected: 1-9)");
+            throw new IllegalArgumentException("memLevel: " + memLevel + " (expected: 1-9)");
         }
         if (contentSizeThreshold < 0) {
-            throw new IllegalArgumentException(
-                    "contentSizeThreshold: " + contentSizeThreshold + " (expected: non negative number)");
+            throw new IllegalArgumentException("contentSizeThreshold: " + contentSizeThreshold + " (expected: non negative number)");
         }
         this.compressionLevel = compressionLevel;
         this.windowBits = windowBits;
@@ -134,8 +106,7 @@ public class HttpContentCompressor extends HttpContentEncoder {
     @Override
     protected Result beginEncode(HttpResponse httpResponse, String acceptEncoding) throws Exception {
         if (this.contentSizeThreshold > 0) {
-            if (httpResponse instanceof HttpContent &&
-                    ((HttpContent) httpResponse).content().readableBytes() < contentSizeThreshold) {
+            if (httpResponse instanceof HttpContent && ((HttpContent) httpResponse).content().readableBytes() < contentSizeThreshold) {
                 return null;
             }
         }
@@ -154,21 +125,17 @@ public class HttpContentCompressor extends HttpContentEncoder {
 
         String targetContentEncoding;
         switch (wrapper) {
-        case GZIP:
-            targetContentEncoding = "gzip";
-            break;
-        case ZLIB:
-            targetContentEncoding = "deflate";
-            break;
-        default:
-            throw new Error();
+            case GZIP:
+                targetContentEncoding = "gzip";
+                break;
+            case ZLIB:
+                targetContentEncoding = "deflate";
+                break;
+            default:
+                throw new Error();
         }
 
-        return new Result(
-                targetContentEncoding,
-                new EmbeddedChannel(ctx.channel().id(), ctx.channel().metadata().hasDisconnect(),
-                        ctx.channel().config(), ZlibCodecFactory.newZlibEncoder(
-                        wrapper, compressionLevel, windowBits, memLevel)));
+        return new Result(targetContentEncoding, new EmbeddedChannel(ctx.channel().id(), ctx.channel().metadata().hasDisconnect(), ctx.channel().config(), ZlibCodecFactory.newZlibEncoder(wrapper, compressionLevel, windowBits, memLevel)));
     }
 
     @SuppressWarnings("FloatingPointEquality")

@@ -1,19 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.resolver;
 
 import io.netty.util.concurrent.EventExecutor;
@@ -46,8 +30,8 @@ public abstract class AbstractAddressResolver<T extends SocketAddress> implement
     }
 
     /**
-     * @param executor the {@link EventExecutor} which is used to notify the listeners of the {@link Future} returned
-     *                 by {@link #resolve(SocketAddress)}
+     * @param executor    the {@link EventExecutor} which is used to notify the listeners of the {@link Future} returned
+     *                    by {@link #resolve(SocketAddress)}
      * @param addressType the type of the {@link SocketAddress} supported by this resolver
      */
     protected AbstractAddressResolver(EventExecutor executor, Class<? extends T> addressType) {
@@ -74,8 +58,7 @@ public abstract class AbstractAddressResolver<T extends SocketAddress> implement
             throw new UnsupportedAddressTypeException();
         }
 
-        @SuppressWarnings("unchecked")
-        final T castAddress = (T) address;
+        @SuppressWarnings("unchecked") final T castAddress = (T) address;
         return doIsResolved(castAddress);
     }
 
@@ -94,14 +77,12 @@ public abstract class AbstractAddressResolver<T extends SocketAddress> implement
 
         if (isResolved(address)) {
             // Resolved already; no need to perform a lookup
-            @SuppressWarnings("unchecked")
-            final T cast = (T) address;
+            @SuppressWarnings("unchecked") final T cast = (T) address;
             return executor.newSucceededFuture(cast);
         }
 
         try {
-            @SuppressWarnings("unchecked")
-            final T cast = (T) address;
+            @SuppressWarnings("unchecked") final T cast = (T) address;
             final Promise<T> promise = executor().newPromise();
             doResolve(cast, promise);
             return promise;
@@ -122,14 +103,12 @@ public abstract class AbstractAddressResolver<T extends SocketAddress> implement
 
         if (isResolved(address)) {
             // Resolved already; no need to perform a lookup
-            @SuppressWarnings("unchecked")
-            final T cast = (T) address;
+            @SuppressWarnings("unchecked") final T cast = (T) address;
             return promise.setSuccess(cast);
         }
 
         try {
-            @SuppressWarnings("unchecked")
-            final T cast = (T) address;
+            @SuppressWarnings("unchecked") final T cast = (T) address;
             doResolve(cast, promise);
             return promise;
         } catch (Exception e) {
@@ -146,14 +125,12 @@ public abstract class AbstractAddressResolver<T extends SocketAddress> implement
 
         if (isResolved(address)) {
             // Resolved already; no need to perform a lookup
-            @SuppressWarnings("unchecked")
-            final T cast = (T) address;
+            @SuppressWarnings("unchecked") final T cast = (T) address;
             return executor.newSucceededFuture(Collections.singletonList(cast));
         }
 
         try {
-            @SuppressWarnings("unchecked")
-            final T cast = (T) address;
+            @SuppressWarnings("unchecked") final T cast = (T) address;
             final Promise<List<T>> promise = executor().newPromise();
             doResolveAll(cast, promise);
             return promise;
@@ -174,14 +151,12 @@ public abstract class AbstractAddressResolver<T extends SocketAddress> implement
 
         if (isResolved(address)) {
             // Resolved already; no need to perform a lookup
-            @SuppressWarnings("unchecked")
-            final T cast = (T) address;
+            @SuppressWarnings("unchecked") final T cast = (T) address;
             return promise.setSuccess(Collections.singletonList(cast));
         }
 
         try {
-            @SuppressWarnings("unchecked")
-            final T cast = (T) address;
+            @SuppressWarnings("unchecked") final T cast = (T) address;
             doResolveAll(cast, promise);
             return promise;
         } catch (Exception e) {
@@ -202,5 +177,6 @@ public abstract class AbstractAddressResolver<T extends SocketAddress> implement
     protected abstract void doResolveAll(T unresolvedAddress, Promise<List<T>> promise) throws Exception;
 
     @Override
-    public void close() { }
+    public void close() {
+    }
 }

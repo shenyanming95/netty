@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.memcache;
 
 import io.netty.buffer.ByteBuf;
@@ -36,44 +21,6 @@ import java.util.List;
 public abstract class AbstractMemcacheObjectEncoder<M extends MemcacheMessage> extends MessageToMessageEncoder<Object> {
 
     private boolean expectingMoreContent;
-
-    @Override
-    protected void encode(ChannelHandlerContext ctx, Object msg, List<Object> out) throws Exception {
-        if (msg instanceof MemcacheMessage) {
-            if (expectingMoreContent) {
-                throw new IllegalStateException("unexpected message type: " + StringUtil.simpleClassName(msg));
-            }
-
-            @SuppressWarnings({ "unchecked", "CastConflictsWithInstanceof" })
-            final M m = (M) msg;
-            out.add(encodeMessage(ctx, m));
-        }
-
-        if (msg instanceof MemcacheContent || msg instanceof ByteBuf || msg instanceof FileRegion) {
-            int contentLength = contentLength(msg);
-            if (contentLength > 0) {
-                out.add(encodeAndRetain(msg));
-            } else {
-                out.add(Unpooled.EMPTY_BUFFER);
-            }
-
-            expectingMoreContent = !(msg instanceof LastMemcacheContent);
-        }
-    }
-
-    @Override
-    public boolean acceptOutboundMessage(Object msg) throws Exception {
-        return msg instanceof MemcacheObject || msg instanceof ByteBuf || msg instanceof FileRegion;
-    }
-
-    /**
-     * Take the given {@link MemcacheMessage} and encode it into a writable {@link ByteBuf}.
-     *
-     * @param ctx the channel handler context.
-     * @param msg the message to encode.
-     * @return the {@link ByteBuf} representation of the message.
-     */
-    protected abstract ByteBuf encodeMessage(ChannelHandlerContext ctx, M msg);
 
     /**
      * Determine the content length of the given object.
@@ -112,5 +59,42 @@ public abstract class AbstractMemcacheObjectEncoder<M extends MemcacheMessage> e
         }
         throw new IllegalStateException("unexpected message type: " + StringUtil.simpleClassName(msg));
     }
+
+    @Override
+    protected void encode(ChannelHandlerContext ctx, Object msg, List<Object> out) throws Exception {
+        if (msg instanceof MemcacheMessage) {
+            if (expectingMoreContent) {
+                throw new IllegalStateException("unexpected message type: " + StringUtil.simpleClassName(msg));
+            }
+
+            @SuppressWarnings({"unchecked", "CastConflictsWithInstanceof"}) final M m = (M) msg;
+            out.add(encodeMessage(ctx, m));
+        }
+
+        if (msg instanceof MemcacheContent || msg instanceof ByteBuf || msg instanceof FileRegion) {
+            int contentLength = contentLength(msg);
+            if (contentLength > 0) {
+                out.add(encodeAndRetain(msg));
+            } else {
+                out.add(Unpooled.EMPTY_BUFFER);
+            }
+
+            expectingMoreContent = !(msg instanceof LastMemcacheContent);
+        }
+    }
+
+    @Override
+    public boolean acceptOutboundMessage(Object msg) throws Exception {
+        return msg instanceof MemcacheObject || msg instanceof ByteBuf || msg instanceof FileRegion;
+    }
+
+    /**
+     * Take the given {@link MemcacheMessage} and encode it into a writable {@link ByteBuf}.
+     *
+     * @param ctx the channel handler context.
+     * @param msg the message to encode.
+     * @return the {@link ByteBuf} representation of the message.
+     */
+    protected abstract ByteBuf encodeMessage(ChannelHandlerContext ctx, M msg);
 
 }

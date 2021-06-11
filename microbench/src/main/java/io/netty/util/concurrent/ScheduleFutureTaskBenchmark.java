@@ -34,36 +34,6 @@ public class ScheduleFutureTaskBenchmark extends AbstractMicrobenchmark {
         }
     };
 
-    @State(Scope.Thread)
-    public static class ThreadState {
-
-        @Param({ "100000" })
-        int num;
-
-        AbstractScheduledEventExecutor eventLoop;
-
-        @Setup(Level.Trial)
-        public void reset() {
-            eventLoop = (AbstractScheduledEventExecutor) new NioEventLoopGroup(1).next();
-        }
-
-        @Setup(Level.Invocation)
-        public void clear() {
-            eventLoop.submit(new Runnable() {
-                @Override
-                public void run() {
-                    eventLoop.cancelScheduledTasks();
-                }
-            }).awaitUninterruptibly();
-        }
-
-        @TearDown(Level.Trial)
-        public void shutdown() {
-            clear();
-            eventLoop.parent().shutdownGracefully().awaitUninterruptibly();
-        }
-    }
-
     @Benchmark
     @Threads(3)
     public Future<?> scheduleLots(final ThreadState threadState) {
@@ -95,5 +65,35 @@ public class ScheduleFutureTaskBenchmark extends AbstractMicrobenchmark {
             eventLoop.schedule(NO_OP, i, TimeUnit.HOURS).cancel(false);
         }
         return null;
+    }
+
+    @State(Scope.Thread)
+    public static class ThreadState {
+
+        @Param({"100000"})
+        int num;
+
+        AbstractScheduledEventExecutor eventLoop;
+
+        @Setup(Level.Trial)
+        public void reset() {
+            eventLoop = (AbstractScheduledEventExecutor) new NioEventLoopGroup(1).next();
+        }
+
+        @Setup(Level.Invocation)
+        public void clear() {
+            eventLoop.submit(new Runnable() {
+                @Override
+                public void run() {
+                    eventLoop.cancelScheduledTasks();
+                }
+            }).awaitUninterruptibly();
+        }
+
+        @TearDown(Level.Trial)
+        public void shutdown() {
+            clear();
+            eventLoop.parent().shutdownGracefully().awaitUninterruptibly();
+        }
     }
 }

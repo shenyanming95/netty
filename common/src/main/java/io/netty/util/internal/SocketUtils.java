@@ -45,8 +45,7 @@ public final class SocketUtils {
         return (Enumeration<T>) EMPTY;
     }
 
-    public static void connect(final Socket socket, final SocketAddress remoteAddress, final int timeout)
-            throws IOException {
+    public static void connect(final Socket socket, final SocketAddress remoteAddress, final int timeout) throws IOException {
         try {
             AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
                 @Override
@@ -74,8 +73,7 @@ public final class SocketUtils {
         }
     }
 
-    public static boolean connect(final SocketChannel socketChannel, final SocketAddress remoteAddress)
-            throws IOException {
+    public static boolean connect(final SocketChannel socketChannel, final SocketAddress remoteAddress) throws IOException {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<Boolean>() {
                 @Override
@@ -176,8 +174,7 @@ public final class SocketUtils {
     }
 
     public static Enumeration<InetAddress> addressesFromNetworkInterface(final NetworkInterface intf) {
-        Enumeration<InetAddress> addresses =
-                AccessController.doPrivileged(new PrivilegedAction<Enumeration<InetAddress>>() {
+        Enumeration<InetAddress> addresses = AccessController.doPrivileged(new PrivilegedAction<Enumeration<InetAddress>>() {
             @Override
             public Enumeration<InetAddress> run() {
                 return intf.getInetAddresses();

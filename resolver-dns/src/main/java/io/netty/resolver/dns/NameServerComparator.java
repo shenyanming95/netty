@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.resolver.dns;
 
 import io.netty.util.internal.ObjectUtil;
@@ -25,7 +10,7 @@ import java.util.List;
 
 /**
  * Special {@link Comparator} implementation to sort the nameservers to use when follow redirects.
- *
+ * <p>
  * This implementation follows all the semantics listed in the
  * <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html">Comparator apidocs</a>
  * with the limitation that {@link InetSocketAddress#equals(Object)} will not result in the same return value as

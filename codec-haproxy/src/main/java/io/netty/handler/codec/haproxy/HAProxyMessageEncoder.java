@@ -1,18 +1,3 @@
-/*
- * Copyright 2020 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.haproxy;
 
 import io.netty.buffer.ByteBuf;
@@ -35,29 +20,13 @@ import static io.netty.handler.codec.haproxy.HAProxyConstants.TEXT_PREFIX;
 @Sharable
 public final class HAProxyMessageEncoder extends MessageToByteEncoder<HAProxyMessage> {
 
-    private static final int V2_VERSION_BITMASK = 0x02 << 4;
-
+    public static final HAProxyMessageEncoder INSTANCE = new HAProxyMessageEncoder();
     // Length for source/destination addresses for the UNIX family must be 108 bytes each.
     static final int UNIX_ADDRESS_BYTES_LENGTH = 108;
     static final int TOTAL_UNIX_ADDRESS_BYTES_LENGTH = UNIX_ADDRESS_BYTES_LENGTH * 2;
-
-    public static final HAProxyMessageEncoder INSTANCE = new HAProxyMessageEncoder();
+    private static final int V2_VERSION_BITMASK = 0x02 << 4;
 
     private HAProxyMessageEncoder() {
-    }
-
-    @Override
-    protected void encode(ChannelHandlerContext ctx, HAProxyMessage msg, ByteBuf out) throws Exception {
-        switch (msg.protocolVersion()) {
-            case V1:
-                encodeV1(msg, out);
-                break;
-            case V2:
-                encodeV2(msg, out);
-                break;
-            default:
-                throw new HAProxyProtocolException("Unsupported version: " + msg.protocolVersion());
-        }
     }
 
     private static void encodeV1(HAProxyMessage msg, ByteBuf out) {
@@ -130,6 +99,20 @@ public final class HAProxyMessageEncoder extends MessageToByteEncoder<HAProxyMes
     private static void encodeTlvs(List<HAProxyTLV> haProxyTLVs, ByteBuf out) {
         for (int i = 0; i < haProxyTLVs.size(); i++) {
             encodeTlv(haProxyTLVs.get(i), out);
+        }
+    }
+
+    @Override
+    protected void encode(ChannelHandlerContext ctx, HAProxyMessage msg, ByteBuf out) throws Exception {
+        switch (msg.protocolVersion()) {
+            case V1:
+                encodeV1(msg, out);
+                break;
+            case V2:
+                encodeV2(msg, out);
+                break;
+            default:
+                throw new HAProxyProtocolException("Unsupported version: " + msg.protocolVersion());
         }
     }
 }

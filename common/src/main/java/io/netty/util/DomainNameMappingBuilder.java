@@ -94,8 +94,7 @@ public final class DomainNameMappingBuilder<V> {
         private static final String REPR_HEADER = "ImmutableDomainNameMapping(default: ";
         private static final String REPR_MAP_OPENING = ", map: {";
         private static final String REPR_MAP_CLOSING = "})";
-        private static final int REPR_CONST_PART_LENGTH =
-            REPR_HEADER.length() + REPR_MAP_OPENING.length() + REPR_MAP_CLOSING.length();
+        private static final int REPR_CONST_PART_LENGTH = REPR_HEADER.length() + REPR_MAP_OPENING.length() + REPR_MAP_CLOSING.length();
 
         private final String[] domainNamePatterns;
         private final V[] values;
@@ -124,11 +123,28 @@ public final class DomainNameMappingBuilder<V> {
             this.map = Collections.unmodifiableMap(mapCopy);
         }
 
+        /**
+         * Estimates the length of string representation of the given instance:
+         * est = lengthOfConstantComponents + defaultValueLength + (estimatedMappingLength * numOfMappings) * 1.10
+         *
+         * @param defaultValueLength     length of string representation of {@link #defaultValue}
+         * @param numberOfMappings       number of mappings the given instance holds,
+         *                               e.g. {@link #domainNamePatterns#length}
+         * @param estimatedMappingLength estimated size taken by one mapping
+         * @return estimated length of string returned by {@link #toString()}
+         */
+        private static int estimateBufferSize(int defaultValueLength, int numberOfMappings, int estimatedMappingLength) {
+            return REPR_CONST_PART_LENGTH + defaultValueLength + (int) (estimatedMappingLength * numberOfMappings * 1.10);
+        }
+
+        private static StringBuilder appendMapping(StringBuilder sb, String domainNamePattern, String value) {
+            return sb.append(domainNamePattern).append('=').append(value);
+        }
+
         @Override
         @Deprecated
         public DomainNameMapping<V> add(String hostname, V output) {
-            throw new UnsupportedOperationException(
-                "Immutable DomainNameMapping does not support modification after initial creation");
+            throw new UnsupportedOperationException("Immutable DomainNameMapping does not support modification after initial creation");
         }
 
         @Override
@@ -166,8 +182,7 @@ public final class DomainNameMappingBuilder<V> {
             int oneMappingLength = pattern0.length() + value0.length() + 3; // 2 for separator ", " and 1 for '='
             int estimatedBufferSize = estimateBufferSize(defaultValueStr.length(), numberOfMappings, oneMappingLength);
 
-            StringBuilder sb = new StringBuilder(estimatedBufferSize)
-                .append(REPR_HEADER).append(defaultValueStr).append(REPR_MAP_OPENING);
+            StringBuilder sb = new StringBuilder(estimatedBufferSize).append(REPR_HEADER).append(defaultValueStr).append(REPR_MAP_OPENING);
 
             appendMapping(sb, pattern0, value0);
             for (int index = 1; index < numberOfMappings; ++index) {
@@ -178,29 +193,8 @@ public final class DomainNameMappingBuilder<V> {
             return sb.append(REPR_MAP_CLOSING).toString();
         }
 
-        /**
-         * Estimates the length of string representation of the given instance:
-         * est = lengthOfConstantComponents + defaultValueLength + (estimatedMappingLength * numOfMappings) * 1.10
-         *
-         * @param defaultValueLength     length of string representation of {@link #defaultValue}
-         * @param numberOfMappings       number of mappings the given instance holds,
-         *                               e.g. {@link #domainNamePatterns#length}
-         * @param estimatedMappingLength estimated size taken by one mapping
-         * @return estimated length of string returned by {@link #toString()}
-         */
-        private static int estimateBufferSize(int defaultValueLength,
-                                              int numberOfMappings,
-                                              int estimatedMappingLength) {
-            return REPR_CONST_PART_LENGTH + defaultValueLength
-                + (int) (estimatedMappingLength * numberOfMappings * 1.10);
-        }
-
         private StringBuilder appendMapping(StringBuilder sb, int mappingIndex) {
             return appendMapping(sb, domainNamePatterns[mappingIndex], values[mappingIndex].toString());
-        }
-
-        private static StringBuilder appendMapping(StringBuilder sb, String domainNamePattern, String value) {
-            return sb.append(domainNamePattern).append('=').append(value);
         }
     }
 }

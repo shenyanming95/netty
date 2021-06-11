@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.concurrent;
 
 import java.util.concurrent.Callable;
@@ -20,47 +5,9 @@ import java.util.concurrent.RunnableFuture;
 
 class PromiseTask<V> extends DefaultPromise<V> implements RunnableFuture<V> {
 
-    private static final class RunnableAdapter<T> implements Callable<T> {
-        final Runnable task;
-        final T result;
-
-        RunnableAdapter(Runnable task, T result) {
-            this.task = task;
-            this.result = result;
-        }
-
-        @Override
-        public T call() {
-            task.run();
-            return result;
-        }
-
-        @Override
-        public String toString() {
-            return "Callable(task: " + task + ", result: " + result + ')';
-        }
-    }
-
     private static final Runnable COMPLETED = new SentinelRunnable("COMPLETED");
     private static final Runnable CANCELLED = new SentinelRunnable("CANCELLED");
     private static final Runnable FAILED = new SentinelRunnable("FAILED");
-
-    private static class SentinelRunnable implements Runnable {
-        private final String name;
-
-        SentinelRunnable(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public void run() { } // no-op
-
-        @Override
-        public String toString() {
-            return name;
-        }
-    }
-
     // Strictly of type Callable<V> or Runnable
     private Object task;
 
@@ -181,8 +128,44 @@ class PromiseTask<V> extends DefaultPromise<V> implements RunnableFuture<V> {
         StringBuilder buf = super.toStringBuilder();
         buf.setCharAt(buf.length() - 1, ',');
 
-        return buf.append(" task: ")
-                  .append(task)
-                  .append(')');
+        return buf.append(" task: ").append(task).append(')');
+    }
+
+    private static final class RunnableAdapter<T> implements Callable<T> {
+        final Runnable task;
+        final T result;
+
+        RunnableAdapter(Runnable task, T result) {
+            this.task = task;
+            this.result = result;
+        }
+
+        @Override
+        public T call() {
+            task.run();
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "Callable(task: " + task + ", result: " + result + ')';
+        }
+    }
+
+    private static class SentinelRunnable implements Runnable {
+        private final String name;
+
+        SentinelRunnable(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public void run() {
+        } // no-op
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 }

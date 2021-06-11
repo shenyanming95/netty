@@ -24,12 +24,7 @@ import io.netty.util.internal.UnstableApi;
 @UnstableApi
 public enum RedisMessageType {
 
-    INLINE_COMMAND(null, true),
-    SIMPLE_STRING((byte) '+', true),
-    ERROR((byte) '-', true),
-    INTEGER((byte) ':', true),
-    BULK_STRING((byte) '$', false),
-    ARRAY_HEADER((byte) '*', false);
+    INLINE_COMMAND(null, true), SIMPLE_STRING((byte) '+', true), ERROR((byte) '-', true), INTEGER((byte) ':', true), BULK_STRING((byte) '$', false), ARRAY_HEADER((byte) '*', false);
 
     private final Byte value;
     private final boolean inline;
@@ -37,21 +32,6 @@ public enum RedisMessageType {
     RedisMessageType(Byte value, boolean inline) {
         this.value = value;
         this.inline = inline;
-    }
-
-    /**
-     * Returns length of this type.
-     */
-    public int length() {
-        return value != null ? RedisConstants.TYPE_LENGTH : 0;
-    }
-
-    /**
-     * Returns {@code true} if this type is inline type, or returns {@code false}. If this is {@code true},
-     * this type doesn't have length field.
-     */
-    public boolean isInline() {
-        return inline;
     }
 
     /**
@@ -70,6 +50,38 @@ public enum RedisMessageType {
         return type;
     }
 
+    private static RedisMessageType valueOf(byte value) {
+        switch (value) {
+            case '+':
+                return SIMPLE_STRING;
+            case '-':
+                return ERROR;
+            case ':':
+                return INTEGER;
+            case '$':
+                return BULK_STRING;
+            case '*':
+                return ARRAY_HEADER;
+            default:
+                return INLINE_COMMAND;
+        }
+    }
+
+    /**
+     * Returns length of this type.
+     */
+    public int length() {
+        return value != null ? RedisConstants.TYPE_LENGTH : 0;
+    }
+
+    /**
+     * Returns {@code true} if this type is inline type, or returns {@code false}. If this is {@code true},
+     * this type doesn't have length field.
+     */
+    public boolean isInline() {
+        return inline;
+    }
+
     /**
      * Write the message type's prefix to the given buffer.
      */
@@ -78,22 +90,5 @@ public enum RedisMessageType {
             return;
         }
         out.writeByte(value.byteValue());
-    }
-
-    private static RedisMessageType valueOf(byte value) {
-        switch (value) {
-        case '+':
-            return SIMPLE_STRING;
-        case '-':
-            return ERROR;
-        case ':':
-            return INTEGER;
-        case '$':
-            return BULK_STRING;
-        case '*':
-            return ARRAY_HEADER;
-        default:
-            return INLINE_COMMAND;
-        }
     }
 }

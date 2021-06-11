@@ -54,10 +54,6 @@ public class ArrayHeaderRedisMessage implements RedisMessage {
 
     @Override
     public String toString() {
-        return new StringBuilder(StringUtil.simpleClassName(this))
-                .append('[')
-                .append("length=")
-                .append(length)
-                .append(']').toString();
+        return new StringBuilder(StringUtil.simpleClassName(this)).append('[').append("length=").append(length).append(']').toString();
     }
 }

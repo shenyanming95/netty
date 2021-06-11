@@ -1,19 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.resolver.dns;
 
 import io.netty.util.NetUtil;
@@ -31,8 +15,27 @@ final class DnsQueryContextManager {
      * A map whose key is the DNS server address and value is the map of the DNS query ID and its corresponding
      * {@link DnsQueryContext}.
      */
-    final Map<InetSocketAddress, IntObjectMap<DnsQueryContext>> map =
-            new HashMap<InetSocketAddress, IntObjectMap<DnsQueryContext>>();
+    final Map<InetSocketAddress, IntObjectMap<DnsQueryContext>> map = new HashMap<InetSocketAddress, IntObjectMap<DnsQueryContext>>();
+
+    private static Inet6Address toCompactAddress(Inet4Address a4) {
+        byte[] b4 = a4.getAddress();
+        byte[] b6 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, b4[0], b4[1], b4[2], b4[3]};
+        try {
+            return (Inet6Address) InetAddress.getByAddress(b6);
+        } catch (UnknownHostException e) {
+            throw new Error(e);
+        }
+    }
+
+    private static Inet4Address toIPv4Address(Inet6Address a6) {
+        byte[] b6 = a6.getAddress();
+        byte[] b4 = {b6[12], b6[13], b6[14], b6[15]};
+        try {
+            return (Inet4Address) InetAddress.getByAddress(b4);
+        } catch (UnknownHostException e) {
+            throw new Error(e);
+        }
+    }
 
     int add(DnsQueryContext qCtx) {
         final IntObjectMap<DnsQueryContext> contexts = getOrCreateContextMap(qCtx.nameServerAddr());
@@ -42,7 +45,7 @@ final class DnsQueryContextManager {
         int tries = 0;
 
         synchronized (contexts) {
-            for (;;) {
+            for (; ; ) {
                 if (!contexts.containsKey(id)) {
                     contexts.put(id, qCtx);
                     return id;
@@ -78,7 +81,7 @@ final class DnsQueryContextManager {
         }
 
         synchronized (contexts) {
-            return  contexts.remove(id);
+            return contexts.remove(id);
         }
     }
 
@@ -119,26 +122,6 @@ final class DnsQueryContextManager {
             }
 
             return newContexts;
-        }
-    }
-
-    private static Inet6Address toCompactAddress(Inet4Address a4) {
-        byte[] b4 = a4.getAddress();
-        byte[] b6 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, b4[0], b4[1], b4[2], b4[3] };
-        try {
-            return (Inet6Address) InetAddress.getByAddress(b6);
-        } catch (UnknownHostException e) {
-            throw new Error(e);
-        }
-    }
-
-    private static Inet4Address toIPv4Address(Inet6Address a6) {
-        byte[] b6 = a6.getAddress();
-        byte[] b4 = { b6[12], b6[13], b6[14], b6[15] };
-        try {
-            return (Inet4Address) InetAddress.getByAddress(b4);
-        } catch (UnknownHostException e) {
-            throw new Error(e);
         }
     }
 }

@@ -41,14 +41,10 @@ public final class KQueueDatagramChannelConfig extends KQueueChannelConfig imple
     @Override
     @SuppressWarnings("deprecation")
     public Map<ChannelOption<?>, Object> getOptions() {
-        return getOptions(
-                super.getOptions(),
-                SO_BROADCAST, SO_RCVBUF, SO_SNDBUF, SO_REUSEADDR, IP_MULTICAST_LOOP_DISABLED,
-                IP_MULTICAST_ADDR, IP_MULTICAST_IF, IP_MULTICAST_TTL,
-                IP_TOS, DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, SO_REUSEPORT);
+        return getOptions(super.getOptions(), SO_BROADCAST, SO_RCVBUF, SO_SNDBUF, SO_REUSEADDR, IP_MULTICAST_LOOP_DISABLED, IP_MULTICAST_ADDR, IP_MULTICAST_IF, IP_MULTICAST_TTL, IP_TOS, DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, SO_REUSEPORT);
     }
 
-    @SuppressWarnings({ "unchecked", "deprecation" })
+    @SuppressWarnings({"unchecked", "deprecation"})
     @Override
     public <T> T getOption(ChannelOption<T> option) {
         if (option == SO_BROADCAST) {
@@ -121,15 +117,15 @@ public final class KQueueDatagramChannelConfig extends KQueueChannelConfig imple
         return true;
     }
 
+    boolean getActiveOnOpen() {
+        return activeOnOpen;
+    }
+
     private void setActiveOnOpen(boolean activeOnOpen) {
         if (channel.isRegistered()) {
             throw new IllegalStateException("Can only changed before channel was registered");
         }
         this.activeOnOpen = activeOnOpen;
-    }
-
-    boolean getActiveOnOpen() {
-        return activeOnOpen;
     }
 
     /**
@@ -146,7 +142,7 @@ public final class KQueueDatagramChannelConfig extends KQueueChannelConfig imple
     /**
      * Set the SO_REUSEPORT option on the underlying Channel. This will allow to bind multiple
      * {@link KQueueSocketChannel}s to the same port and so accept connections with multiple threads.
-     *
+     * <p>
      * Be aware this method needs be called before {@link KQueueDatagramChannel#bind(java.net.SocketAddress)} to have
      * any affect.
      */

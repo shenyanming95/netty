@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.resolver.dns;
 
 import io.netty.channel.ChannelFactory;
@@ -54,10 +39,8 @@ public final class DnsNameResolverBuilder {
     private int maxPayloadSize = 4096;
     private boolean optResourceEnabled = true;
     private HostsFileEntriesResolver hostsFileEntriesResolver = HostsFileEntriesResolver.DEFAULT;
-    private DnsServerAddressStreamProvider dnsServerAddressStreamProvider =
-            DnsServerAddressStreamProviders.platformDefault();
-    private DnsQueryLifecycleObserverFactory dnsQueryLifecycleObserverFactory =
-            NoopDnsQueryLifecycleObserverFactory.INSTANCE;
+    private DnsServerAddressStreamProvider dnsServerAddressStreamProvider = DnsServerAddressStreamProviders.platformDefault();
+    private DnsQueryLifecycleObserverFactory dnsQueryLifecycleObserverFactory = NoopDnsQueryLifecycleObserverFactory.INSTANCE;
     private String[] searchDomains;
     private int ndots = -1;
     private boolean decodeIdn = true;
@@ -72,10 +55,36 @@ public final class DnsNameResolverBuilder {
      * Creates a new builder.
      *
      * @param eventLoop the {@link EventLoop} which will perform the communication with the DNS
-     * servers.
+     *                  servers.
      */
     public DnsNameResolverBuilder(EventLoop eventLoop) {
         eventLoop(eventLoop);
+    }
+
+    /**
+     * Compute a {@link ResolvedAddressTypes} from some {@link InternetProtocolFamily}s.
+     * An empty input will return the default value, based on "java.net" System properties.
+     * Valid inputs are (), (IPv4), (IPv6), (Ipv4, IPv6) and (IPv6, IPv4).
+     *
+     * @param internetProtocolFamilies a valid sequence of {@link InternetProtocolFamily}s
+     * @return a {@link ResolvedAddressTypes}
+     */
+    public static ResolvedAddressTypes computeResolvedAddressTypes(InternetProtocolFamily... internetProtocolFamilies) {
+        if (internetProtocolFamilies == null || internetProtocolFamilies.length == 0) {
+            return DnsNameResolver.DEFAULT_RESOLVE_ADDRESS_TYPES;
+        }
+        if (internetProtocolFamilies.length > 2) {
+            throw new IllegalArgumentException("No more than 2 InternetProtocolFamilies");
+        }
+
+        switch (internetProtocolFamilies[0]) {
+            case IPv4:
+                return (internetProtocolFamilies.length >= 2 && internetProtocolFamilies[1] == InternetProtocolFamily.IPv6) ? ResolvedAddressTypes.IPV4_PREFERRED : ResolvedAddressTypes.IPV4_ONLY;
+            case IPv6:
+                return (internetProtocolFamilies.length >= 2 && internetProtocolFamilies[1] == InternetProtocolFamily.IPv4) ? ResolvedAddressTypes.IPV6_PREFERRED : ResolvedAddressTypes.IPV6_ONLY;
+            default:
+                throw new IllegalArgumentException("Couldn't resolve ResolvedAddressTypes from InternetProtocolFamily array");
+        }
     }
 
     /**
@@ -151,7 +160,7 @@ public final class DnsNameResolverBuilder {
      * @return {@code this}
      */
     public DnsNameResolverBuilder resolveCache(DnsCache resolveCache) {
-        this.resolveCache  = resolveCache;
+        this.resolveCache = resolveCache;
         return this;
     }
 
@@ -162,17 +171,17 @@ public final class DnsNameResolverBuilder {
      * @return {@code this}
      */
     public DnsNameResolverBuilder cnameCache(DnsCnameCache cnameCache) {
-        this.cnameCache  = cnameCache;
+        this.cnameCache = cnameCache;
         return this;
     }
 
     /**
      * Set the factory used to generate objects which can observe individual DNS queries.
+     *
      * @param lifecycleObserverFactory the factory used to generate objects which can observe individual DNS queries.
      * @return {@code this}
      */
-    public DnsNameResolverBuilder dnsQueryLifecycleObserverFactory(DnsQueryLifecycleObserverFactory
-                                                                           lifecycleObserverFactory) {
+    public DnsNameResolverBuilder dnsQueryLifecycleObserverFactory(DnsQueryLifecycleObserverFactory lifecycleObserverFactory) {
         this.dnsQueryLifecycleObserverFactory = checkNotNull(lifecycleObserverFactory, "lifecycleObserverFactory");
         return this;
     }
@@ -239,36 +248,6 @@ public final class DnsNameResolverBuilder {
     public DnsNameResolverBuilder queryTimeoutMillis(long queryTimeoutMillis) {
         this.queryTimeoutMillis = queryTimeoutMillis;
         return this;
-    }
-
-    /**
-     * Compute a {@link ResolvedAddressTypes} from some {@link InternetProtocolFamily}s.
-     * An empty input will return the default value, based on "java.net" System properties.
-     * Valid inputs are (), (IPv4), (IPv6), (Ipv4, IPv6) and (IPv6, IPv4).
-     * @param internetProtocolFamilies a valid sequence of {@link InternetProtocolFamily}s
-     * @return a {@link ResolvedAddressTypes}
-     */
-    public static ResolvedAddressTypes computeResolvedAddressTypes(InternetProtocolFamily... internetProtocolFamilies) {
-        if (internetProtocolFamilies == null || internetProtocolFamilies.length == 0) {
-            return DnsNameResolver.DEFAULT_RESOLVE_ADDRESS_TYPES;
-        }
-        if (internetProtocolFamilies.length > 2) {
-            throw new IllegalArgumentException("No more than 2 InternetProtocolFamilies");
-        }
-
-        switch(internetProtocolFamilies[0]) {
-            case IPv4:
-                return (internetProtocolFamilies.length >= 2
-                        && internetProtocolFamilies[1] == InternetProtocolFamily.IPv6) ?
-                        ResolvedAddressTypes.IPV4_PREFERRED: ResolvedAddressTypes.IPV4_ONLY;
-            case IPv6:
-                return (internetProtocolFamilies.length >= 2
-                        && internetProtocolFamilies[1] == InternetProtocolFamily.IPv4) ?
-                        ResolvedAddressTypes.IPV6_PREFERRED: ResolvedAddressTypes.IPV6_ONLY;
-            default:
-                throw new IllegalArgumentException(
-                        "Couldn't resolve ResolvedAddressTypes from InternetProtocolFamily array");
-        }
     }
 
     /**
@@ -374,11 +353,11 @@ public final class DnsNameResolverBuilder {
     /**
      * Set the {@link DnsServerAddressStreamProvider} which is used to determine which DNS server is used to resolve
      * each hostname.
+     *
      * @return {@code this}.
      */
     public DnsNameResolverBuilder nameServerProvider(DnsServerAddressStreamProvider dnsServerAddressStreamProvider) {
-        this.dnsServerAddressStreamProvider =
-                checkNotNull(dnsServerAddressStreamProvider, "dnsServerAddressStreamProvider");
+        this.dnsServerAddressStreamProvider = checkNotNull(dnsServerAddressStreamProvider, "dnsServerAddressStreamProvider");
         return this;
     }
 
@@ -410,13 +389,13 @@ public final class DnsNameResolverBuilder {
         return this;
     }
 
-  /**
-   * Set the number of dots which must appear in a name before an initial absolute query is made.
-   * The default value is {@code 1}.
-   *
-   * @param ndots the ndots value
-   * @return {@code this}
-   */
+    /**
+     * Set the number of dots which must appear in a name before an initial absolute query is made.
+     * The default value is {@code 1}.
+     *
+     * @param ndots the ndots value
+     * @return {@code this}
+     */
     public DnsNameResolverBuilder ndots(int ndots) {
         this.ndots = ndots;
         return this;
@@ -427,16 +406,14 @@ public final class DnsNameResolverBuilder {
     }
 
     private AuthoritativeDnsServerCache newAuthoritativeDnsServerCache() {
-        return new DefaultAuthoritativeDnsServerCache(
-                intValue(minTtl, 0), intValue(maxTtl, Integer.MAX_VALUE),
+        return new DefaultAuthoritativeDnsServerCache(intValue(minTtl, 0), intValue(maxTtl, Integer.MAX_VALUE),
                 // Let us use the sane ordering as DnsNameResolver will be used when returning
                 // nameservers from the cache.
                 new NameServerComparator(DnsNameResolver.preferredAddressType(resolvedAddressTypes).addressType()));
     }
 
     private DnsCnameCache newCnameCache() {
-        return new DefaultDnsCnameCache(
-                intValue(minTtl, 0), intValue(maxTtl, Integer.MAX_VALUE));
+        return new DefaultDnsCnameCache(intValue(minTtl, 0), intValue(maxTtl, Integer.MAX_VALUE));
     }
 
     /**
@@ -471,29 +448,8 @@ public final class DnsNameResolverBuilder {
 
         DnsCache resolveCache = this.resolveCache != null ? this.resolveCache : newCache();
         DnsCnameCache cnameCache = this.cnameCache != null ? this.cnameCache : newCnameCache();
-        AuthoritativeDnsServerCache authoritativeDnsServerCache = this.authoritativeDnsServerCache != null ?
-                this.authoritativeDnsServerCache : newAuthoritativeDnsServerCache();
-        return new DnsNameResolver(
-                eventLoop,
-                channelFactory,
-                socketChannelFactory,
-                resolveCache,
-                cnameCache,
-                authoritativeDnsServerCache,
-                dnsQueryLifecycleObserverFactory,
-                queryTimeoutMillis,
-                resolvedAddressTypes,
-                recursionDesired,
-                maxQueriesPerResolve,
-                traceEnabled,
-                maxPayloadSize,
-                optResourceEnabled,
-                hostsFileEntriesResolver,
-                dnsServerAddressStreamProvider,
-                searchDomains,
-                ndots,
-                decodeIdn,
-                completeOncePreferredResolved);
+        AuthoritativeDnsServerCache authoritativeDnsServerCache = this.authoritativeDnsServerCache != null ? this.authoritativeDnsServerCache : newAuthoritativeDnsServerCache();
+        return new DnsNameResolver(eventLoop, channelFactory, socketChannelFactory, resolveCache, cnameCache, authoritativeDnsServerCache, dnsQueryLifecycleObserverFactory, queryTimeoutMillis, resolvedAddressTypes, recursionDesired, maxQueriesPerResolve, traceEnabled, maxPayloadSize, optResourceEnabled, hostsFileEntriesResolver, dnsServerAddressStreamProvider, searchDomains, ndots, decodeIdn, completeOncePreferredResolved);
     }
 
     /**

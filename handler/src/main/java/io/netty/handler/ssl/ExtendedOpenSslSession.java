@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.util.internal.EmptyArrays;
@@ -38,10 +23,7 @@ abstract class ExtendedOpenSslSession extends ExtendedSSLSession implements Open
     // TODO: use OpenSSL API to actually fetch the real data but for now just do what Conscrypt does:
     // https://github.com/google/conscrypt/blob/1.2.0/common/
     // src/main/java/org/conscrypt/Java7ExtendedSSLSession.java#L32
-    private static final String[] LOCAL_SUPPORTED_SIGNATURE_ALGORITHMS = {
-            "SHA512withRSA", "SHA512withECDSA", "SHA384withRSA", "SHA384withECDSA", "SHA256withRSA",
-            "SHA256withECDSA", "SHA224withRSA", "SHA224withECDSA", "SHA1withRSA", "SHA1withECDSA",
-    };
+    private static final String[] LOCAL_SUPPORTED_SIGNATURE_ALGORITHMS = {"SHA512withRSA", "SHA512withECDSA", "SHA384withRSA", "SHA384withECDSA", "SHA256withRSA", "SHA256withECDSA", "SHA224withRSA", "SHA224withECDSA", "SHA1withRSA", "SHA1withECDSA",};
 
     private final OpenSslSession wrapped;
 
@@ -51,7 +33,7 @@ abstract class ExtendedOpenSslSession extends ExtendedSSLSession implements Open
 
     // Use rawtypes an unchecked override to be able to also work on java7.
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public abstract List getRequestedServerNames();
 
     // Do not mark as override so we can compile on java8.
@@ -74,11 +56,6 @@ abstract class ExtendedOpenSslSession extends ExtendedSSLSession implements Open
     @Override
     public final void setLocalCertificate(Certificate[] localCertificate) {
         wrapped.setLocalCertificate(localCertificate);
-    }
-
-    @Override
-    public final void setPacketBufferSize(int packetBufferSize) {
-        wrapped.setPacketBufferSize(packetBufferSize);
     }
 
     @Override
@@ -147,7 +124,7 @@ abstract class ExtendedOpenSslSession extends ExtendedSSLSession implements Open
 
     @Override
     public final Object getValue(String s) {
-        Object value =  wrapped.getValue(s);
+        Object value = wrapped.getValue(s);
         if (value instanceof SSLSessionBindingListenerDecorator) {
             // Unwrap as needed so we return the original value
             return ((SSLSessionBindingListenerDecorator) value).delegate;
@@ -213,6 +190,11 @@ abstract class ExtendedOpenSslSession extends ExtendedSSLSession implements Open
     @Override
     public final int getPacketBufferSize() {
         return wrapped.getPacketBufferSize();
+    }
+
+    @Override
+    public final void setPacketBufferSize(int packetBufferSize) {
+        wrapped.setPacketBufferSize(packetBufferSize);
     }
 
     @Override

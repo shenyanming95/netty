@@ -1,19 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.util.internal;
 
 import java.lang.reflect.*;
@@ -29,9 +13,11 @@ public abstract class TypeParameterMatcher {
         }
     };
 
+    TypeParameterMatcher() {
+    }
+
     public static TypeParameterMatcher get(final Class<?> parameterType) {
-        final Map<Class<?>, TypeParameterMatcher> getCache =
-                InternalThreadLocalMap.get().typeParameterMatcherGetCache();
+        final Map<Class<?>, TypeParameterMatcher> getCache = InternalThreadLocalMap.get().typeParameterMatcherGetCache();
 
         TypeParameterMatcher matcher = getCache.get(parameterType);
         if (matcher == null) {
@@ -46,11 +32,9 @@ public abstract class TypeParameterMatcher {
         return matcher;
     }
 
-    public static TypeParameterMatcher find(
-            final Object object, final Class<?> parametrizedSuperclass, final String typeParamName) {
+    public static TypeParameterMatcher find(final Object object, final Class<?> parametrizedSuperclass, final String typeParamName) {
 
-        final Map<Class<?>, Map<String, TypeParameterMatcher>> findCache =
-                InternalThreadLocalMap.get().typeParameterMatcherFindCache();
+        final Map<Class<?>, Map<String, TypeParameterMatcher>> findCache = InternalThreadLocalMap.get().typeParameterMatcherFindCache();
         final Class<?> thisClass = object.getClass();
 
         Map<String, TypeParameterMatcher> map = findCache.get(thisClass);
@@ -68,16 +52,15 @@ public abstract class TypeParameterMatcher {
         return matcher;
     }
 
-    private static Class<?> find0(
-            final Object object, Class<?> parametrizedSuperclass, String typeParamName) {
+    private static Class<?> find0(final Object object, Class<?> parametrizedSuperclass, String typeParamName) {
 
         final Class<?> thisClass = object.getClass();
         Class<?> currentClass = thisClass;
-        for (;;) {
+        for (; ; ) {
             if (currentClass.getSuperclass() == parametrizedSuperclass) {
                 int typeParamIndex = -1;
                 TypeVariable<?>[] typeParams = currentClass.getSuperclass().getTypeParameters();
-                for (int i = 0; i < typeParams.length; i ++) {
+                for (int i = 0; i < typeParams.length; i++) {
                     if (typeParamName.equals(typeParams[i].getName())) {
                         typeParamIndex = i;
                         break;
@@ -85,8 +68,7 @@ public abstract class TypeParameterMatcher {
                 }
 
                 if (typeParamIndex < 0) {
-                    throw new IllegalStateException(
-                            "unknown type parameter '" + typeParamName + "': " + parametrizedSuperclass);
+                    throw new IllegalStateException("unknown type parameter '" + typeParamName + "': " + parametrizedSuperclass);
                 }
 
                 Type genericSuperType = currentClass.getGenericSuperclass();
@@ -139,8 +121,7 @@ public abstract class TypeParameterMatcher {
     }
 
     private static Class<?> fail(Class<?> type, String typeParamName) {
-        throw new IllegalStateException(
-                "cannot determine the type of the type parameter '" + typeParamName + "': " + type);
+        throw new IllegalStateException("cannot determine the type of the type parameter '" + typeParamName + "': " + type);
     }
 
     public abstract boolean match(Object msg);
@@ -157,6 +138,4 @@ public abstract class TypeParameterMatcher {
             return type.isInstance(msg);
         }
     }
-
-    TypeParameterMatcher() { }
 }

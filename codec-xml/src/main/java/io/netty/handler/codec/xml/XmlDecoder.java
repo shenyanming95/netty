@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.xml;
 
 import com.fasterxml.aalto.AsyncByteArrayFeeder;
@@ -29,7 +14,7 @@ import java.util.List;
 
 /**
  * Async XML decoder based on <a href="https://github.com/FasterXML/aalto-xml">Aalto XML parser</a>.
- *
+ * <p>
  * Parses the incoming data into one of XML messages defined in this package.
  */
 
@@ -56,34 +41,27 @@ public class XmlDecoder extends ByteToMessageDecoder {
             int type = streamReader.next();
             switch (type) {
                 case XMLStreamConstants.START_DOCUMENT:
-                    out.add(new XmlDocumentStart(streamReader.getEncoding(), streamReader.getVersion(),
-                            streamReader.isStandalone(), streamReader.getCharacterEncodingScheme()));
+                    out.add(new XmlDocumentStart(streamReader.getEncoding(), streamReader.getVersion(), streamReader.isStandalone(), streamReader.getCharacterEncodingScheme()));
                     break;
                 case XMLStreamConstants.END_DOCUMENT:
                     out.add(XML_DOCUMENT_END);
                     break;
                 case XMLStreamConstants.START_ELEMENT:
-                    XmlElementStart elementStart = new XmlElementStart(streamReader.getLocalName(),
-                            streamReader.getName().getNamespaceURI(), streamReader.getPrefix());
+                    XmlElementStart elementStart = new XmlElementStart(streamReader.getLocalName(), streamReader.getName().getNamespaceURI(), streamReader.getPrefix());
                     for (int x = 0; x < streamReader.getAttributeCount(); x++) {
-                        XmlAttribute attribute = new XmlAttribute(streamReader.getAttributeType(x),
-                                streamReader.getAttributeLocalName(x), streamReader.getAttributePrefix(x),
-                                streamReader.getAttributeNamespace(x), streamReader.getAttributeValue(x));
+                        XmlAttribute attribute = new XmlAttribute(streamReader.getAttributeType(x), streamReader.getAttributeLocalName(x), streamReader.getAttributePrefix(x), streamReader.getAttributeNamespace(x), streamReader.getAttributeValue(x));
                         elementStart.attributes().add(attribute);
                     }
                     for (int x = 0; x < streamReader.getNamespaceCount(); x++) {
-                        XmlNamespace namespace = new XmlNamespace(streamReader.getNamespacePrefix(x),
-                                streamReader.getNamespaceURI(x));
+                        XmlNamespace namespace = new XmlNamespace(streamReader.getNamespacePrefix(x), streamReader.getNamespaceURI(x));
                         elementStart.namespaces().add(namespace);
                     }
                     out.add(elementStart);
                     break;
                 case XMLStreamConstants.END_ELEMENT:
-                    XmlElementEnd elementEnd = new XmlElementEnd(streamReader.getLocalName(),
-                            streamReader.getName().getNamespaceURI(), streamReader.getPrefix());
+                    XmlElementEnd elementEnd = new XmlElementEnd(streamReader.getLocalName(), streamReader.getName().getNamespaceURI(), streamReader.getPrefix());
                     for (int x = 0; x < streamReader.getNamespaceCount(); x++) {
-                        XmlNamespace namespace = new XmlNamespace(streamReader.getNamespacePrefix(x),
-                                streamReader.getNamespaceURI(x));
+                        XmlNamespace namespace = new XmlNamespace(streamReader.getNamespacePrefix(x), streamReader.getNamespaceURI(x));
                         elementEnd.namespaces().add(namespace);
                     }
                     out.add(elementEnd);

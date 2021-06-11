@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.cookie;
 
 import io.netty.handler.codec.http.cookie.CookieHeaderNames.SameSite;
@@ -127,6 +112,7 @@ public class DefaultCookie implements Cookie {
      * Checks to see if this {@link Cookie} can be sent along cross-site requests.
      * For more information, please look
      * <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-05">here</a>
+     *
      * @return <b>same-site-flag</b> value
      */
     public SameSite sameSite() {
@@ -136,7 +122,8 @@ public class DefaultCookie implements Cookie {
     /**
      * Determines if this this {@link Cookie} can be sent along cross-site requests.
      * For more information, please look
-     *  <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-05">here</a>
+     * <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-05">here</a>
+     *
      * @param sameSite <b>same-site-flag</b> value
      */
     public void setSameSite(SameSite sameSite) {
@@ -221,7 +208,8 @@ public class DefaultCookie implements Cookie {
     /**
      * Validate a cookie attribute value, throws a {@link IllegalArgumentException} otherwise.
      * Only intended to be used by {@link io.netty.handler.codec.http.DefaultCookie}.
-     * @param name attribute name
+     *
+     * @param name  attribute name
      * @param value attribute value
      * @return the trimmed, validated attribute value
      * @deprecated CookieUtil is package private, will be removed once old Cookie API is dropped
@@ -233,22 +221,15 @@ public class DefaultCookie implements Cookie {
 
     @Override
     public String toString() {
-        StringBuilder buf = stringBuilder()
-            .append(name())
-            .append('=')
-            .append(value());
+        StringBuilder buf = stringBuilder().append(name()).append('=').append(value());
         if (domain() != null) {
-            buf.append(", domain=")
-               .append(domain());
+            buf.append(", domain=").append(domain());
         }
         if (path() != null) {
-            buf.append(", path=")
-               .append(path());
+            buf.append(", path=").append(path());
         }
         if (maxAge() >= 0) {
-            buf.append(", maxAge=")
-               .append(maxAge())
-               .append('s');
+            buf.append(", maxAge=").append(maxAge()).append('s');
         }
         if (isSecure()) {
             buf.append(", secure");

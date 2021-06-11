@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.multipart;
 
 import io.netty.buffer.ByteBuf;
@@ -49,27 +34,51 @@ public abstract class AbstractDiskHttpData extends AbstractHttpData {
     }
 
     /**
+     * Utility function
      *
+     * @return the array of bytes
+     */
+    private static byte[] readFrom(File src) throws IOException {
+        long srcsize = src.length();
+        if (srcsize > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("File too big to be loaded in memory");
+        }
+        RandomAccessFile accessFile = new RandomAccessFile(src, "r");
+        byte[] array = new byte[(int) srcsize];
+        try {
+            FileChannel fileChannel = accessFile.getChannel();
+            ByteBuffer byteBuffer = ByteBuffer.wrap(array);
+            int read = 0;
+            while (read < srcsize) {
+                read += fileChannel.read(byteBuffer);
+            }
+        } finally {
+            accessFile.close();
+        }
+        return array;
+    }
+
+    /**
      * @return the real DiskFilename (basename)
      */
     protected abstract String getDiskFilename();
+
     /**
-     *
      * @return the default prefix
      */
     protected abstract String getPrefix();
+
     /**
-     *
      * @return the default base Directory
      */
     protected abstract String getBaseDirectory();
+
     /**
-     *
      * @return the default postfix
      */
     protected abstract String getPostfix();
+
     /**
-     *
      * @return True if the file should be deleted on Exit by default
      */
     protected abstract boolean deleteOnExit();
@@ -90,8 +99,7 @@ public abstract class AbstractDiskHttpData extends AbstractHttpData {
             // create a temporary file
             tmpFile = File.createTempFile(getPrefix(), newpostfix);
         } else {
-            tmpFile = File.createTempFile(getPrefix(), newpostfix, new File(
-                    getBaseDirectory()));
+            tmpFile = File.createTempFile(getPrefix(), newpostfix, new File(getBaseDirectory()));
         }
         if (deleteOnExit()) {
             tmpFile.deleteOnExit();
@@ -147,15 +155,13 @@ public abstract class AbstractDiskHttpData extends AbstractHttpData {
     }
 
     @Override
-    public void addContent(ByteBuf buffer, boolean last)
-            throws IOException {
+    public void addContent(ByteBuf buffer, boolean last) throws IOException {
         if (buffer != null) {
             try {
                 int localsize = buffer.readableBytes();
                 checkSize(size + localsize);
                 if (definedSize > 0 && definedSize < size + localsize) {
-                    throw new IOException("Out of size: " + (size + localsize) +
-                            " > " + definedSize);
+                    throw new IOException("Out of size: " + (size + localsize) + " > " + definedSize);
                 }
                 if (file == null) {
                     file = tempFile();
@@ -271,7 +277,7 @@ public abstract class AbstractDiskHttpData extends AbstractHttpData {
             }
             fileChannel = null;
         }
-        if (! isRenamed) {
+        if (!isRenamed) {
             if (file != null && file.exists()) {
                 if (!file.delete()) {
                     logger.warn("Failed to delete: {}", file);
@@ -379,7 +385,7 @@ public abstract class AbstractDiskHttpData extends AbstractHttpData {
                     if (chunkSize < size - position) {
                         chunkSize = size - position;
                     }
-                    position += in.transferTo(position, chunkSize , out);
+                    position += in.transferTo(position, chunkSize, out);
                 }
             } catch (IOException e) {
                 exception = e;
@@ -427,31 +433,6 @@ public abstract class AbstractDiskHttpData extends AbstractHttpData {
         file = dest;
         isRenamed = true;
         return true;
-    }
-
-    /**
-     * Utility function
-     * @return the array of bytes
-     */
-    private static byte[] readFrom(File src) throws IOException {
-        long srcsize = src.length();
-        if (srcsize > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException(
-                    "File too big to be loaded in memory");
-        }
-        RandomAccessFile accessFile = new RandomAccessFile(src, "r");
-        byte[] array = new byte[(int) srcsize];
-        try {
-            FileChannel fileChannel = accessFile.getChannel();
-            ByteBuffer byteBuffer = ByteBuffer.wrap(array);
-            int read = 0;
-            while (read < srcsize) {
-                read += fileChannel.read(byteBuffer);
-            }
-        } finally {
-            accessFile.close();
-        }
-        return array;
     }
 
     @Override

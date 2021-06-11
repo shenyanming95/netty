@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.bootstrap;
 
 import io.netty.channel.*;
@@ -46,11 +31,11 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
     private final BootstrapConfig config = new BootstrapConfig(this);
 
     @SuppressWarnings("unchecked")
-    private volatile AddressResolverGroup<SocketAddress> resolver =
-            (AddressResolverGroup<SocketAddress>) DEFAULT_RESOLVER;
+    private volatile AddressResolverGroup<SocketAddress> resolver = (AddressResolverGroup<SocketAddress>) DEFAULT_RESOLVER;
     private volatile SocketAddress remoteAddress;
 
-    public Bootstrap() { }
+    public Bootstrap() {
+    }
 
     private Bootstrap(Bootstrap bootstrap) {
         super(bootstrap);
@@ -58,12 +43,29 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
         remoteAddress = bootstrap.remoteAddress;
     }
 
+    private static void doConnect(final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise connectPromise) {
+
+        // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
+        // the pipeline in its channelRegistered() implementation.
+        final Channel channel = connectPromise.channel();
+        channel.eventLoop().execute(new Runnable() {
+            @Override
+            public void run() {
+                if (localAddress == null) {
+                    channel.connect(remoteAddress, connectPromise);
+                } else {
+                    channel.connect(remoteAddress, localAddress, connectPromise);
+                }
+                connectPromise.addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+            }
+        });
+    }
+
     /**
      * Sets the {@link NameResolver} which will resolve the address of the unresolved named address.
      *
      * @param resolver the {@link NameResolver} for this {@code Bootstrap}; may be {@code null}, in which case a default
      *                 resolver will be used
-     *
      * @see io.netty.resolver.DefaultAddressResolverGroup
      */
     @SuppressWarnings("unchecked")
@@ -179,8 +181,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
         }
     }
 
-    private ChannelFuture doResolveAndConnect0(final Channel channel, SocketAddress remoteAddress,
-                                               final SocketAddress localAddress, final ChannelPromise promise) {
+    private ChannelFuture doResolveAndConnect0(final Channel channel, SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise promise) {
         try {
             final EventLoop eventLoop = channel.eventLoop();
             AddressResolver<SocketAddress> resolver;
@@ -229,25 +230,6 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
             promise.tryFailure(cause);
         }
         return promise;
-    }
-
-    private static void doConnect(
-            final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise connectPromise) {
-
-        // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
-        // the pipeline in its channelRegistered() implementation.
-        final Channel channel = connectPromise.channel();
-        channel.eventLoop().execute(new Runnable() {
-            @Override
-            public void run() {
-                if (localAddress == null) {
-                    channel.connect(remoteAddress, connectPromise);
-                } else {
-                    channel.connect(remoteAddress, localAddress, connectPromise);
-                }
-                connectPromise.addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-            }
-        });
     }
 
     @Override

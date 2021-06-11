@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec;
 
 import io.netty.buffer.ByteBuf;
@@ -38,22 +23,26 @@ import java.nio.charset.Charset;
  */
 final class ReplayingDecoderByteBuf extends ByteBuf {
 
-    private static final Signal REPLAY = ReplayingDecoder.REPLAY;
-
-    private ByteBuf buffer;
-    private boolean terminated;
-    private SwappedByteBuf swapped;
-
     static final ReplayingDecoderByteBuf EMPTY_BUFFER = new ReplayingDecoderByteBuf(Unpooled.EMPTY_BUFFER);
+    private static final Signal REPLAY = ReplayingDecoder.REPLAY;
 
     static {
         EMPTY_BUFFER.terminate();
     }
 
-    ReplayingDecoderByteBuf() { }
+    private ByteBuf buffer;
+    private boolean terminated;
+    private SwappedByteBuf swapped;
+
+    ReplayingDecoderByteBuf() {
+    }
 
     ReplayingDecoderByteBuf(ByteBuf buffer) {
         setCumulation(buffer);
+    }
+
+    private static UnsupportedOperationException reject() {
+        return new UnsupportedOperationException("not a replayable operation");
     }
 
     void setCumulation(ByteBuf buffer) {
@@ -917,13 +906,7 @@ final class ReplayingDecoderByteBuf extends ByteBuf {
 
     @Override
     public String toString() {
-        return StringUtil.simpleClassName(this) + '(' +
-               "ridx=" +
-               readerIndex() +
-               ", " +
-               "widx=" +
-               writerIndex() +
-               ')';
+        return StringUtil.simpleClassName(this) + '(' + "ridx=" + readerIndex() + ", " + "widx=" + writerIndex() + ')';
     }
 
     @Override
@@ -1138,9 +1121,5 @@ final class ReplayingDecoderByteBuf extends ByteBuf {
     @Override
     public ByteBuf unwrap() {
         throw reject();
-    }
-
-    private static UnsupportedOperationException reject() {
-        return new UnsupportedOperationException("not a replayable operation");
     }
 }

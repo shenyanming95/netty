@@ -1,18 +1,3 @@
-/*
- * Copyright 2020 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.dns.udp;
 
 import io.netty.bootstrap.Bootstrap;
@@ -33,7 +18,8 @@ public final class DnsClient {
     private static final int DNS_SERVER_PORT = 53;
     private static final String DNS_SERVER_HOST = "8.8.8.8";
 
-    private DnsClient() { }
+    private DnsClient() {
+    }
 
     private static void handleQueryResp(DatagramDnsResponse msg) {
         if (msg.count(DnsSection.QUESTION) > 0) {
@@ -55,15 +41,11 @@ public final class DnsClient {
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
-            b.group(group)
-             .channel(NioDatagramChannel.class)
-             .handler(new ChannelInitializer<DatagramChannel>() {
-                 @Override
-                 protected void initChannel(DatagramChannel ch) throws Exception {
-                     ChannelPipeline p = ch.pipeline();
-                     p.addLast(new DatagramDnsQueryEncoder())
-                     .addLast(new DatagramDnsResponseDecoder())
-                     .addLast(new SimpleChannelInboundHandler<DatagramDnsResponse>() {
+            b.group(group).channel(NioDatagramChannel.class).handler(new ChannelInitializer<DatagramChannel>() {
+                @Override
+                protected void initChannel(DatagramChannel ch) throws Exception {
+                    ChannelPipeline p = ch.pipeline();
+                    p.addLast(new DatagramDnsQueryEncoder()).addLast(new DatagramDnsResponseDecoder()).addLast(new SimpleChannelInboundHandler<DatagramDnsResponse>() {
                         @Override
                         protected void channelRead0(ChannelHandlerContext ctx, DatagramDnsResponse msg) {
                             try {
@@ -73,12 +55,10 @@ public final class DnsClient {
                             }
                         }
                     });
-                 }
-             });
+                }
+            });
             final Channel ch = b.bind(0).sync().channel();
-            DnsQuery query = new DatagramDnsQuery(null, addr, 1).setRecord(
-                    DnsSection.QUESTION,
-                    new DefaultDnsQuestion(QUERY_DOMAIN, DnsRecordType.A));
+            DnsQuery query = new DatagramDnsQuery(null, addr, 1).setRecord(DnsSection.QUESTION, new DefaultDnsQuestion(QUERY_DOMAIN, DnsRecordType.A));
             ch.writeAndFlush(query).sync();
             boolean succ = ch.closeFuture().await(10, TimeUnit.SECONDS);
             if (!succ) {

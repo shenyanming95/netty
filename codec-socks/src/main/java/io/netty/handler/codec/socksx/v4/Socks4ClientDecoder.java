@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.socksx.v4;
 
 import io.netty.buffer.ByteBuf;
@@ -33,12 +18,6 @@ import java.util.List;
  */
 public class Socks4ClientDecoder extends ReplayingDecoder<State> {
 
-    enum State {
-        START,
-        SUCCESS,
-        FAILURE
-    }
-
     public Socks4ClientDecoder() {
         super(State.START);
         setSingleDecode(true);
@@ -48,30 +27,30 @@ public class Socks4ClientDecoder extends ReplayingDecoder<State> {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         try {
             switch (state()) {
-            case START: {
-                final int version = in.readUnsignedByte();
-                if (version != 0) {
-                    throw new DecoderException("unsupported reply version: " + version + " (expected: 0)");
-                }
+                case START: {
+                    final int version = in.readUnsignedByte();
+                    if (version != 0) {
+                        throw new DecoderException("unsupported reply version: " + version + " (expected: 0)");
+                    }
 
-                final Socks4CommandStatus status = Socks4CommandStatus.valueOf(in.readByte());
-                final int dstPort = in.readUnsignedShort();
-                final String dstAddr = NetUtil.intToIpAddress(in.readInt());
+                    final Socks4CommandStatus status = Socks4CommandStatus.valueOf(in.readByte());
+                    final int dstPort = in.readUnsignedShort();
+                    final String dstAddr = NetUtil.intToIpAddress(in.readInt());
 
-                out.add(new DefaultSocks4CommandResponse(status, dstAddr, dstPort));
-                checkpoint(State.SUCCESS);
-            }
-            case SUCCESS: {
-                int readableBytes = actualReadableBytes();
-                if (readableBytes > 0) {
-                    out.add(in.readRetainedSlice(readableBytes));
+                    out.add(new DefaultSocks4CommandResponse(status, dstAddr, dstPort));
+                    checkpoint(State.SUCCESS);
                 }
-                break;
-            }
-            case FAILURE: {
-                in.skipBytes(actualReadableBytes());
-                break;
-            }
+                case SUCCESS: {
+                    int readableBytes = actualReadableBytes();
+                    if (readableBytes > 0) {
+                        out.add(in.readRetainedSlice(readableBytes));
+                    }
+                    break;
+                }
+                case FAILURE: {
+                    in.skipBytes(actualReadableBytes());
+                    break;
+                }
             }
         } catch (Exception e) {
             fail(out, e);
@@ -88,5 +67,9 @@ public class Socks4ClientDecoder extends ReplayingDecoder<State> {
         out.add(m);
 
         checkpoint(State.FAILURE);
+    }
+
+    enum State {
+        START, SUCCESS, FAILURE
     }
 }

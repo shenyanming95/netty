@@ -40,8 +40,7 @@ public final class MacOSDnsServerAddressStreamProvider implements DnsServerAddre
 
     private static final Throwable UNAVAILABILITY_CAUSE;
 
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(MacOSDnsServerAddressStreamProvider.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(MacOSDnsServerAddressStreamProvider.class);
 
     // Let's refresh every 10 seconds.
     private static final long REFRESH_INTERVAL = TimeUnit.SECONDS.toNanos(10);
@@ -54,6 +53,13 @@ public final class MacOSDnsServerAddressStreamProvider implements DnsServerAddre
             cause = error;
         }
         UNAVAILABILITY_CAUSE = cause;
+    }
+
+    private final AtomicLong lastRefresh = new AtomicLong(System.nanoTime());
+    private volatile Map<String, DnsServerAddresses> currentMappings = retrieveCurrentMappings();
+
+    public MacOSDnsServerAddressStreamProvider() {
+        ensureAvailability();
     }
 
     private static void loadNativeLibrary() {
@@ -83,21 +89,13 @@ public final class MacOSDnsServerAddressStreamProvider implements DnsServerAddre
 
     public static void ensureAvailability() {
         if (UNAVAILABILITY_CAUSE != null) {
-            throw (Error) new UnsatisfiedLinkError(
-                    "failed to load the required native library").initCause(UNAVAILABILITY_CAUSE);
+            throw (Error) new UnsatisfiedLinkError("failed to load the required native library").initCause(UNAVAILABILITY_CAUSE);
         }
     }
 
     public static Throwable unavailabilityCause() {
         return UNAVAILABILITY_CAUSE;
     }
-
-    public MacOSDnsServerAddressStreamProvider() {
-        ensureAvailability();
-    }
-
-    private volatile Map<String, DnsServerAddresses> currentMappings = retrieveCurrentMappings();
-    private final AtomicLong lastRefresh = new AtomicLong(System.nanoTime());
 
     private static Map<String, DnsServerAddresses> retrieveCurrentMappings() {
         DnsResolver[] resolvers = resolvers();
@@ -106,7 +104,7 @@ public final class MacOSDnsServerAddressStreamProvider implements DnsServerAddre
             return Collections.emptyMap();
         }
         Map<String, DnsServerAddresses> resolverMap = new HashMap<String, DnsServerAddresses>(resolvers.length);
-        for (DnsResolver resolver: resolvers) {
+        for (DnsResolver resolver : resolvers) {
             // Skip mdns
             if ("mdns".equalsIgnoreCase(resolver.options())) {
                 continue;
@@ -138,6 +136,8 @@ public final class MacOSDnsServerAddressStreamProvider implements DnsServerAddre
         return resolverMap;
     }
 
+    private static native DnsResolver[] resolvers();
+
     @Override
     public DnsServerAddressStream nameServerAddressStream(String hostname) {
         long last = lastRefresh.get();
@@ -151,7 +151,7 @@ public final class MacOSDnsServerAddressStreamProvider implements DnsServerAddre
         }
 
         final String originalHostname = hostname;
-        for (;;) {
+        for (; ; ) {
             int i = hostname.indexOf('.', 1);
             if (i < 0 || i == hostname.length() - 1) {
                 // Try access default mapping.
@@ -170,6 +170,4 @@ public final class MacOSDnsServerAddressStreamProvider implements DnsServerAddre
             hostname = hostname.substring(i + 1);
         }
     }
-
-    private static native DnsResolver[] resolvers();
 }

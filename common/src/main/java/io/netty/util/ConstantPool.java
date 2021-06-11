@@ -1,19 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.util;
 
 import io.netty.util.internal.ObjectUtil;
@@ -33,14 +17,21 @@ public abstract class ConstantPool<T extends Constant<T>> {
 
     private final AtomicInteger nextId = new AtomicInteger(1);
 
+    private static String checkNotNullAndNotEmpty(String name) {
+        ObjectUtil.checkNotNull(name, "name");
+
+        if (name.isEmpty()) {
+            throw new IllegalArgumentException("empty name");
+        }
+
+        return name;
+    }
+
     /**
      * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
     public T valueOf(Class<?> firstNameComponent, String secondNameComponent) {
-        return valueOf(
-                ObjectUtil.checkNotNull(firstNameComponent, "firstNameComponent").getName() +
-                '#' +
-                ObjectUtil.checkNotNull(secondNameComponent, "secondNameComponent"));
+        return valueOf(ObjectUtil.checkNotNull(firstNameComponent, "firstNameComponent").getName() + '#' + ObjectUtil.checkNotNull(secondNameComponent, "secondNameComponent"));
     }
 
     /**
@@ -107,16 +98,6 @@ public abstract class ConstantPool<T extends Constant<T>> {
         }
 
         throw new IllegalArgumentException(String.format("'%s' is already in use", name));
-    }
-
-    private static String checkNotNullAndNotEmpty(String name) {
-        ObjectUtil.checkNotNull(name, "name");
-
-        if (name.isEmpty()) {
-            throw new IllegalArgumentException("empty name");
-        }
-
-        return name;
     }
 
     protected abstract T newConstant(int id, String name);

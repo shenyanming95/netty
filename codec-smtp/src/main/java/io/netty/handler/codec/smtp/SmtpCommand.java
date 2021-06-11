@@ -44,6 +44,7 @@ public final class SmtpCommand {
     public static final SmtpCommand EMPTY = new SmtpCommand(AsciiString.cached(""));
 
     private static final Map<String, SmtpCommand> COMMANDS = new HashMap<String, SmtpCommand>();
+
     static {
         COMMANDS.put(EHLO.name().toString(), EHLO);
         COMMANDS.put(HELO.name().toString(), HELO);
@@ -60,6 +61,12 @@ public final class SmtpCommand {
         COMMANDS.put(EMPTY.name().toString(), EMPTY);
     }
 
+    private final AsciiString name;
+
+    private SmtpCommand(AsciiString name) {
+        this.name = name;
+    }
+
     /**
      * Returns the {@link SmtpCommand} for the given command name.
      */
@@ -67,12 +74,6 @@ public final class SmtpCommand {
         ObjectUtil.checkNotNull(commandName, "commandName");
         SmtpCommand command = COMMANDS.get(commandName.toString());
         return command != null ? command : new SmtpCommand(AsciiString.of(commandName));
-    }
-
-    private final AsciiString name;
-
-    private SmtpCommand(AsciiString name) {
-        this.name = name;
     }
 
     /**

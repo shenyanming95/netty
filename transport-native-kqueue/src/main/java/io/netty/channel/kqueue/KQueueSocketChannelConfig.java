@@ -42,10 +42,7 @@ public final class KQueueSocketChannelConfig extends KQueueChannelConfig impleme
 
     @Override
     public Map<ChannelOption<?>, Object> getOptions() {
-        return getOptions(
-                super.getOptions(),
-                SO_RCVBUF, SO_SNDBUF, TCP_NODELAY, SO_KEEPALIVE, SO_REUSEADDR, SO_LINGER, IP_TOS,
-                ALLOW_HALF_CLOSURE, SO_SNDLOWAT, TCP_NOPUSH);
+        return getOptions(super.getOptions(), SO_RCVBUF, SO_SNDBUF, TCP_NODELAY, SO_KEEPALIVE, SO_REUSEADDR, SO_LINGER, IP_TOS, ALLOW_HALF_CLOSURE, SO_SNDLOWAT, TCP_NOPUSH);
     }
 
     @SuppressWarnings("unchecked")
@@ -125,102 +122,6 @@ public final class KQueueSocketChannelConfig extends KQueueChannelConfig impleme
     }
 
     @Override
-    public int getSendBufferSize() {
-        try {
-            return ((KQueueSocketChannel) channel).socket.getSendBufferSize();
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    @Override
-    public int getSoLinger() {
-        try {
-            return ((KQueueSocketChannel) channel).socket.getSoLinger();
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    @Override
-    public int getTrafficClass() {
-        try {
-            return ((KQueueSocketChannel) channel).socket.getTrafficClass();
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    @Override
-    public boolean isKeepAlive() {
-        try {
-            return ((KQueueSocketChannel) channel).socket.isKeepAlive();
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    @Override
-    public boolean isReuseAddress() {
-        try {
-            return ((KQueueSocketChannel) channel).socket.isReuseAddress();
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    @Override
-    public boolean isTcpNoDelay() {
-        try {
-            return ((KQueueSocketChannel) channel).socket.isTcpNoDelay();
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    public int getSndLowAt() {
-        try {
-            return ((KQueueSocketChannel) channel).socket.getSndLowAt();
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    public void setSndLowAt(int sndLowAt)  {
-        try {
-            ((KQueueSocketChannel) channel).socket.setSndLowAt(sndLowAt);
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    public boolean isTcpNoPush() {
-        try {
-            return ((KQueueSocketChannel) channel).socket.isTcpNoPush();
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    public void setTcpNoPush(boolean tcpNoPush)  {
-        try {
-            ((KQueueSocketChannel) channel).socket.setTcpNoPush(tcpNoPush);
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    @Override
-    public KQueueSocketChannelConfig setKeepAlive(boolean keepAlive) {
-        try {
-            ((KQueueSocketChannel) channel).socket.setKeepAlive(keepAlive);
-            return this;
-        } catch (IOException e) {
-            throw new ChannelException(e);
-        }
-    }
-
-    @Override
     public KQueueSocketChannelConfig setReceiveBufferSize(int receiveBufferSize) {
         try {
             ((KQueueSocketChannel) channel).socket.setReceiveBufferSize(receiveBufferSize);
@@ -231,10 +132,9 @@ public final class KQueueSocketChannelConfig extends KQueueChannelConfig impleme
     }
 
     @Override
-    public KQueueSocketChannelConfig setReuseAddress(boolean reuseAddress) {
+    public int getSendBufferSize() {
         try {
-            ((KQueueSocketChannel) channel).socket.setReuseAddress(reuseAddress);
-            return this;
+            return ((KQueueSocketChannel) channel).socket.getSendBufferSize();
         } catch (IOException e) {
             throw new ChannelException(e);
         }
@@ -252,6 +152,15 @@ public final class KQueueSocketChannelConfig extends KQueueChannelConfig impleme
     }
 
     @Override
+    public int getSoLinger() {
+        try {
+            return ((KQueueSocketChannel) channel).socket.getSoLinger();
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    @Override
     public KQueueSocketChannelConfig setSoLinger(int soLinger) {
         try {
             ((KQueueSocketChannel) channel).socket.setSoLinger(soLinger);
@@ -262,10 +171,9 @@ public final class KQueueSocketChannelConfig extends KQueueChannelConfig impleme
     }
 
     @Override
-    public KQueueSocketChannelConfig setTcpNoDelay(boolean tcpNoDelay) {
+    public int getTrafficClass() {
         try {
-            ((KQueueSocketChannel) channel).socket.setTcpNoDelay(tcpNoDelay);
-            return this;
+            return ((KQueueSocketChannel) channel).socket.getTrafficClass();
         } catch (IOException e) {
             throw new ChannelException(e);
         }
@@ -282,8 +190,103 @@ public final class KQueueSocketChannelConfig extends KQueueChannelConfig impleme
     }
 
     @Override
+    public boolean isKeepAlive() {
+        try {
+            return ((KQueueSocketChannel) channel).socket.isKeepAlive();
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    @Override
+    public KQueueSocketChannelConfig setKeepAlive(boolean keepAlive) {
+        try {
+            ((KQueueSocketChannel) channel).socket.setKeepAlive(keepAlive);
+            return this;
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    @Override
+    public boolean isReuseAddress() {
+        try {
+            return ((KQueueSocketChannel) channel).socket.isReuseAddress();
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    @Override
+    public KQueueSocketChannelConfig setReuseAddress(boolean reuseAddress) {
+        try {
+            ((KQueueSocketChannel) channel).socket.setReuseAddress(reuseAddress);
+            return this;
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    @Override
+    public boolean isTcpNoDelay() {
+        try {
+            return ((KQueueSocketChannel) channel).socket.isTcpNoDelay();
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    @Override
+    public KQueueSocketChannelConfig setTcpNoDelay(boolean tcpNoDelay) {
+        try {
+            ((KQueueSocketChannel) channel).socket.setTcpNoDelay(tcpNoDelay);
+            return this;
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    public int getSndLowAt() {
+        try {
+            return ((KQueueSocketChannel) channel).socket.getSndLowAt();
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    public void setSndLowAt(int sndLowAt) {
+        try {
+            ((KQueueSocketChannel) channel).socket.setSndLowAt(sndLowAt);
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    public boolean isTcpNoPush() {
+        try {
+            return ((KQueueSocketChannel) channel).socket.isTcpNoPush();
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    public void setTcpNoPush(boolean tcpNoPush) {
+        try {
+            ((KQueueSocketChannel) channel).socket.setTcpNoPush(tcpNoPush);
+        } catch (IOException e) {
+            throw new ChannelException(e);
+        }
+    }
+
+    @Override
     public boolean isAllowHalfClosure() {
         return allowHalfClosure;
+    }
+
+    @Override
+    public KQueueSocketChannelConfig setAllowHalfClosure(boolean allowHalfClosure) {
+        this.allowHalfClosure = allowHalfClosure;
+        return this;
     }
 
     @Override
@@ -293,14 +296,7 @@ public final class KQueueSocketChannelConfig extends KQueueChannelConfig impleme
     }
 
     @Override
-    public KQueueSocketChannelConfig setPerformancePreferences(
-            int connectionTime, int latency, int bandwidth) {
-        return this;
-    }
-
-    @Override
-    public KQueueSocketChannelConfig setAllowHalfClosure(boolean allowHalfClosure) {
-        this.allowHalfClosure = allowHalfClosure;
+    public KQueueSocketChannelConfig setPerformancePreferences(int connectionTime, int latency, int bandwidth) {
         return this;
     }
 

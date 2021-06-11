@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.socket.oio;
 
 import io.netty.channel.ChannelException;
@@ -31,28 +16,17 @@ import java.util.List;
 
 /**
  * {@link ServerSocketChannel} which accepts new connections and create the {@link OioSocketChannel}'s for them.
- *
+ * <p>
  * This implementation use Old-Blocking-IO.
  *
  * @deprecated use NIO / EPOLL / KQUEUE transport.
  */
 @Deprecated
-public class OioServerSocketChannel extends AbstractOioMessageChannel
-                                    implements ServerSocketChannel {
+public class OioServerSocketChannel extends AbstractOioMessageChannel implements ServerSocketChannel {
 
-    private static final InternalLogger logger =
-        InternalLoggerFactory.getInstance(OioServerSocketChannel.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(OioServerSocketChannel.class);
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 1);
-
-    private static ServerSocket newServerSocket() {
-        try {
-            return new ServerSocket();
-        } catch (IOException e) {
-            throw new ChannelException("failed to create a server socket", e);
-        }
-    }
-
     final ServerSocket socket;
     private final OioServerSocketChannelConfig config;
 
@@ -66,7 +40,7 @@ public class OioServerSocketChannel extends AbstractOioMessageChannel
     /**
      * Create a new instance from the given {@link ServerSocket}
      *
-     * @param socket    the {@link ServerSocket} which is used by this instance
+     * @param socket the {@link ServerSocket} which is used by this instance
      */
     public OioServerSocketChannel(ServerSocket socket) {
         super(null);
@@ -77,22 +51,28 @@ public class OioServerSocketChannel extends AbstractOioMessageChannel
             socket.setSoTimeout(SO_TIMEOUT);
             success = true;
         } catch (IOException e) {
-            throw new ChannelException(
-                    "Failed to set the server socket timeout.", e);
+            throw new ChannelException("Failed to set the server socket timeout.", e);
         } finally {
             if (!success) {
                 try {
                     socket.close();
                 } catch (IOException e) {
                     if (logger.isWarnEnabled()) {
-                        logger.warn(
-                                "Failed to close a partially initialized socket.", e);
+                        logger.warn("Failed to close a partially initialized socket.", e);
                     }
                 }
             }
         }
         this.socket = socket;
         config = new DefaultOioServerSocketChannelConfig(this, socket);
+    }
+
+    private static ServerSocket newServerSocket() {
+        try {
+            return new ServerSocket();
+        } catch (IOException e) {
+            throw new ChannelException("failed to create a server socket", e);
+        }
     }
 
     @Override
@@ -176,8 +156,7 @@ public class OioServerSocketChannel extends AbstractOioMessageChannel
     }
 
     @Override
-    protected void doConnect(
-            SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
+    protected void doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         throw new UnsupportedOperationException();
     }
 

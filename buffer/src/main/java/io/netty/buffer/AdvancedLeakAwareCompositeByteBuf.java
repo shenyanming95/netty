@@ -1048,8 +1048,7 @@ final class AdvancedLeakAwareCompositeByteBuf extends SimpleLeakAwareCompositeBy
     }
 
     @Override
-    protected AdvancedLeakAwareByteBuf newLeakAwareByteBuf(
-            ByteBuf wrapped, ByteBuf trackedByteBuf, ResourceLeakTracker<ByteBuf> leakTracker) {
+    protected AdvancedLeakAwareByteBuf newLeakAwareByteBuf(ByteBuf wrapped, ByteBuf trackedByteBuf, ResourceLeakTracker<ByteBuf> leakTracker) {
         return new AdvancedLeakAwareByteBuf(wrapped, trackedByteBuf, leakTracker);
     }
 }

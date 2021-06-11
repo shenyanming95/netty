@@ -37,6 +37,44 @@ public class HpackUtilBenchmark extends AbstractMicrobenchmark {
 
     private List<HpackHeader> hpackHeaders;
 
+    private static boolean oldEquals(CharSequence s1, CharSequence s2) {
+        if (s1.length() != s2.length()) {
+            return false;
+        }
+        char c = 0;
+        for (int i = 0; i < s1.length(); i++) {
+            c |= s1.charAt(i) ^ s2.charAt(i);
+        }
+        return c == 0;
+    }
+
+    private static boolean newEquals(CharSequence s1, CharSequence s2) {
+        if (s1 instanceof AsciiString && s2 instanceof AsciiString) {
+            if (s1.length() != s2.length()) {
+                return false;
+            }
+            AsciiString s1Ascii = (AsciiString) s1;
+            AsciiString s2Ascii = (AsciiString) s2;
+            return PlatformDependent.equalsConstantTime(s1Ascii.array(), s1Ascii.arrayOffset(), s2Ascii.array(), s2Ascii.arrayOffset(), s1.length()) != 0;
+        }
+
+        return ConstantTimeUtils.equalsConstantTime(s1, s2) != 0;
+    }
+
+    static HpackEncoder newTestEncoder() {
+        HpackEncoder hpackEncoder = new HpackEncoder();
+        ByteBuf buf = Unpooled.buffer();
+        try {
+            hpackEncoder.setMaxHeaderTableSize(buf, MAX_HEADER_TABLE_SIZE);
+            hpackEncoder.setMaxHeaderListSize(MAX_HEADER_LIST_SIZE);
+        } catch (Http2Exception e) {
+            throw new Error("max size not allowed?", e);
+        } finally {
+            buf.release();
+        }
+        return hpackEncoder;
+    }
+
     @Setup(Level.Trial)
     public void setup() {
         hpackHeaders = HpackBenchmarkUtil.headers(size, false);
@@ -64,44 +102,5 @@ public class HpackUtilBenchmark extends AbstractMicrobenchmark {
             }
         }
         return count;
-    }
-
-    private static boolean oldEquals(CharSequence s1, CharSequence s2) {
-        if (s1.length() != s2.length()) {
-            return false;
-        }
-        char c = 0;
-        for (int i = 0; i < s1.length(); i++) {
-            c |= s1.charAt(i) ^ s2.charAt(i);
-        }
-        return c == 0;
-    }
-
-    private static boolean newEquals(CharSequence s1, CharSequence s2) {
-        if (s1 instanceof AsciiString && s2 instanceof AsciiString) {
-            if (s1.length() != s2.length()) {
-                return false;
-            }
-            AsciiString s1Ascii = (AsciiString) s1;
-            AsciiString s2Ascii = (AsciiString) s2;
-            return PlatformDependent.equalsConstantTime(s1Ascii.array(), s1Ascii.arrayOffset(),
-                                                        s2Ascii.array(), s2Ascii.arrayOffset(), s1.length()) != 0;
-        }
-
-        return ConstantTimeUtils.equalsConstantTime(s1, s2) != 0;
-    }
-
-    static HpackEncoder newTestEncoder() {
-        HpackEncoder hpackEncoder = new HpackEncoder();
-        ByteBuf buf = Unpooled.buffer();
-        try {
-            hpackEncoder.setMaxHeaderTableSize(buf, MAX_HEADER_TABLE_SIZE);
-            hpackEncoder.setMaxHeaderListSize(MAX_HEADER_LIST_SIZE);
-        } catch (Http2Exception e) {
-            throw new Error("max size not allowed?", e);
-        } finally  {
-            buf.release();
-        }
-        return hpackEncoder;
     }
 }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.util.internal.PlatformDependent;
@@ -46,18 +31,6 @@ final class OpenSslTlsv13X509ExtendedTrustManager extends X509ExtendedTrustManag
             return new OpenSslTlsv13X509ExtendedTrustManager(tm);
         }
         return tm;
-    }
-
-    @Override
-    public void checkClientTrusted(X509Certificate[] x509Certificates, String s, Socket socket)
-            throws CertificateException {
-        tm.checkClientTrusted(x509Certificates, s, socket);
-    }
-
-    @Override
-    public void checkServerTrusted(X509Certificate[] x509Certificates, String s, Socket socket)
-            throws CertificateException {
-        tm.checkServerTrusted(x509Certificates, s, socket);
     }
 
     private static SSLEngine wrapEngine(final SSLEngine engine) {
@@ -131,7 +104,7 @@ final class OpenSslTlsv13X509ExtendedTrustManager extends X509ExtendedTrustManag
 
                             @Override
                             public Object getValue(String s) {
-                               return session.getValue(s);
+                                return session.getValue(s);
                             }
 
                             @Override
@@ -155,8 +128,7 @@ final class OpenSslTlsv13X509ExtendedTrustManager extends X509ExtendedTrustManag
                             }
 
                             @Override
-                            public javax.security.cert.X509Certificate[] getPeerCertificateChain()
-                                    throws SSLPeerUnverifiedException {
+                            public javax.security.cert.X509Certificate[] getPeerCertificateChain() throws SSLPeerUnverifiedException {
                                 return session.getPeerCertificateChain();
                             }
 
@@ -208,14 +180,22 @@ final class OpenSslTlsv13X509ExtendedTrustManager extends X509ExtendedTrustManag
     }
 
     @Override
-    public void checkClientTrusted(X509Certificate[] x509Certificates, final String s, SSLEngine sslEngine)
-            throws CertificateException {
+    public void checkClientTrusted(X509Certificate[] x509Certificates, String s, Socket socket) throws CertificateException {
+        tm.checkClientTrusted(x509Certificates, s, socket);
+    }
+
+    @Override
+    public void checkServerTrusted(X509Certificate[] x509Certificates, String s, Socket socket) throws CertificateException {
+        tm.checkServerTrusted(x509Certificates, s, socket);
+    }
+
+    @Override
+    public void checkClientTrusted(X509Certificate[] x509Certificates, final String s, SSLEngine sslEngine) throws CertificateException {
         tm.checkClientTrusted(x509Certificates, s, wrapEngine(sslEngine));
     }
 
     @Override
-    public void checkServerTrusted(X509Certificate[] x509Certificates, String s, SSLEngine sslEngine)
-            throws CertificateException {
+    public void checkServerTrusted(X509Certificate[] x509Certificates, String s, SSLEngine sslEngine) throws CertificateException {
         tm.checkServerTrusted(x509Certificates, s, wrapEngine(sslEngine));
     }
 

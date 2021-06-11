@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel;
 
 import io.netty.buffer.ByteBufAllocator;
@@ -27,10 +12,9 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.net.SocketAddress;
 
 /**
- *  Combines a {@link ChannelInboundHandler} and a {@link ChannelOutboundHandler} into one {@link ChannelHandler}.
+ * Combines a {@link ChannelInboundHandler} and a {@link ChannelOutboundHandler} into one {@link ChannelHandler}.
  */
-public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O extends ChannelOutboundHandler>
-        extends ChannelDuplexHandler {
+public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O extends ChannelOutboundHandler> extends ChannelDuplexHandler {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(CombinedChannelDuplexHandler.class);
 
@@ -61,8 +45,8 @@ public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O ext
     /**
      * Initialized this handler with the specified handlers.
      *
-     * @throws IllegalStateException if this handler was not constructed via the default constructor or
-     *                               if this handler does not implement all required handler interfaces
+     * @throws IllegalStateException    if this handler was not constructed via the default constructor or
+     *                                  if this handler does not implement all required handler interfaces
      * @throws IllegalArgumentException if the specified handlers cannot be combined into one due to a conflict
      *                                  in the type hierarchy
      */
@@ -74,23 +58,17 @@ public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O ext
 
     private void validate(I inboundHandler, O outboundHandler) {
         if (this.inboundHandler != null) {
-            throw new IllegalStateException(
-                    "init() can not be invoked if " + CombinedChannelDuplexHandler.class.getSimpleName() +
-                            " was constructed with non-default constructor.");
+            throw new IllegalStateException("init() can not be invoked if " + CombinedChannelDuplexHandler.class.getSimpleName() + " was constructed with non-default constructor.");
         }
 
         ObjectUtil.checkNotNull(inboundHandler, "inboundHandler");
         ObjectUtil.checkNotNull(outboundHandler, "outboundHandler");
 
         if (inboundHandler instanceof ChannelOutboundHandler) {
-            throw new IllegalArgumentException(
-                    "inboundHandler must not implement " +
-                    ChannelOutboundHandler.class.getSimpleName() + " to get combined.");
+            throw new IllegalArgumentException("inboundHandler must not implement " + ChannelOutboundHandler.class.getSimpleName() + " to get combined.");
         }
         if (outboundHandler instanceof ChannelInboundHandler) {
-            throw new IllegalArgumentException(
-                    "outboundHandler must not implement " +
-                    ChannelInboundHandler.class.getSimpleName() + " to get combined.");
+            throw new IllegalArgumentException("outboundHandler must not implement " + ChannelInboundHandler.class.getSimpleName() + " to get combined.");
         }
     }
 
@@ -127,10 +105,7 @@ public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O ext
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         if (inboundHandler == null) {
-            throw new IllegalStateException(
-                    "init() must be invoked before being added to a " + ChannelPipeline.class.getSimpleName() +
-                            " if " +  CombinedChannelDuplexHandler.class.getSimpleName() +
-                            " was constructed with the default constructor.");
+            throw new IllegalStateException("init() must be invoked before being added to a " + ChannelPipeline.class.getSimpleName() + " if " + CombinedChannelDuplexHandler.class.getSimpleName() + " was constructed with the default constructor.");
         }
 
         outboundCtx = new DelegatingChannelHandlerContext(ctx, outboundHandler);
@@ -145,16 +120,9 @@ public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O ext
                         outboundHandler.exceptionCaught(outboundCtx, cause);
                     } catch (Throwable error) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug(
-                                    "An exception {}" +
-                                    "was thrown by a user handler's exceptionCaught() " +
-                                    "method while handling the following exception:",
-                                    ThrowableUtil.stackTraceToString(error), cause);
+                            logger.debug("An exception {}" + "was thrown by a user handler's exceptionCaught() " + "method while handling the following exception:", ThrowableUtil.stackTraceToString(error), cause);
                         } else if (logger.isWarnEnabled()) {
-                            logger.warn(
-                                    "An exception '{}' [enable DEBUG level for full stacktrace] " +
-                                    "was thrown by a user handler's exceptionCaught() " +
-                                    "method while handling the following exception:", error, cause);
+                            logger.warn("An exception '{}' [enable DEBUG level for full stacktrace] " + "was thrown by a user handler's exceptionCaught() " + "method while handling the following exception:", error, cause);
                         }
                     }
                 } else {
@@ -275,9 +243,7 @@ public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O ext
     }
 
     @Override
-    public void bind(
-            ChannelHandlerContext ctx,
-            SocketAddress localAddress, ChannelPromise promise) throws Exception {
+    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         assert ctx == outboundCtx.ctx;
         if (!outboundCtx.removed) {
             outboundHandler.bind(outboundCtx, localAddress, promise);
@@ -287,10 +253,7 @@ public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O ext
     }
 
     @Override
-    public void connect(
-            ChannelHandlerContext ctx,
-            SocketAddress remoteAddress, SocketAddress localAddress,
-            ChannelPromise promise) throws Exception {
+    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         assert ctx == outboundCtx.ctx;
         if (!outboundCtx.removed) {
             outboundHandler.connect(outboundCtx, remoteAddress, localAddress, promise);
@@ -490,8 +453,7 @@ public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O ext
         }
 
         @Override
-        public ChannelFuture connect(
-                SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) {
+        public ChannelFuture connect(SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) {
             return ctx.connect(remoteAddress, localAddress, promise);
         }
 
@@ -607,8 +569,7 @@ public class CombinedChannelDuplexHandler<I extends ChannelInboundHandler, O ext
                 try {
                     handler.handlerRemoved(this);
                 } catch (Throwable cause) {
-                    fireExceptionCaught(new ChannelPipelineException(
-                            handler.getClass().getName() + ".handlerRemoved() has thrown an exception.", cause));
+                    fireExceptionCaught(new ChannelPipelineException(handler.getClass().getName() + ".handlerRemoved() has thrown an exception.", cause));
                 }
             }
         }

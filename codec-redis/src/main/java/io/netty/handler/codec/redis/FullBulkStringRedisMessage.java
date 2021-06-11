@@ -27,39 +27,6 @@ import io.netty.util.internal.UnstableApi;
 @UnstableApi
 public class FullBulkStringRedisMessage extends DefaultByteBufHolder implements LastBulkStringRedisContent {
 
-    private FullBulkStringRedisMessage() {
-        this(Unpooled.EMPTY_BUFFER);
-    }
-
-    /**
-     * Creates a {@link FullBulkStringRedisMessage} for the given {@code content}.
-     *
-     * @param content the content, must not be {@code null}. If content is null or empty,
-     * use {@link FullBulkStringRedisMessage#NULL_INSTANCE} or {@link FullBulkStringRedisMessage#EMPTY_INSTANCE}
-     * instead of constructor.
-     */
-    public FullBulkStringRedisMessage(ByteBuf content) {
-        super(content);
-    }
-
-    /**
-     * Returns whether the content of this message is {@code null}.
-     *
-     * @return indicates whether the content of this message is {@code null}.
-     */
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return new StringBuilder(StringUtil.simpleClassName(this))
-                .append('[')
-                .append("content=")
-                .append(content())
-                .append(']').toString();
-    }
-
     /**
      * A predefined null instance of {@link FullBulkStringRedisMessage}.
      */
@@ -124,7 +91,6 @@ public class FullBulkStringRedisMessage extends DefaultByteBufHolder implements 
             return false;
         }
     };
-
     /**
      * A predefined empty instance of {@link FullBulkStringRedisMessage}.
      */
@@ -184,6 +150,35 @@ public class FullBulkStringRedisMessage extends DefaultByteBufHolder implements 
             return false;
         }
     };
+
+    private FullBulkStringRedisMessage() {
+        this(Unpooled.EMPTY_BUFFER);
+    }
+
+    /**
+     * Creates a {@link FullBulkStringRedisMessage} for the given {@code content}.
+     *
+     * @param content the content, must not be {@code null}. If content is null or empty,
+     *                use {@link FullBulkStringRedisMessage#NULL_INSTANCE} or {@link FullBulkStringRedisMessage#EMPTY_INSTANCE}
+     *                instead of constructor.
+     */
+    public FullBulkStringRedisMessage(ByteBuf content) {
+        super(content);
+    }
+
+    /**
+     * Returns whether the content of this message is {@code null}.
+     *
+     * @return indicates whether the content of this message is {@code null}.
+     */
+    public boolean isNull() {
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder(StringUtil.simpleClassName(this)).append('[').append("content=").append(content()).append(']').toString();
+    }
 
     @Override
     public FullBulkStringRedisMessage copy() {

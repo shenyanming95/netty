@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.spdy;
 
 import io.netty.buffer.ByteBuf;
@@ -49,18 +34,17 @@ public class SpdyHeaderBlockRawEncoder extends SpdyHeaderBlockEncoder {
             return Unpooled.EMPTY_BUFFER;
         }
         if (numHeaders > SPDY_MAX_NV_LENGTH) {
-            throw new IllegalArgumentException(
-                    "header block contains too many headers");
+            throw new IllegalArgumentException("header block contains too many headers");
         }
         ByteBuf headerBlock = alloc.heapBuffer();
         writeLengthField(headerBlock, numHeaders);
-        for (CharSequence name: names) {
+        for (CharSequence name : names) {
             writeLengthField(headerBlock, name.length());
             ByteBufUtil.writeAscii(headerBlock, name);
             int savedIndex = headerBlock.writerIndex();
             int valueLength = 0;
             writeLengthField(headerBlock, valueLength);
-            for (CharSequence value: frame.headers().getAll(name)) {
+            for (CharSequence value : frame.headers().getAll(name)) {
                 int length = value.length();
                 if (length > 0) {
                     ByteBufUtil.writeAscii(headerBlock, value);
@@ -69,11 +53,10 @@ public class SpdyHeaderBlockRawEncoder extends SpdyHeaderBlockEncoder {
                 }
             }
             if (valueLength != 0) {
-                valueLength --;
+                valueLength--;
             }
             if (valueLength > SPDY_MAX_NV_LENGTH) {
-                throw new IllegalArgumentException(
-                        "header exceeds allowable length: " + name);
+                throw new IllegalArgumentException("header exceeds allowable length: " + name);
             }
             if (valueLength > 0) {
                 setLengthField(headerBlock, savedIndex, valueLength);

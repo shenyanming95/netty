@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.spdy;
 
 import io.netty.buffer.ByteBuf;
@@ -56,8 +41,7 @@ public class SpdyFrameEncoder {
         return frame;
     }
 
-    public ByteBuf encodeSynStreamFrame(ByteBufAllocator allocator,  int streamId, int associatedToStreamId,
-            byte priority, boolean last, boolean unidirectional, ByteBuf headerBlock) {
+    public ByteBuf encodeSynStreamFrame(ByteBufAllocator allocator, int streamId, int associatedToStreamId, byte priority, boolean last, boolean unidirectional, ByteBuf headerBlock) {
         int headerBlockLength = headerBlock.readableBytes();
         byte flags = last ? SPDY_FLAG_FIN : 0;
         if (unidirectional) {
@@ -98,8 +82,7 @@ public class SpdyFrameEncoder {
         Set<Integer> ids = spdySettingsFrame.ids();
         int numSettings = ids.size();
 
-        byte flags = spdySettingsFrame.clearPreviouslyPersistedSettings() ?
-                SPDY_SETTINGS_CLEAR : 0;
+        byte flags = spdySettingsFrame.clearPreviouslyPersistedSettings() ? SPDY_SETTINGS_CLEAR : 0;
         int length = 4 + 8 * numSettings;
         ByteBuf frame = allocator.ioBuffer(SPDY_HEADER_SIZE + length).order(ByteOrder.BIG_ENDIAN);
         writeControlFrameHeader(frame, SPDY_SETTINGS_FRAME, flags, length);

@@ -33,34 +33,30 @@ import static io.netty.buffer.AbstractUnpooledSlicedByteBuf.checkSliceOutOfBound
 
 final class PooledSlicedByteBuf extends AbstractPooledDerivedByteBuf {
 
-    private static final ObjectPool<PooledSlicedByteBuf> RECYCLER = ObjectPool.newPool(
-            new ObjectCreator<PooledSlicedByteBuf>() {
+    private static final ObjectPool<PooledSlicedByteBuf> RECYCLER = ObjectPool.newPool(new ObjectCreator<PooledSlicedByteBuf>() {
         @Override
         public PooledSlicedByteBuf newObject(Handle<PooledSlicedByteBuf> handle) {
             return new PooledSlicedByteBuf(handle);
         }
     });
+    int adjustment;
 
-    static PooledSlicedByteBuf newInstance(AbstractByteBuf unwrapped, ByteBuf wrapped,
-                                           int index, int length) {
+    private PooledSlicedByteBuf(Handle<PooledSlicedByteBuf> handle) {
+        super(handle);
+    }
+
+    static PooledSlicedByteBuf newInstance(AbstractByteBuf unwrapped, ByteBuf wrapped, int index, int length) {
         checkSliceOutOfBounds(index, length, unwrapped);
         return newInstance0(unwrapped, wrapped, index, length);
     }
 
-    private static PooledSlicedByteBuf newInstance0(AbstractByteBuf unwrapped, ByteBuf wrapped,
-                                                    int adjustment, int length) {
+    private static PooledSlicedByteBuf newInstance0(AbstractByteBuf unwrapped, ByteBuf wrapped, int adjustment, int length) {
         final PooledSlicedByteBuf slice = RECYCLER.get();
         slice.init(unwrapped, wrapped, 0, length, length);
         slice.discardMarks();
         slice.adjustment = adjustment;
 
         return slice;
-    }
-
-    int adjustment;
-
-    private PooledSlicedByteBuf(Handle<PooledSlicedByteBuf> handle) {
-        super(handle);
     }
 
     @Override
@@ -373,44 +369,38 @@ final class PooledSlicedByteBuf extends AbstractPooledDerivedByteBuf {
     }
 
     @Override
-    public ByteBuf getBytes(int index, OutputStream out, int length)
-            throws IOException {
+    public ByteBuf getBytes(int index, OutputStream out, int length) throws IOException {
         checkIndex0(index, length);
         unwrap().getBytes(idx(index), out, length);
         return this;
     }
 
     @Override
-    public int getBytes(int index, GatheringByteChannel out, int length)
-            throws IOException {
+    public int getBytes(int index, GatheringByteChannel out, int length) throws IOException {
         checkIndex0(index, length);
         return unwrap().getBytes(idx(index), out, length);
     }
 
     @Override
-    public int getBytes(int index, FileChannel out, long position, int length)
-            throws IOException {
+    public int getBytes(int index, FileChannel out, long position, int length) throws IOException {
         checkIndex0(index, length);
         return unwrap().getBytes(idx(index), out, position, length);
     }
 
     @Override
-    public int setBytes(int index, InputStream in, int length)
-            throws IOException {
+    public int setBytes(int index, InputStream in, int length) throws IOException {
         checkIndex0(index, length);
         return unwrap().setBytes(idx(index), in, length);
     }
 
     @Override
-    public int setBytes(int index, ScatteringByteChannel in, int length)
-            throws IOException {
+    public int setBytes(int index, ScatteringByteChannel in, int length) throws IOException {
         checkIndex0(index, length);
         return unwrap().setBytes(idx(index), in, length);
     }
 
     @Override
-    public int setBytes(int index, FileChannel in, long position, int length)
-            throws IOException {
+    public int setBytes(int index, FileChannel in, long position, int length) throws IOException {
         checkIndex0(index, length);
         return unwrap().setBytes(idx(index), in, position, length);
     }

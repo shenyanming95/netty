@@ -47,8 +47,7 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
      * When padding is needed it can be taken as a slice of this buffer. Users should call {@link ByteBuf#retain()}
      * before using their slice.
      */
-    private static final ByteBuf ZERO_BUFFER =
-            unreleasableBuffer(directBuffer(MAX_UNSIGNED_BYTE).writeZero(MAX_UNSIGNED_BYTE)).asReadOnly();
+    private static final ByteBuf ZERO_BUFFER = unreleasableBuffer(directBuffer(MAX_UNSIGNED_BYTE).writeZero(MAX_UNSIGNED_BYTE)).asReadOnly();
 
     private final Http2HeadersEncoder headersEncoder;
     private int maxFrameSize;
@@ -68,6 +67,53 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     public DefaultHttp2FrameWriter(Http2HeadersEncoder headersEncoder) {
         this.headersEncoder = headersEncoder;
         maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
+    }
+
+    /**
+     * Returns the number of padding bytes that should be appended to the end of a frame.
+     */
+    private static int paddingBytes(int padding) {
+        // The padding parameter contains the 1 byte pad length field as well as the trailing padding bytes.
+        // Subtract 1, so to only get the number of padding bytes that need to be appended to the end of a frame.
+        return padding - 1;
+    }
+
+    private static void writePaddingLength(ByteBuf buf, int padding) {
+        if (padding > 0) {
+            // It is assumed that the padding length has been bounds checked before this
+            // Minus 1, as the pad length field is included in the padding parameter and is 1 byte wide.
+            buf.writeByte(padding - 1);
+        }
+    }
+
+    private static void verifyStreamId(int streamId, String argumentName) {
+        checkPositive(streamId, argumentName);
+    }
+
+    private static void verifyStreamOrConnectionId(int streamId, String argumentName) {
+        checkPositiveOrZero(streamId, argumentName);
+    }
+
+    private static void verifyWeight(short weight) {
+        if (weight < MIN_WEIGHT || weight > MAX_WEIGHT) {
+            throw new IllegalArgumentException("Invalid weight: " + weight);
+        }
+    }
+
+    private static void verifyErrorCode(long errorCode) {
+        if (errorCode < 0 || errorCode > MAX_UNSIGNED_INT) {
+            throw new IllegalArgumentException("Invalid errorCode: " + errorCode);
+        }
+    }
+
+    private static void verifyWindowSizeIncrement(int windowSizeIncrement) {
+        checkPositiveOrZero(windowSizeIncrement, "windowSizeIncrement");
+    }
+
+    private static void verifyPingPayload(ByteBuf data) {
+        if (data == null || data.readableBytes() != PING_FRAME_PAYLOAD_LENGTH) {
+            throw new IllegalArgumentException("Opaque data must be " + PING_FRAME_PAYLOAD_LENGTH + " bytes");
+        }
     }
 
     @Override
@@ -99,13 +145,12 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     }
 
     @Override
-    public void close() { }
+    public void close() {
+    }
 
     @Override
-    public ChannelFuture writeData(ChannelHandlerContext ctx, int streamId, ByteBuf data,
-            int padding, boolean endStream, ChannelPromise promise) {
-        final SimpleChannelPromiseAggregator promiseAggregator =
-                new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
+    public ChannelFuture writeData(ChannelHandlerContext ctx, int streamId, ByteBuf data, int padding, boolean endStream, ChannelPromise promise) {
+        final SimpleChannelPromiseAggregator promiseAggregator = new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
         ByteBuf frameHeader = null;
         try {
             verifyStreamId(streamId, STREAM_ID);
@@ -199,8 +244,7 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
                     }
                     // Write the frame padding.
                     if (paddingBytes(framePaddingBytes) > 0) {
-                        ctx.write(ZERO_BUFFER.slice(0, paddingBytes(framePaddingBytes)),
-                                  promiseAggregator.newPromise());
+                        ctx.write(ZERO_BUFFER.slice(0, paddingBytes(framePaddingBytes)), promiseAggregator.newPromise());
                     }
                 } while (remainingData != 0 || padding != 0);
             }
@@ -224,23 +268,17 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     }
 
     @Override
-    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId,
-            Http2Headers headers, int padding, boolean endStream, ChannelPromise promise) {
-        return writeHeadersInternal(ctx, streamId, headers, padding, endStream,
-                false, 0, (short) 0, false, promise);
+    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int padding, boolean endStream, ChannelPromise promise) {
+        return writeHeadersInternal(ctx, streamId, headers, padding, endStream, false, 0, (short) 0, false, promise);
     }
 
     @Override
-    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId,
-            Http2Headers headers, int streamDependency, short weight, boolean exclusive,
-            int padding, boolean endStream, ChannelPromise promise) {
-        return writeHeadersInternal(ctx, streamId, headers, padding, endStream,
-                true, streamDependency, weight, exclusive, promise);
+    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int streamDependency, short weight, boolean exclusive, int padding, boolean endStream, ChannelPromise promise) {
+        return writeHeadersInternal(ctx, streamId, headers, padding, endStream, true, streamDependency, weight, exclusive, promise);
     }
 
     @Override
-    public ChannelFuture writePriority(ChannelHandlerContext ctx, int streamId,
-            int streamDependency, short weight, boolean exclusive, ChannelPromise promise) {
+    public ChannelFuture writePriority(ChannelHandlerContext ctx, int streamId, int streamDependency, short weight, boolean exclusive, ChannelPromise promise) {
         try {
             verifyStreamId(streamId, STREAM_ID);
             verifyStreamOrConnectionId(streamDependency, STREAM_DEPENDENCY);
@@ -258,8 +296,7 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     }
 
     @Override
-    public ChannelFuture writeRstStream(ChannelHandlerContext ctx, int streamId, long errorCode,
-            ChannelPromise promise) {
+    public ChannelFuture writeRstStream(ChannelHandlerContext ctx, int streamId, long errorCode, ChannelPromise promise) {
         try {
             verifyStreamId(streamId, STREAM_ID);
             verifyErrorCode(errorCode);
@@ -274,8 +311,7 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     }
 
     @Override
-    public ChannelFuture writeSettings(ChannelHandlerContext ctx, Http2Settings settings,
-            ChannelPromise promise) {
+    public ChannelFuture writeSettings(ChannelHandlerContext ctx, Http2Settings settings, ChannelPromise promise) {
         try {
             checkNotNull(settings, "settings");
             int payloadLength = SETTING_ENTRY_LENGTH * settings.size();
@@ -314,11 +350,9 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     }
 
     @Override
-    public ChannelFuture writePushPromise(ChannelHandlerContext ctx, int streamId,
-            int promisedStreamId, Http2Headers headers, int padding, ChannelPromise promise) {
+    public ChannelFuture writePushPromise(ChannelHandlerContext ctx, int streamId, int promisedStreamId, Http2Headers headers, int padding, ChannelPromise promise) {
         ByteBuf headerBlock = null;
-        SimpleChannelPromiseAggregator promiseAggregator =
-                new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
+        SimpleChannelPromiseAggregator promiseAggregator = new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
         try {
             verifyStreamId(streamId, STREAM_ID);
             verifyStreamId(promisedStreamId, "Promised Stream ID");
@@ -372,10 +406,8 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     }
 
     @Override
-    public ChannelFuture writeGoAway(ChannelHandlerContext ctx, int lastStreamId, long errorCode,
-            ByteBuf debugData, ChannelPromise promise) {
-        SimpleChannelPromiseAggregator promiseAggregator =
-                new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
+    public ChannelFuture writeGoAway(ChannelHandlerContext ctx, int lastStreamId, long errorCode, ByteBuf debugData, ChannelPromise promise) {
+        SimpleChannelPromiseAggregator promiseAggregator = new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
         try {
             verifyStreamOrConnectionId(lastStreamId, "Last Stream ID");
             verifyErrorCode(errorCode);
@@ -407,8 +439,7 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     }
 
     @Override
-    public ChannelFuture writeWindowUpdate(ChannelHandlerContext ctx, int streamId,
-            int windowSizeIncrement, ChannelPromise promise) {
+    public ChannelFuture writeWindowUpdate(ChannelHandlerContext ctx, int streamId, int windowSizeIncrement, ChannelPromise promise) {
         try {
             verifyStreamOrConnectionId(streamId, STREAM_ID);
             verifyWindowSizeIncrement(windowSizeIncrement);
@@ -423,10 +454,8 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     }
 
     @Override
-    public ChannelFuture writeFrame(ChannelHandlerContext ctx, byte frameType, int streamId,
-            Http2Flags flags, ByteBuf payload, ChannelPromise promise) {
-        SimpleChannelPromiseAggregator promiseAggregator =
-                new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
+    public ChannelFuture writeFrame(ChannelHandlerContext ctx, byte frameType, int streamId, Http2Flags flags, ByteBuf payload, ChannelPromise promise) {
+        SimpleChannelPromiseAggregator promiseAggregator = new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
         try {
             verifyStreamOrConnectionId(streamId, STREAM_ID);
             ByteBuf buf = ctx.alloc().buffer(FRAME_HEADER_LENGTH);
@@ -451,12 +480,9 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
         return promiseAggregator.doneAllocatingPromises();
     }
 
-    private ChannelFuture writeHeadersInternal(ChannelHandlerContext ctx,
-            int streamId, Http2Headers headers, int padding, boolean endStream,
-            boolean hasPriority, int streamDependency, short weight, boolean exclusive, ChannelPromise promise) {
+    private ChannelFuture writeHeadersInternal(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int padding, boolean endStream, boolean hasPriority, int streamDependency, short weight, boolean exclusive, ChannelPromise promise) {
         ByteBuf headerBlock = null;
-        SimpleChannelPromiseAggregator promiseAggregator =
-                new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
+        SimpleChannelPromiseAggregator promiseAggregator = new SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
         try {
             verifyStreamId(streamId, STREAM_ID);
             if (hasPriority) {
@@ -469,8 +495,7 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
             headerBlock = ctx.alloc().buffer();
             headersEncoder.encodeHeaders(streamId, headers, headerBlock);
 
-            Http2Flags flags =
-                    new Http2Flags().endOfStream(endStream).priorityPresent(hasPriority).paddingPresent(padding > 0);
+            Http2Flags flags = new Http2Flags().endOfStream(endStream).priorityPresent(hasPriority).paddingPresent(padding > 0);
 
             // Read the first fragment (possibly everything).
             int nonFragmentBytes = padding + flags.getNumPriorityBytes();
@@ -521,8 +546,7 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
     /**
      * Writes as many continuation frames as needed until {@code padding} and {@code headerBlock} are consumed.
      */
-    private ChannelFuture writeContinuationFrames(ChannelHandlerContext ctx, int streamId,
-            ByteBuf headerBlock, SimpleChannelPromiseAggregator promiseAggregator) {
+    private ChannelFuture writeContinuationFrames(ChannelHandlerContext ctx, int streamId, ByteBuf headerBlock, SimpleChannelPromiseAggregator promiseAggregator) {
         Http2Flags flags = new Http2Flags();
 
         if (headerBlock.isReadable()) {
@@ -551,52 +575,5 @@ public class DefaultHttp2FrameWriter implements Http2FrameWriter, Http2FrameSize
             } while (headerBlock.isReadable());
         }
         return promiseAggregator;
-    }
-
-    /**
-     * Returns the number of padding bytes that should be appended to the end of a frame.
-     */
-    private static int paddingBytes(int padding) {
-        // The padding parameter contains the 1 byte pad length field as well as the trailing padding bytes.
-        // Subtract 1, so to only get the number of padding bytes that need to be appended to the end of a frame.
-        return padding - 1;
-    }
-
-    private static void writePaddingLength(ByteBuf buf, int padding) {
-        if (padding > 0) {
-            // It is assumed that the padding length has been bounds checked before this
-            // Minus 1, as the pad length field is included in the padding parameter and is 1 byte wide.
-            buf.writeByte(padding - 1);
-        }
-    }
-
-    private static void verifyStreamId(int streamId, String argumentName) {
-        checkPositive(streamId, argumentName);
-    }
-
-    private static void verifyStreamOrConnectionId(int streamId, String argumentName) {
-        checkPositiveOrZero(streamId, argumentName);
-    }
-
-    private static void verifyWeight(short weight) {
-        if (weight < MIN_WEIGHT || weight > MAX_WEIGHT) {
-            throw new IllegalArgumentException("Invalid weight: " + weight);
-        }
-    }
-
-    private static void verifyErrorCode(long errorCode) {
-        if (errorCode < 0 || errorCode > MAX_UNSIGNED_INT) {
-            throw new IllegalArgumentException("Invalid errorCode: " + errorCode);
-        }
-    }
-
-    private static void verifyWindowSizeIncrement(int windowSizeIncrement) {
-        checkPositiveOrZero(windowSizeIncrement, "windowSizeIncrement");
-    }
-
-    private static void verifyPingPayload(ByteBuf data) {
-        if (data == null || data.readableBytes() != PING_FRAME_PAYLOAD_LENGTH) {
-            throw new IllegalArgumentException("Opaque data must be " + PING_FRAME_PAYLOAD_LENGTH + " bytes");
-        }
     }
 }

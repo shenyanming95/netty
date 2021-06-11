@@ -1,61 +1,29 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.compression;
 
 /**
  * Core of FastLZ compression algorithm.
- *
+ * <p>
  * This class provides methods for compression and decompression of buffers and saves
  * constants which use by {@link FastLzFrameEncoder} and {@link FastLzFrameDecoder}.
- *
+ * <p>
  * This is refactored code of <a href="https://code.google.com/p/jfastlz/">jfastlz</a>
  * library written by William Kinney.
  */
 final class FastLz {
 
-    private static final int MAX_DISTANCE = 8191;
-    private static final int MAX_FARDISTANCE = 65535 + MAX_DISTANCE - 1;
-
-    private static final int HASH_LOG = 13;
-    private static final int HASH_SIZE = 1 << HASH_LOG; // 8192
-    private static final int HASH_MASK = HASH_SIZE - 1;
-
-    private static final int MAX_COPY = 32;
-    private static final int MAX_LEN = 256 + 8;
-
-    private static final int MIN_RECOMENDED_LENGTH_FOR_LEVEL_2 = 1024 * 64;
-
     static final int MAGIC_NUMBER = 'F' << 16 | 'L' << 8 | 'Z';
-
     static final byte BLOCK_TYPE_NON_COMPRESSED = 0x00;
-    static final byte     BLOCK_TYPE_COMPRESSED = 0x01;
-    static final byte    BLOCK_WITHOUT_CHECKSUM = 0x00;
-    static final byte       BLOCK_WITH_CHECKSUM = 0x10;
-
+    static final byte BLOCK_TYPE_COMPRESSED = 0x01;
+    static final byte BLOCK_WITHOUT_CHECKSUM = 0x00;
+    static final byte BLOCK_WITH_CHECKSUM = 0x10;
     static final int OPTIONS_OFFSET = 3;
     static final int CHECKSUM_OFFSET = 4;
-
     static final int MAX_CHUNK_LENGTH = 0xFFFF;
-
     /**
      * Do not call {@link #compress(byte[], int, int, byte[], int, int)} for input buffers
      * which length less than this value.
      */
     static final int MIN_LENGTH_TO_COMPRESSION = 32;
-
     /**
      * In this case {@link #compress(byte[], int, int, byte[], int, int)} will choose level
      * automatically depending on the length of the input buffer. If length less than
@@ -63,19 +31,29 @@ final class FastLz {
      * otherwise {@link #LEVEL_2}.
      */
     static final int LEVEL_AUTO = 0;
-
     /**
      * Level 1 is the fastest compression and generally useful for short data.
      */
     static final int LEVEL_1 = 1;
-
     /**
      * Level 2 is slightly slower but it gives better compression ratio.
      */
     static final int LEVEL_2 = 2;
+    private static final int MAX_DISTANCE = 8191;
+    private static final int MAX_FARDISTANCE = 65535 + MAX_DISTANCE - 1;
+    private static final int HASH_LOG = 13;
+    private static final int HASH_SIZE = 1 << HASH_LOG; // 8192
+    private static final int HASH_MASK = HASH_SIZE - 1;
+    private static final int MAX_COPY = 32;
+    private static final int MAX_LEN = 256 + 8;
+    private static final int MIN_RECOMENDED_LENGTH_FOR_LEVEL_2 = 1024 * 64;
+
+    private FastLz() {
+    }
 
     /**
      * The output buffer must be at least 6% larger than the input buffer and can not be smaller than 66 bytes.
+     *
      * @param inputLength length of input buffer
      * @return Maximum output buffer length
      */
@@ -87,12 +65,11 @@ final class FastLz {
     /**
      * Compress a block of data in the input buffer and returns the size of compressed block.
      * The size of input buffer is specified by length. The minimum input buffer size is 32.
-     *
+     * <p>
      * If the input is not compressible, the return value might be larger than length (input buffer size).
      */
     @SuppressWarnings("IdentityBinaryExpression")
-    static int compress(final byte[] input, final int inOffset, final int inLength,
-                        final byte[] output, final int outOffset, final int proposedLevel) {
+    static int compress(final byte[] input, final int inOffset, final int inLength, final byte[] output, final int outOffset, final int proposedLevel) {
         final int level;
         if (proposedLevel == LEVEL_AUTO) {
             level = inLength < MIN_RECOMENDED_LENGTH_FOR_LEVEL_2 ? LEVEL_1 : LEVEL_2;
@@ -164,8 +141,7 @@ final class FastLz {
             /* check for a run */
             if (level == LEVEL_2) {
                 //if(ip[0] == ip[-1] && FASTLZ_READU16(ip-1)==FASTLZ_READU16(ip+1))
-                if (input[inOffset + ip] == input[inOffset + ip - 1] &&
-                        readU16(input, inOffset + ip - 1) == readU16(input, inOffset + ip + 1)) {
+                if (input[inOffset + ip] == input[inOffset + ip - 1] && readU16(input, inOffset + ip - 1) == readU16(input, inOffset + ip + 1)) {
                     distance = 1;
                     ip += 3;
                     ref = anchor + (3 - 1);
@@ -193,11 +169,7 @@ final class FastLz {
                 htab[hslot] = anchor;
 
                 /* is this a match? check the first 3 bytes */
-                if (distance == 0
-                        || (level == LEVEL_1 ? distance >= MAX_DISTANCE : distance >= MAX_FARDISTANCE)
-                        || input[inOffset + ref++] != input[inOffset + ip++]
-                        || input[inOffset + ref++] != input[inOffset + ip++]
-                        || input[inOffset + ref++] != input[inOffset + ip++]) {
+                if (distance == 0 || (level == LEVEL_1 ? distance >= MAX_DISTANCE : distance >= MAX_FARDISTANCE) || input[inOffset + ref++] != input[inOffset + ip++] || input[inOffset + ref++] != input[inOffset + ip++] || input[inOffset + ref++] != input[inOffset + ip++]) {
                     /*
                      * goto literal;
                      */
@@ -214,8 +186,7 @@ final class FastLz {
                 if (level == LEVEL_2) {
                     /* far, needs at least 5-byte match */
                     if (distance >= MAX_DISTANCE) {
-                        if (input[inOffset + ip++] != input[inOffset + ref++]
-                                || input[inOffset + ip++] != input[inOffset + ref++]) {
+                        if (input[inOffset + ip++] != input[inOffset + ref++] || input[inOffset + ip++] != input[inOffset + ref++]) {
                             /*
                              * goto literal;
                              */
@@ -253,7 +224,7 @@ final class FastLz {
                     }
                 }
             } else {
-                for (;;) {
+                for (; ; ) {
                     /* safe because the outer check against ip limit */
                     if (input[inOffset + ref++] != input[inOffset + ip++]) {
                         break;
@@ -418,18 +389,15 @@ final class FastLz {
      * Decompress a block of compressed data and returns the size of the decompressed block.
      * If error occurs, e.g. the compressed data is corrupted or the output buffer is not large
      * enough, then 0 (zero) will be returned instead.
-     *
+     * <p>
      * Decompression is memory safe and guaranteed not to write the output buffer
      * more than what is specified in outLength.
      */
-    static int decompress(final byte[] input, final int inOffset, final int inLength,
-                          final byte[] output, final int outOffset, final int outLength) {
+    static int decompress(final byte[] input, final int inOffset, final int inLength, final byte[] output, final int outOffset, final int outLength) {
         //int level = ((*(const flzuint8*)input) >> 5) + 1;
         final int level = (input[inOffset] >> 5) + 1;
         if (level != LEVEL_1 && level != LEVEL_2) {
-            throw new DecompressionException(String.format(
-                    "invalid level: %d (expected: %d or %d)", level, LEVEL_1, LEVEL_2
-            ));
+            throw new DecompressionException(String.format("invalid level: %d (expected: %d or %d)", level, LEVEL_1, LEVEL_2));
         }
 
         // const flzuint8* ip = (const flzuint8*) input;
@@ -551,7 +519,7 @@ final class FastLz {
                 }
             }
 
-        // while(FASTLZ_EXPECT_CONDITIONAL(loop));
+            // while(FASTLZ_EXPECT_CONDITIONAL(loop));
         } while (loop != 0);
 
         //  return op - (flzuint8*)output;
@@ -569,8 +537,6 @@ final class FastLz {
         if (offset + 1 >= data.length) {
             return data[offset] & 0xff;
         }
-        return  (data[offset + 1] & 0xff) << 8 | data[offset] & 0xff;
+        return (data[offset + 1] & 0xff) << 8 | data[offset] & 0xff;
     }
-
-    private FastLz() { }
 }

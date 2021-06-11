@@ -19,10 +19,6 @@ import java.net.SocketAddress;
 
 @SuppressWarnings("all")
 public class SctpStandardSocketOptions {
-    static {
-        UnsupportedOperatingSystemException.raise();
-    }
-
     public static final SctpSocketOption<Boolean> SCTP_DISABLE_FRAGMENTS = null;
     public static final SctpSocketOption<Boolean> SCTP_EXPLICIT_COMPLETE = null;
     public static final SctpSocketOption<Integer> SCTP_FRAGMENT_INTERLEAVE = null;
@@ -33,6 +29,10 @@ public class SctpStandardSocketOptions {
     public static final SctpSocketOption<Integer> SO_LINGER = null;
     public static final SctpSocketOption<Integer> SO_RCVBUF = null;
     public static final SctpSocketOption<Integer> SO_SNDBUF = null;
+
+    static {
+        UnsupportedOperatingSystemException.raise();
+    }
 
     public static class InitMaxStreams {
 

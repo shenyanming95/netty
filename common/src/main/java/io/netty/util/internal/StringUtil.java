@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.internal;
 
 import java.io.IOException;
@@ -234,8 +219,9 @@ public final class StringUtil {
 
     /**
      * Helper to decode half of a hexadecimal number from a string.
+     *
      * @param c The ASCII character of the hexadecimal number to decode.
-     * Must be in the range {@code [0-9a-fA-F]}.
+     *          Must be in the range {@code [0-9a-fA-F]}.
      * @return The hexadecimal value represented in the ASCII character
      * given, or {@code -1} if the character is invalid.
      */
@@ -254,8 +240,7 @@ public final class StringUtil {
         int hi = decodeHexNibble(s.charAt(pos));
         int lo = decodeHexNibble(s.charAt(pos + 1));
         if (hi == -1 || lo == -1) {
-            throw new IllegalArgumentException(String.format(
-                    "invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
+            throw new IllegalArgumentException(String.format("invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
         }
         return (byte) ((hi << 4) + lo);
     }
@@ -263,9 +248,9 @@ public final class StringUtil {
     /**
      * Decodes part of a string with <a href="http://en.wikipedia.org/wiki/Hex_dump">hex dump</a>
      *
-     * @param hexDump a {@link CharSequence} which contains the hex dump
+     * @param hexDump   a {@link CharSequence} which contains the hex dump
      * @param fromIndex start of hex dump in {@code hexDump}
-     * @param length hex string length
+     * @param length    hex string length
      */
     public static byte[] decodeHexDump(CharSequence hexDump, int fromIndex, int length) {
         if (length < 0 || (length & 1) != 0) {
@@ -393,7 +378,7 @@ public final class StringUtil {
                 // Special characters is not found or all of them already escaped.
                 // In the most cases returns a same string. New string will be instantiated (via StringBuilder)
                 // only if it really needed. It's important to prevent GC extra load.
-                return quoted? value.subSequence(start - 1, last + 2) : value.subSequence(start, last + 1);
+                return quoted ? value.subSequence(start - 1, last + 2) : value.subSequence(start, last + 1);
             }
         }
 
@@ -640,8 +625,7 @@ public final class StringUtil {
      * Returns a char sequence that contains all {@code elements} joined by a given separator.
      *
      * @param separator for each element
-     * @param elements to join together
-     *
+     * @param elements  to join together
      * @return a char sequence joined by a given separator.
      */
     public static CharSequence join(CharSequence separator, Iterable<? extends CharSequence> elements) {

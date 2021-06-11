@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbench.internal;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
@@ -29,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark)
 public class UnitializedArrayBenchmark extends AbstractMicrobenchmark {
 
-    @Param({ "1", "10", "100", "1000", "10000", "100000" })
+    @Param({"1", "10", "100", "1000", "10000", "100000"})
     private int size;
 
     @Setup(Level.Trial)
@@ -46,8 +31,7 @@ public class UnitializedArrayBenchmark extends AbstractMicrobenchmark {
     protected String[] jvmArgs() {
         // Ensure we minimize the GC overhead for this benchmark and also open up required package.
         // See also https://shipilev.net/jvm-anatomy-park/7-initialization-costs/
-        return new String[] { "-XX:+UseParallelOldGC", "-Xmx8g", "-Xms8g",
-                "-Xmn6g", "--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED" };
+        return new String[]{"-XX:+UseParallelOldGC", "-Xmx8g", "-Xms8g", "-Xmn6g", "--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED"};
     }
 
     @Benchmark

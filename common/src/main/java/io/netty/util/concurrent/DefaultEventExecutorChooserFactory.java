@@ -28,7 +28,12 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 
     public static final DefaultEventExecutorChooserFactory INSTANCE = new DefaultEventExecutorChooserFactory();
 
-    private DefaultEventExecutorChooserFactory() { }
+    private DefaultEventExecutorChooserFactory() {
+    }
+
+    private static boolean isPowerOfTwo(int val) {
+        return (val & -val) == val;
+    }
 
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
@@ -41,10 +46,6 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
             // 主要是next()方法的区别，通过不同的选择逻辑，高效率地快速选择事件执行器：
             return new GenericEventExecutorChooser(executors);
         }
-    }
-
-    private static boolean isPowerOfTwo(int val) {
-        return (val & -val) == val;
     }
 
     private static final class PowerOfTwoEventExecutorChooser implements EventExecutorChooser {

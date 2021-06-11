@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util;
 
 import io.netty.util.internal.ObjectUtil;
@@ -28,15 +13,18 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 public class DefaultAttributeMap implements AttributeMap {
 
     @SuppressWarnings("rawtypes")
-    private static final AtomicReferenceFieldUpdater<DefaultAttributeMap, AtomicReferenceArray> updater =
-            AtomicReferenceFieldUpdater.newUpdater(DefaultAttributeMap.class, AtomicReferenceArray.class, "attributes");
+    private static final AtomicReferenceFieldUpdater<DefaultAttributeMap, AtomicReferenceArray> updater = AtomicReferenceFieldUpdater.newUpdater(DefaultAttributeMap.class, AtomicReferenceArray.class, "attributes");
 
     private static final int BUCKET_SIZE = 4;
-    private static final int MASK = BUCKET_SIZE  - 1;
+    private static final int MASK = BUCKET_SIZE - 1;
 
     // Initialize lazily to reduce memory consumption; updated by AtomicReferenceFieldUpdater above.
     @SuppressWarnings("UnusedDeclaration")
     private volatile AtomicReferenceArray<DefaultAttribute<?>> attributes;
+
+    private static int index(AttributeKey<?> key) {
+        return key.id() & MASK;
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -71,7 +59,7 @@ public class DefaultAttributeMap implements AttributeMap {
 
         synchronized (head) {
             DefaultAttribute<?> curr = head;
-            for (;;) {
+            for (; ; ) {
                 DefaultAttribute<?> next = curr.next;
                 if (next == null) {
                     DefaultAttribute<T> attr = new DefaultAttribute<T>(head, key);
@@ -116,10 +104,6 @@ public class DefaultAttributeMap implements AttributeMap {
             }
             return false;
         }
-    }
-
-    private static int index(AttributeKey<?> key) {
-        return key.id() & MASK;
     }
 
     @SuppressWarnings("serial")

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.multipart;
 
 import io.netty.buffer.ByteBuf;
@@ -84,8 +69,7 @@ final class InternalAttribute extends AbstractReferenceCounted implements Interf
     @Override
     public int compareTo(InterfaceHttpData o) {
         if (!(o instanceof InternalAttribute)) {
-            throw new ClassCastException("Cannot compare " + getHttpDataType() +
-                    " with " + o.getHttpDataType());
+            throw new ClassCastException("Cannot compare " + getHttpDataType() + " with " + o.getHttpDataType());
         }
         return compareTo((InternalAttribute) o);
     }
@@ -123,7 +107,7 @@ final class InternalAttribute extends AbstractReferenceCounted implements Interf
 
     @Override
     public InterfaceHttpData retain() {
-        for (ByteBuf buf: value) {
+        for (ByteBuf buf : value) {
             buf.retain();
         }
         return this;
@@ -131,7 +115,7 @@ final class InternalAttribute extends AbstractReferenceCounted implements Interf
 
     @Override
     public InterfaceHttpData retain(int increment) {
-        for (ByteBuf buf: value) {
+        for (ByteBuf buf : value) {
             buf.retain(increment);
         }
         return this;
@@ -139,7 +123,7 @@ final class InternalAttribute extends AbstractReferenceCounted implements Interf
 
     @Override
     public InterfaceHttpData touch() {
-        for (ByteBuf buf: value) {
+        for (ByteBuf buf : value) {
             buf.touch();
         }
         return this;
@@ -147,7 +131,7 @@ final class InternalAttribute extends AbstractReferenceCounted implements Interf
 
     @Override
     public InterfaceHttpData touch(Object hint) {
-        for (ByteBuf buf: value) {
+        for (ByteBuf buf : value) {
             buf.touch(hint);
         }
         return this;

@@ -37,17 +37,7 @@ public final class WebSocketServerProtocolConfig {
     private final boolean dropPongFrames;
     private final WebSocketDecoderConfig decoderConfig;
 
-    private WebSocketServerProtocolConfig(
-        String websocketPath,
-        String subprotocols,
-        boolean checkStartsWith,
-        long handshakeTimeoutMillis,
-        long forceCloseTimeoutMillis,
-        boolean handleCloseFrames,
-        WebSocketCloseStatus sendCloseFrame,
-        boolean dropPongFrames,
-        WebSocketDecoderConfig decoderConfig
-    ) {
+    private WebSocketServerProtocolConfig(String websocketPath, String subprotocols, boolean checkStartsWith, long handshakeTimeoutMillis, long forceCloseTimeoutMillis, boolean handleCloseFrames, WebSocketCloseStatus sendCloseFrame, boolean dropPongFrames, WebSocketDecoderConfig decoderConfig) {
         this.websocketPath = websocketPath;
         this.subprotocols = subprotocols;
         this.checkStartsWith = checkStartsWith;
@@ -57,6 +47,10 @@ public final class WebSocketServerProtocolConfig {
         this.sendCloseFrame = sendCloseFrame;
         this.dropPongFrames = dropPongFrames;
         this.decoderConfig = decoderConfig == null ? WebSocketDecoderConfig.DEFAULT : decoderConfig;
+    }
+
+    public static Builder newBuilder() {
+        return new Builder("/", null, false, DEFAULT_HANDSHAKE_TIMEOUT_MILLIS, 0L, true, WebSocketCloseStatus.NORMAL_CLOSURE, true, WebSocketDecoderConfig.DEFAULT);
     }
 
     public String websocketPath() {
@@ -97,26 +91,11 @@ public final class WebSocketServerProtocolConfig {
 
     @Override
     public String toString() {
-        return "WebSocketServerProtocolConfig" +
-            " {websocketPath=" + websocketPath +
-            ", subprotocols=" + subprotocols +
-            ", checkStartsWith=" + checkStartsWith +
-            ", handshakeTimeoutMillis=" + handshakeTimeoutMillis +
-            ", forceCloseTimeoutMillis=" + forceCloseTimeoutMillis +
-            ", handleCloseFrames=" + handleCloseFrames +
-            ", sendCloseFrame=" + sendCloseFrame +
-            ", dropPongFrames=" + dropPongFrames +
-            ", decoderConfig=" + decoderConfig +
-            "}";
+        return "WebSocketServerProtocolConfig" + " {websocketPath=" + websocketPath + ", subprotocols=" + subprotocols + ", checkStartsWith=" + checkStartsWith + ", handshakeTimeoutMillis=" + handshakeTimeoutMillis + ", forceCloseTimeoutMillis=" + forceCloseTimeoutMillis + ", handleCloseFrames=" + handleCloseFrames + ", sendCloseFrame=" + sendCloseFrame + ", dropPongFrames=" + dropPongFrames + ", decoderConfig=" + decoderConfig + "}";
     }
 
     public Builder toBuilder() {
         return new Builder(this);
-    }
-
-    public static Builder newBuilder() {
-        return new Builder("/", null, false, DEFAULT_HANDSHAKE_TIMEOUT_MILLIS, 0L,
-                           true, WebSocketCloseStatus.NORMAL_CLOSURE, true, WebSocketDecoderConfig.DEFAULT);
     }
 
     public static final class Builder {
@@ -132,27 +111,10 @@ public final class WebSocketServerProtocolConfig {
         private WebSocketDecoderConfig.Builder decoderConfigBuilder;
 
         private Builder(WebSocketServerProtocolConfig serverConfig) {
-            this(ObjectUtil.checkNotNull(serverConfig, "serverConfig").websocketPath(),
-                 serverConfig.subprotocols(),
-                 serverConfig.checkStartsWith(),
-                 serverConfig.handshakeTimeoutMillis(),
-                 serverConfig.forceCloseTimeoutMillis(),
-                 serverConfig.handleCloseFrames(),
-                 serverConfig.sendCloseFrame(),
-                 serverConfig.dropPongFrames(),
-                 serverConfig.decoderConfig()
-            );
+            this(ObjectUtil.checkNotNull(serverConfig, "serverConfig").websocketPath(), serverConfig.subprotocols(), serverConfig.checkStartsWith(), serverConfig.handshakeTimeoutMillis(), serverConfig.forceCloseTimeoutMillis(), serverConfig.handleCloseFrames(), serverConfig.sendCloseFrame(), serverConfig.dropPongFrames(), serverConfig.decoderConfig());
         }
 
-        private Builder(String websocketPath,
-                        String subprotocols,
-                        boolean checkStartsWith,
-                        long handshakeTimeoutMillis,
-                        long forceCloseTimeoutMillis,
-                        boolean handleCloseFrames,
-                        WebSocketCloseStatus sendCloseFrame,
-                        boolean dropPongFrames,
-                        WebSocketDecoderConfig decoderConfig) {
+        private Builder(String websocketPath, String subprotocols, boolean checkStartsWith, long handshakeTimeoutMillis, long forceCloseTimeoutMillis, boolean handleCloseFrames, WebSocketCloseStatus sendCloseFrame, boolean dropPongFrames, WebSocketDecoderConfig decoderConfig) {
             this.websocketPath = websocketPath;
             this.subprotocols = subprotocols;
             this.checkStartsWith = checkStartsWith;
@@ -280,17 +242,7 @@ public final class WebSocketServerProtocolConfig {
          * Build unmodifiable server protocol configuration.
          */
         public WebSocketServerProtocolConfig build() {
-            return new WebSocketServerProtocolConfig(
-                websocketPath,
-                subprotocols,
-                checkStartsWith,
-                handshakeTimeoutMillis,
-                forceCloseTimeoutMillis,
-                handleCloseFrames,
-                sendCloseFrame,
-                dropPongFrames,
-                decoderConfigBuilder == null ? decoderConfig : decoderConfigBuilder.build()
-            );
+            return new WebSocketServerProtocolConfig(websocketPath, subprotocols, checkStartsWith, handshakeTimeoutMillis, forceCloseTimeoutMillis, handleCloseFrames, sendCloseFrame, dropPongFrames, decoderConfigBuilder == null ? decoderConfig : decoderConfigBuilder.build());
         }
     }
 }

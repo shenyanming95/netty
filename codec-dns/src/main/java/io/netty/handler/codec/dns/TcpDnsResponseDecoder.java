@@ -44,8 +44,7 @@ public final class TcpDnsResponseDecoder extends LengthFieldBasedFrameDecoder {
 
         this.responseDecoder = new DnsResponseDecoder<SocketAddress>(recordDecoder) {
             @Override
-            protected DnsResponse newResponse(SocketAddress sender, SocketAddress recipient,
-                                              int id, DnsOpCode opCode, DnsResponseCode responseCode) {
+            protected DnsResponse newResponse(SocketAddress sender, SocketAddress recipient, int id, DnsOpCode opCode, DnsResponseCode responseCode) {
                 return new DefaultDnsResponse(id, opCode, responseCode);
             }
         };

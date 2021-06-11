@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.websocketx.extensions;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -32,9 +17,12 @@ public final class WebSocketExtensionUtil {
 
     private static final Pattern PARAMETER = Pattern.compile("^([^=]+)(=[\\\"]?([^\\\"]+)[\\\"]?)?$");
 
+    private WebSocketExtensionUtil() {
+        // Unused
+    }
+
     static boolean isWebsocketUpgrade(HttpHeaders headers) {
-        return headers.containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true) &&
-                headers.contains(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET, true);
+        return headers.containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true) && headers.contains(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET, true);
     }
 
     public static List<WebSocketExtensionData> extractExtensions(String extensionHeader) {
@@ -65,11 +53,9 @@ public final class WebSocketExtensionUtil {
         }
     }
 
-    static String appendExtension(String currentHeaderValue, String extensionName,
-            Map<String, String> extensionParameters) {
+    static String appendExtension(String currentHeaderValue, String extensionName, Map<String, String> extensionParameters) {
 
-        StringBuilder newHeaderValue = new StringBuilder(
-                currentHeaderValue != null ? currentHeaderValue.length() : extensionName.length() + 1);
+        StringBuilder newHeaderValue = new StringBuilder(currentHeaderValue != null ? currentHeaderValue.length() : extensionName.length() + 1);
         if (currentHeaderValue != null && !currentHeaderValue.trim().isEmpty()) {
             newHeaderValue.append(currentHeaderValue);
             newHeaderValue.append(EXTENSION_SEPARATOR);
@@ -84,9 +70,5 @@ public final class WebSocketExtensionUtil {
             }
         }
         return newHeaderValue.toString();
-    }
-
-    private WebSocketExtensionUtil() {
-        // Unused
     }
 }

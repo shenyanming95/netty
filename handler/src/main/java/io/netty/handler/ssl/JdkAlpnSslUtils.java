@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 
@@ -74,8 +59,7 @@ final class JdkAlpnSslUtils {
             });
             setApplicationProtocols.invoke(engine.getSSLParameters(), new Object[]{EmptyArrays.EMPTY_STRINGS});
 
-            setHandshakeApplicationProtocolSelector =
-                    AccessController.doPrivileged(new PrivilegedExceptionAction<Method>() {
+            setHandshakeApplicationProtocolSelector = AccessController.doPrivileged(new PrivilegedExceptionAction<Method>() {
                 @Override
                 public Method run() throws Exception {
                     return SSLEngine.class.getMethod("setHandshakeApplicationProtocolSelector", BiFunction.class);
@@ -88,8 +72,7 @@ final class JdkAlpnSslUtils {
                 }
             });
 
-            getHandshakeApplicationProtocolSelector =
-                    AccessController.doPrivileged(new PrivilegedExceptionAction<Method>() {
+            getHandshakeApplicationProtocolSelector = AccessController.doPrivileged(new PrivilegedExceptionAction<Method>() {
                 @Override
                 public Method run() throws Exception {
                     return SSLEngine.class.getMethod("getHandshakeApplicationProtocolSelector");
@@ -156,8 +139,7 @@ final class JdkAlpnSslUtils {
         engine.setSSLParameters(parameters);
     }
 
-    static void setHandshakeApplicationProtocolSelector(
-            SSLEngine engine, BiFunction<SSLEngine, List<String>, String> selector) {
+    static void setHandshakeApplicationProtocolSelector(SSLEngine engine, BiFunction<SSLEngine, List<String>, String> selector) {
         try {
             SET_HANDSHAKE_APPLICATION_PROTOCOL_SELECTOR.invoke(engine, selector);
         } catch (UnsupportedOperationException ex) {
@@ -170,8 +152,7 @@ final class JdkAlpnSslUtils {
     @SuppressWarnings("unchecked")
     static BiFunction<SSLEngine, List<String>, String> getHandshakeApplicationProtocolSelector(SSLEngine engine) {
         try {
-            return (BiFunction<SSLEngine, List<String>, String>)
-                    GET_HANDSHAKE_APPLICATION_PROTOCOL_SELECTOR.invoke(engine);
+            return (BiFunction<SSLEngine, List<String>, String>) GET_HANDSHAKE_APPLICATION_PROTOCOL_SELECTOR.invoke(engine);
         } catch (UnsupportedOperationException ex) {
             throw ex;
         } catch (Exception ex) {

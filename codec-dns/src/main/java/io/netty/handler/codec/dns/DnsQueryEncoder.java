@@ -31,15 +31,6 @@ final class DnsQueryEncoder {
     }
 
     /**
-     * Encodes the given {@link DnsQuery} into a {@link ByteBuf}.
-     */
-    void encode(DnsQuery query, ByteBuf out) throws Exception {
-        encodeHeader(query, out);
-        encodeQuestions(query, out);
-        encodeRecords(query, DnsSection.ADDITIONAL, out);
-    }
-
-    /**
      * Encodes the header that is always 12 bytes long.
      *
      * @param query the query header being encoded
@@ -57,6 +48,15 @@ final class DnsQueryEncoder {
         buf.writeShort(0); // answerCount
         buf.writeShort(0); // authorityResourceCount
         buf.writeShort(query.count(DnsSection.ADDITIONAL));
+    }
+
+    /**
+     * Encodes the given {@link DnsQuery} into a {@link ByteBuf}.
+     */
+    void encode(DnsQuery query, ByteBuf out) throws Exception {
+        encodeHeader(query, out);
+        encodeQuestions(query, out);
+        encodeRecords(query, DnsSection.ADDITIONAL, out);
     }
 
     private void encodeQuestions(DnsQuery query, ByteBuf buf) throws Exception {

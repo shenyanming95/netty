@@ -52,8 +52,15 @@ abstract class AbstractUnpooledSlicedByteBuf extends AbstractDerivedByteBuf {
         writerIndex(length);
     }
 
+    static void checkSliceOutOfBounds(int index, int length, ByteBuf buffer) {
+        if (isOutOfBounds(index, length, buffer.capacity())) {
+            throw new IndexOutOfBoundsException(buffer + ".slice(" + index + ", " + length + ')');
+        }
+    }
+
     /**
      * Called by the constructor before {@link #writerIndex(int)}.
+     *
      * @param length the {@code length} argument from the constructor.
      */
     void initLength(int length) {
@@ -467,11 +474,5 @@ abstract class AbstractUnpooledSlicedByteBuf extends AbstractDerivedByteBuf {
      */
     final int idx(int index) {
         return index + adjustment;
-    }
-
-    static void checkSliceOutOfBounds(int index, int length, ByteBuf buffer) {
-        if (isOutOfBounds(index, length, buffer.capacity())) {
-            throw new IndexOutOfBoundsException(buffer + ".slice(" + index + ", " + length + ')');
-        }
     }
 }

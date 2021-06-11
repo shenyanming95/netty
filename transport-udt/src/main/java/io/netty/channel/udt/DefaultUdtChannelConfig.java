@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.udt;
 
 import com.barchart.udt.OptionUDT;
@@ -33,8 +18,7 @@ import static io.netty.channel.udt.UdtChannelOption.*;
  * @deprecated The UDT transport is no longer maintained and will be removed.
  */
 @Deprecated
-public class DefaultUdtChannelConfig extends DefaultChannelConfig implements
-        UdtChannelConfig {
+public class DefaultUdtChannelConfig extends DefaultChannelConfig implements UdtChannelConfig {
 
     private static final int K = 1024;
     private static final int M = K * K;
@@ -52,9 +36,7 @@ public class DefaultUdtChannelConfig extends DefaultChannelConfig implements
 
     private volatile boolean reuseAddress = true;
 
-    public DefaultUdtChannelConfig(final UdtChannel channel,
-            final ChannelUDT channelUDT, final boolean apply)
-            throws IOException {
+    public DefaultUdtChannelConfig(final UdtChannel channel, final ChannelUDT channelUDT, final boolean apply) throws IOException {
         super(channel);
         if (apply) {
             apply(channelUDT);
@@ -70,14 +52,10 @@ public class DefaultUdtChannelConfig extends DefaultChannelConfig implements
         } else {
             socketUDT.setSoLinger(true, getSoLinger());
         }
-        socketUDT.setOption(OptionUDT.Protocol_Receive_Buffer_Size,
-                getProtocolReceiveBufferSize());
-        socketUDT.setOption(OptionUDT.Protocol_Send_Buffer_Size,
-                getProtocolSendBufferSize());
-        socketUDT.setOption(OptionUDT.System_Receive_Buffer_Size,
-                getSystemReceiveBufferSize());
-        socketUDT.setOption(OptionUDT.System_Send_Buffer_Size,
-                getSystemSendBufferSize());
+        socketUDT.setOption(OptionUDT.Protocol_Receive_Buffer_Size, getProtocolReceiveBufferSize());
+        socketUDT.setOption(OptionUDT.Protocol_Send_Buffer_Size, getProtocolSendBufferSize());
+        socketUDT.setOption(OptionUDT.System_Receive_Buffer_Size, getSystemReceiveBufferSize());
+        socketUDT.setOption(OptionUDT.System_Send_Buffer_Size, getSystemSendBufferSize());
     }
 
     @Override
@@ -117,10 +95,7 @@ public class DefaultUdtChannelConfig extends DefaultChannelConfig implements
 
     @Override
     public Map<ChannelOption<?>, Object> getOptions() {
-        return getOptions(super.getOptions(), PROTOCOL_RECEIVE_BUFFER_SIZE,
-                PROTOCOL_SEND_BUFFER_SIZE, SYSTEM_RECEIVE_BUFFER_SIZE,
-                SYSTEM_SEND_BUFFER_SIZE, SO_RCVBUF, SO_SNDBUF, SO_REUSEADDR,
-                SO_LINGER);
+        return getOptions(super.getOptions(), PROTOCOL_RECEIVE_BUFFER_SIZE, PROTOCOL_SEND_BUFFER_SIZE, SYSTEM_RECEIVE_BUFFER_SIZE, SYSTEM_SEND_BUFFER_SIZE, SO_RCVBUF, SO_SNDBUF, SO_REUSEADDR, SO_LINGER);
     }
 
     @Override
@@ -204,8 +179,7 @@ public class DefaultUdtChannelConfig extends DefaultChannelConfig implements
     }
 
     @Override
-    public UdtChannelConfig setSystemSendBufferSize(
-            final int systemReceiveBufferSize) {
+    public UdtChannelConfig setSystemSendBufferSize(final int systemReceiveBufferSize) {
         this.systemReceiveBufferSize = systemReceiveBufferSize;
         return this;
     }
@@ -216,15 +190,13 @@ public class DefaultUdtChannelConfig extends DefaultChannelConfig implements
     }
 
     @Override
-    public UdtChannelConfig setProtocolSendBufferSize(
-            final int protocolSendBufferSize) {
+    public UdtChannelConfig setProtocolSendBufferSize(final int protocolSendBufferSize) {
         this.protocolSendBufferSize = protocolSendBufferSize;
         return this;
     }
 
     @Override
-    public UdtChannelConfig setSystemReceiveBufferSize(
-            final int systemSendBufferSize) {
+    public UdtChannelConfig setSystemReceiveBufferSize(final int systemSendBufferSize) {
         this.systemSendBufferSize = systemSendBufferSize;
         return this;
     }

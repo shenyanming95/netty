@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.handler.codec.http;
 
 import io.netty.util.AsciiString;
@@ -52,28 +36,23 @@ public final class HttpHeaderNames {
     /**
      * {@code "access-control-allow-credentials"}
      */
-    public static final AsciiString ACCESS_CONTROL_ALLOW_CREDENTIALS =
-            AsciiString.cached("access-control-allow-credentials");
+    public static final AsciiString ACCESS_CONTROL_ALLOW_CREDENTIALS = AsciiString.cached("access-control-allow-credentials");
     /**
      * {@code "access-control-allow-headers"}
      */
-    public static final AsciiString ACCESS_CONTROL_ALLOW_HEADERS =
-            AsciiString.cached("access-control-allow-headers");
+    public static final AsciiString ACCESS_CONTROL_ALLOW_HEADERS = AsciiString.cached("access-control-allow-headers");
     /**
      * {@code "access-control-allow-methods"}
      */
-    public static final AsciiString ACCESS_CONTROL_ALLOW_METHODS =
-            AsciiString.cached("access-control-allow-methods");
+    public static final AsciiString ACCESS_CONTROL_ALLOW_METHODS = AsciiString.cached("access-control-allow-methods");
     /**
      * {@code "access-control-allow-origin"}
      */
-    public static final AsciiString ACCESS_CONTROL_ALLOW_ORIGIN =
-            AsciiString.cached("access-control-allow-origin");
+    public static final AsciiString ACCESS_CONTROL_ALLOW_ORIGIN = AsciiString.cached("access-control-allow-origin");
     /**
      * {@code "access-control-expose-headers"}
      */
-    public static final AsciiString ACCESS_CONTROL_EXPOSE_HEADERS =
-            AsciiString.cached("access-control-expose-headers");
+    public static final AsciiString ACCESS_CONTROL_EXPOSE_HEADERS = AsciiString.cached("access-control-expose-headers");
     /**
      * {@code "access-control-max-age"}
      */
@@ -81,13 +60,11 @@ public final class HttpHeaderNames {
     /**
      * {@code "access-control-request-headers"}
      */
-    public static final AsciiString ACCESS_CONTROL_REQUEST_HEADERS =
-            AsciiString.cached("access-control-request-headers");
+    public static final AsciiString ACCESS_CONTROL_REQUEST_HEADERS = AsciiString.cached("access-control-request-headers");
     /**
      * {@code "access-control-request-method"}
      */
-    public static final AsciiString ACCESS_CONTROL_REQUEST_METHOD =
-            AsciiString.cached("access-control-request-method");
+    public static final AsciiString ACCESS_CONTROL_REQUEST_METHOD = AsciiString.cached("access-control-request-method");
     /**
      * {@code "age"}
      */
@@ -206,7 +183,7 @@ public final class HttpHeaderNames {
     public static final AsciiString IF_UNMODIFIED_SINCE = AsciiString.cached("if-unmodified-since");
     /**
      * @deprecated use {@link #CONNECTION}
-     *
+     * <p>
      * {@code "keep-alive"}
      */
     @Deprecated
@@ -241,7 +218,7 @@ public final class HttpHeaderNames {
     public static final AsciiString PROXY_AUTHORIZATION = AsciiString.cached("proxy-authorization");
     /**
      * @deprecated use {@link #CONNECTION}
-     *
+     * <p>
      * {@code "proxy-connection"}
      */
     @Deprecated
@@ -367,5 +344,6 @@ public final class HttpHeaderNames {
      */
     public static final AsciiString X_REQUESTED_WITH = AsciiString.cached("x-requested-with");
 
-    private HttpHeaderNames() { }
+    private HttpHeaderNames() {
+    }
 }

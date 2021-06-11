@@ -36,6 +36,9 @@ public final class SmtpRequests {
     private static final SmtpRequest QUIT = new DefaultSmtpRequest(SmtpCommand.QUIT);
     private static final AsciiString FROM_NULL_SENDER = AsciiString.cached("FROM:<>");
 
+    private SmtpRequests() {
+    }
+
     /**
      * Creates a {@code HELO} request.
      */
@@ -104,11 +107,10 @@ public final class SmtpRequests {
      */
     public static SmtpRequest mail(CharSequence sender, CharSequence... mailParameters) {
         if (mailParameters == null || mailParameters.length == 0) {
-            return new DefaultSmtpRequest(SmtpCommand.MAIL,
-                                          sender != null ? "FROM:<" + sender + '>' : FROM_NULL_SENDER);
+            return new DefaultSmtpRequest(SmtpCommand.MAIL, sender != null ? "FROM:<" + sender + '>' : FROM_NULL_SENDER);
         } else {
             List<CharSequence> params = new ArrayList<CharSequence>(mailParameters.length + 1);
-            params.add(sender != null? "FROM:<" + sender + '>' : FROM_NULL_SENDER);
+            params.add(sender != null ? "FROM:<" + sender + '>' : FROM_NULL_SENDER);
             Collections.addAll(params, mailParameters);
             return new DefaultSmtpRequest(SmtpCommand.MAIL, params);
         }
@@ -142,6 +144,4 @@ public final class SmtpRequests {
     public static SmtpRequest vrfy(CharSequence user) {
         return new DefaultSmtpRequest(SmtpCommand.VRFY, ObjectUtil.checkNotNull(user, "user"));
     }
-
-    private SmtpRequests() { }
 }

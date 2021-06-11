@@ -41,41 +41,9 @@ public class HttpMethodMapBenchmark extends AbstractMicrobenchmark {
         // We intentionally don't use HttpMethod.toString() here to avoid the equals(..) comparison method from being
         // able to short circuit due to reference equality checks and being biased toward the new approach. This
         // simulates the behavior of HttpObjectDecoder which will build new String objects during the decode operation.
-        KNOWN_METHODS = new String[] {
-                "OPTIONS",
-                "GET",
-                "HEAD",
-                "POST",
-                "PUT",
-                "PATCH",
-                "DELETE",
-                "TRACE",
-                "CONNECT"
-        };
-        MIXED_METHODS = new String[] {
-                "OPTIONS",
-                "FAKEMETHOD",
-                "GET",
-                "HEAD",
-                "POST",
-                "UBERGET",
-                "PUT",
-                "PATCH",
-                "MYMETHOD",
-                "DELETE",
-                "TRACE",
-                "CONNECT",
-                "WHATMETHOD"
-        };
-        UNKNOWN_METHODS = new String[] {
-                "FAKEMETHOD",
-                "UBERGET",
-                "MYMETHOD",
-                "TESTING",
-                "WHATMETHOD",
-                "UNKNOWN",
-                "FOOBAR"
-        };
+        KNOWN_METHODS = new String[]{"OPTIONS", "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "TRACE", "CONNECT"};
+        MIXED_METHODS = new String[]{"OPTIONS", "FAKEMETHOD", "GET", "HEAD", "POST", "UBERGET", "PUT", "PATCH", "MYMETHOD", "DELETE", "TRACE", "CONNECT", "WHATMETHOD"};
+        UNKNOWN_METHODS = new String[]{"FAKEMETHOD", "UBERGET", "MYMETHOD", "TESTING", "WHATMETHOD", "UNKNOWN", "FOOBAR"};
         OLD_MAP.put(OPTIONS.toString(), OPTIONS);
         OLD_MAP.put(GET.toString(), GET);
         OLD_MAP.put(HEAD.toString(), HEAD);
@@ -86,56 +54,7 @@ public class HttpMethodMapBenchmark extends AbstractMicrobenchmark {
         OLD_MAP.put(TRACE.toString(), TRACE);
         OLD_MAP.put(CONNECT.toString(), CONNECT);
 
-        NEW_MAP = new SimpleStringMap<HttpMethod>(
-                new SimpleStringMap.Node<HttpMethod>(OPTIONS.toString(), OPTIONS),
-                new SimpleStringMap.Node<HttpMethod>(GET.toString(), GET),
-                new SimpleStringMap.Node<HttpMethod>(HEAD.toString(), HEAD),
-                new SimpleStringMap.Node<HttpMethod>(POST.toString(), POST),
-                new SimpleStringMap.Node<HttpMethod>(PUT.toString(), PUT),
-                new SimpleStringMap.Node<HttpMethod>(PATCH.toString(), PATCH),
-                new SimpleStringMap.Node<HttpMethod>(DELETE.toString(), DELETE),
-                new SimpleStringMap.Node<HttpMethod>(TRACE.toString(), TRACE),
-                new SimpleStringMap.Node<HttpMethod>(CONNECT.toString(), CONNECT));
-    }
-
-    private static final class SimpleStringMap<T> {
-        private final SimpleStringMap.Node<T>[] values;
-        private final int valuesMask;
-
-        SimpleStringMap(SimpleStringMap.Node<T>... nodes) {
-            values = (SimpleStringMap.Node<T>[]) new SimpleStringMap.Node[findNextPositivePowerOfTwo(nodes.length)];
-            valuesMask = values.length - 1;
-            for (SimpleStringMap.Node<T> node : nodes) {
-                int i = hashCode(node.key) & valuesMask;
-                if (values[i] != null) {
-                    throw new IllegalArgumentException("index " + i + " collision between values: [" +
-                            values[i].key + ", " + node.key + "]");
-                }
-                values[i] = node;
-            }
-        }
-
-        T get(String name) {
-            SimpleStringMap.Node<T> node = values[hashCode(name) & valuesMask];
-            return node == null || !node.key.equals(name) ? null : node.value;
-        }
-
-        private static int hashCode(String name) {
-            // This hash code needs to produce a unique index for each HttpMethod. If new methods are added this
-            // algorithm will need to be adjusted. The goal is to have each enum name's hash value correlate to a unique
-            // index in the values array.
-            return name.hashCode() >>> 6;
-        }
-
-        private static final class Node<T> {
-            final String key;
-            final T value;
-
-            Node(String key, T value) {
-                this.key = key;
-                this.value = value;
-            }
-        }
+        NEW_MAP = new SimpleStringMap<HttpMethod>(new SimpleStringMap.Node<HttpMethod>(OPTIONS.toString(), OPTIONS), new SimpleStringMap.Node<HttpMethod>(GET.toString(), GET), new SimpleStringMap.Node<HttpMethod>(HEAD.toString(), HEAD), new SimpleStringMap.Node<HttpMethod>(POST.toString(), POST), new SimpleStringMap.Node<HttpMethod>(PUT.toString(), PUT), new SimpleStringMap.Node<HttpMethod>(PATCH.toString(), PATCH), new SimpleStringMap.Node<HttpMethod>(DELETE.toString(), DELETE), new SimpleStringMap.Node<HttpMethod>(TRACE.toString(), TRACE), new SimpleStringMap.Node<HttpMethod>(CONNECT.toString(), CONNECT));
     }
 
     @Benchmark
@@ -188,6 +107,45 @@ public class HttpMethodMapBenchmark extends AbstractMicrobenchmark {
             HttpMethod method = NEW_MAP.get(UNKNOWN_METHODS[i]);
             if (method != null) {
                 bh.consume(method);
+            }
+        }
+    }
+
+    private static final class SimpleStringMap<T> {
+        private final SimpleStringMap.Node<T>[] values;
+        private final int valuesMask;
+
+        SimpleStringMap(SimpleStringMap.Node<T>... nodes) {
+            values = (SimpleStringMap.Node<T>[]) new SimpleStringMap.Node[findNextPositivePowerOfTwo(nodes.length)];
+            valuesMask = values.length - 1;
+            for (SimpleStringMap.Node<T> node : nodes) {
+                int i = hashCode(node.key) & valuesMask;
+                if (values[i] != null) {
+                    throw new IllegalArgumentException("index " + i + " collision between values: [" + values[i].key + ", " + node.key + "]");
+                }
+                values[i] = node;
+            }
+        }
+
+        private static int hashCode(String name) {
+            // This hash code needs to produce a unique index for each HttpMethod. If new methods are added this
+            // algorithm will need to be adjusted. The goal is to have each enum name's hash value correlate to a unique
+            // index in the values array.
+            return name.hashCode() >>> 6;
+        }
+
+        T get(String name) {
+            SimpleStringMap.Node<T> node = values[hashCode(name) & valuesMask];
+            return node == null || !node.key.equals(name) ? null : node.value;
+        }
+
+        private static final class Node<T> {
+            final String key;
+            final T value;
+
+            Node(String key, T value) {
+                this.key = key;
+                this.value = value;
             }
         }
     }

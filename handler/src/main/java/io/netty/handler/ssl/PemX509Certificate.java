@@ -35,7 +35,7 @@ import java.util.Set;
  * This is a special purpose implementation of a {@link X509Certificate} which allows
  * the user to pass PEM/PKCS#8 encoded data straight into {@link OpenSslContext} without
  * having to parse and re-encode bytes in Java land.
- *
+ * <p>
  * All methods other than what's implemented in {@link PemEncoded}'s throw
  * {@link UnsupportedOperationException}s.
  *
@@ -48,12 +48,16 @@ public final class PemX509Certificate extends X509Certificate implements PemEnco
 
     private static final byte[] BEGIN_CERT = "-----BEGIN CERTIFICATE-----\n".getBytes(CharsetUtil.US_ASCII);
     private static final byte[] END_CERT = "\n-----END CERTIFICATE-----\n".getBytes(CharsetUtil.US_ASCII);
+    private final ByteBuf content;
+
+    private PemX509Certificate(ByteBuf content) {
+        this.content = ObjectUtil.checkNotNull(content, "content");
+    }
 
     /**
      * Creates a {@link PemEncoded} value from the {@link X509Certificate}s.
      */
-    static PemEncoded toPEM(ByteBufAllocator allocator, boolean useDirect,
-            X509Certificate... chain) throws CertificateEncodingException {
+    static PemEncoded toPEM(ByteBufAllocator allocator, boolean useDirect, X509Certificate... chain) throws CertificateEncodingException {
 
         if (chain == null || chain.length == 0) {
             throw new IllegalArgumentException("X.509 certificate chain can't be null or empty");
@@ -102,8 +106,7 @@ public final class PemX509Certificate extends X509Certificate implements PemEnco
      * Appends the {@link PemEncoded} value to the {@link ByteBuf} (last arg) and returns it.
      * If the {@link ByteBuf} didn't exist yet it'll create it using the {@link ByteBufAllocator}.
      */
-    private static ByteBuf append(ByteBufAllocator allocator, boolean useDirect,
-            PemEncoded encoded, int count, ByteBuf pem) {
+    private static ByteBuf append(ByteBufAllocator allocator, boolean useDirect, PemEncoded encoded, int count, ByteBuf pem) {
 
         ByteBuf content = encoded.content();
 
@@ -120,8 +123,7 @@ public final class PemX509Certificate extends X509Certificate implements PemEnco
      * Appends the {@link X509Certificate} value to the {@link ByteBuf} (last arg) and returns it.
      * If the {@link ByteBuf} didn't exist yet it'll create it using the {@link ByteBufAllocator}.
      */
-    private static ByteBuf append(ByteBufAllocator allocator, boolean useDirect,
-            X509Certificate cert, int count, ByteBuf pem) throws CertificateEncodingException {
+    private static ByteBuf append(ByteBufAllocator allocator, boolean useDirect, X509Certificate cert, int count, ByteBuf pem) throws CertificateEncodingException {
 
         ByteBuf encoded = Unpooled.wrappedBuffer(cert.getEncoded());
         try {
@@ -131,8 +133,7 @@ public final class PemX509Certificate extends X509Certificate implements PemEnco
                     // We try to approximate the buffer's initial size. The sizes of
                     // certificates can vary a lot so it'll be off a bit depending
                     // on the number of elements in the array (count argument).
-                    pem = newBuffer(allocator, useDirect,
-                            (BEGIN_CERT.length + base64.readableBytes() + END_CERT.length) * count);
+                    pem = newBuffer(allocator, useDirect, (BEGIN_CERT.length + base64.readableBytes() + END_CERT.length) * count);
                 }
 
                 pem.writeBytes(BEGIN_CERT);
@@ -154,7 +155,7 @@ public final class PemX509Certificate extends X509Certificate implements PemEnco
 
     /**
      * Creates a {@link PemX509Certificate} from raw {@code byte[]}.
-     *
+     * <p>
      * ATTENTION: It's assumed that the given argument is a PEM/PKCS#8 encoded value.
      * No input validation is performed to validate it.
      */
@@ -164,18 +165,12 @@ public final class PemX509Certificate extends X509Certificate implements PemEnco
 
     /**
      * Creates a {@link PemX509Certificate} from raw {@code ByteBuf}.
-     *
+     * <p>
      * ATTENTION: It's assumed that the given argument is a PEM/PKCS#8 encoded value.
      * No input validation is performed to validate it.
      */
     public static PemX509Certificate valueOf(ByteBuf key) {
         return new PemX509Certificate(key);
-    }
-
-    private final ByteBuf content;
-
-    private PemX509Certificate(ByteBuf content) {
-        this.content = ObjectUtil.checkNotNull(content, "content");
     }
 
     @Override

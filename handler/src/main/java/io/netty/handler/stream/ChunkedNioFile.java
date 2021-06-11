@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.stream;
 
 import io.netty.buffer.ByteBuf;
@@ -80,13 +65,12 @@ public class ChunkedNioFile implements ChunkedInput<ByteBuf> {
     /**
      * Creates a new instance that fetches data from the specified file.
      *
-     * @param offset the offset of the file where the transfer begins
-     * @param length the number of bytes to transfer
+     * @param offset    the offset of the file where the transfer begins
+     * @param length    the number of bytes to transfer
      * @param chunkSize the number of bytes to fetch on each
      *                  {@link #readChunk(ChannelHandlerContext)} call
      */
-    public ChunkedNioFile(FileChannel in, long offset, long length, int chunkSize)
-            throws IOException {
+    public ChunkedNioFile(FileChannel in, long offset, long length, int chunkSize) throws IOException {
         ObjectUtil.checkNotNull(in, "in");
         ObjectUtil.checkPositiveOrZero(offset, "offset");
         ObjectUtil.checkPositiveOrZero(length, "length");
@@ -149,7 +133,7 @@ public class ChunkedNioFile implements ChunkedInput<ByteBuf> {
         boolean release = true;
         try {
             int readBytes = 0;
-            for (;;) {
+            for (; ; ) {
                 int localReadBytes = buffer.writeBytes(in, offset + readBytes, chunkSize - readBytes);
                 if (localReadBytes < 0) {
                     break;

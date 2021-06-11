@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.udt;
 
 import com.barchart.udt.OptionUDT;
@@ -57,7 +42,7 @@ import io.netty.channel.*;
  * </tr><tr>
  * <td>{@link UdtChannelOption#SYSTEM_SEND_BUFFER_SIZE}</td>
  * <td>{@link #setSystemSendBufferSize(int)}</td>
-
+ *
  * </tr>
  * </table>
  * <p>
@@ -77,9 +62,19 @@ public interface UdtChannelConfig extends ChannelConfig {
     int getProtocolReceiveBufferSize();
 
     /**
+     * Sets {@link OptionUDT#Protocol_Receive_Buffer_Size}
+     */
+    UdtChannelConfig setProtocolReceiveBufferSize(int size);
+
+    /**
      * Gets {@link OptionUDT#Protocol_Send_Buffer_Size}
      */
     int getProtocolSendBufferSize();
+
+    /**
+     * Sets {@link OptionUDT#Protocol_Send_Buffer_Size}
+     */
+    UdtChannelConfig setProtocolSendBufferSize(int size);
 
     /**
      * Gets the {@link ChannelOption#SO_RCVBUF} option.
@@ -87,9 +82,19 @@ public interface UdtChannelConfig extends ChannelConfig {
     int getReceiveBufferSize();
 
     /**
+     * Sets the {@link ChannelOption#SO_RCVBUF} option.
+     */
+    UdtChannelConfig setReceiveBufferSize(int receiveBufferSize);
+
+    /**
      * Gets the {@link ChannelOption#SO_SNDBUF} option.
      */
     int getSendBufferSize();
+
+    /**
+     * Sets the {@link ChannelOption#SO_SNDBUF} option.
+     */
+    UdtChannelConfig setSendBufferSize(int sendBufferSize);
 
     /**
      * Gets the {@link ChannelOption#SO_LINGER} option.
@@ -97,9 +102,19 @@ public interface UdtChannelConfig extends ChannelConfig {
     int getSoLinger();
 
     /**
+     * Sets the {@link ChannelOption#SO_LINGER} option.
+     */
+    UdtChannelConfig setSoLinger(int soLinger);
+
+    /**
      * Gets {@link OptionUDT#System_Receive_Buffer_Size}
      */
     int getSystemReceiveBufferSize();
+
+    /**
+     * Sets {@link OptionUDT#System_Receive_Buffer_Size}
+     */
+    UdtChannelConfig setSystemReceiveBufferSize(int size);
 
     /**
      * Gets {@link OptionUDT#System_Send_Buffer_Size}
@@ -107,9 +122,19 @@ public interface UdtChannelConfig extends ChannelConfig {
     int getSystemSendBufferSize();
 
     /**
+     * Sets {@link OptionUDT#System_Send_Buffer_Size}
+     */
+    UdtChannelConfig setSystemSendBufferSize(int size);
+
+    /**
      * Gets the {@link ChannelOption#SO_REUSEADDR} option.
      */
     boolean isReuseAddress();
+
+    /**
+     * Sets the {@link ChannelOption#SO_REUSEADDR} option.
+     */
+    UdtChannelConfig setReuseAddress(boolean reuseAddress);
 
     @Override
     UdtChannelConfig setConnectTimeoutMillis(int connectTimeoutMillis);
@@ -144,44 +169,4 @@ public interface UdtChannelConfig extends ChannelConfig {
 
     @Override
     UdtChannelConfig setMessageSizeEstimator(MessageSizeEstimator estimator);
-
-    /**
-     * Sets {@link OptionUDT#Protocol_Receive_Buffer_Size}
-     */
-    UdtChannelConfig setProtocolReceiveBufferSize(int size);
-
-    /**
-     * Sets {@link OptionUDT#Protocol_Send_Buffer_Size}
-     */
-    UdtChannelConfig setProtocolSendBufferSize(int size);
-
-    /**
-     * Sets the {@link ChannelOption#SO_RCVBUF} option.
-     */
-    UdtChannelConfig setReceiveBufferSize(int receiveBufferSize);
-
-    /**
-     * Sets the {@link ChannelOption#SO_REUSEADDR} option.
-     */
-    UdtChannelConfig setReuseAddress(boolean reuseAddress);
-
-    /**
-     * Sets the {@link ChannelOption#SO_SNDBUF} option.
-     */
-    UdtChannelConfig setSendBufferSize(int sendBufferSize);
-
-    /**
-     * Sets the {@link ChannelOption#SO_LINGER} option.
-     */
-    UdtChannelConfig setSoLinger(int soLinger);
-
-    /**
-     * Sets {@link OptionUDT#System_Receive_Buffer_Size}
-     */
-    UdtChannelConfig setSystemReceiveBufferSize(int size);
-
-    /**
-     * Sets {@link OptionUDT#System_Send_Buffer_Size}
-     */
-    UdtChannelConfig setSystemSendBufferSize(int size);
 }

@@ -1,20 +1,4 @@
 /*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
-/*
  * Copyright 2014 Twitter, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,8 +44,7 @@ final class HpackEncoder {
     static final int HUFF_CODE_THRESHOLD = 512;
     // a linked hash map of header fields
     private final HeaderEntry[] headerFields;
-    private final HeaderEntry head = new HeaderEntry(-1, AsciiString.EMPTY_STRING,
-            AsciiString.EMPTY_STRING, Integer.MAX_VALUE, null);
+    private final HeaderEntry head = new HeaderEntry(-1, AsciiString.EMPTY_STRING, AsciiString.EMPTY_STRING, Integer.MAX_VALUE, null);
     private final HpackHuffmanEncoder hpackHuffmanEncoder = new HpackHuffmanEncoder();
     private final byte hashMask;
     private final boolean ignoreMaxHeaderListSize;
@@ -100,12 +83,36 @@ final class HpackEncoder {
     }
 
     /**
+     * Encode integer according to <a href="https://tools.ietf.org/html/rfc7541#section-5.1">Section 5.1</a>.
+     */
+    private static void encodeInteger(ByteBuf out, int mask, int n, int i) {
+        encodeInteger(out, mask, n, (long) i);
+    }
+
+    /**
+     * Encode integer according to <a href="https://tools.ietf.org/html/rfc7541#section-5.1">Section 5.1</a>.
+     */
+    private static void encodeInteger(ByteBuf out, int mask, int n, long i) {
+        assert n >= 0 && n <= 8 : "N: " + n;
+        int nbits = 0xFF >>> (8 - n);
+        if (i < nbits) {
+            out.writeByte((int) (mask | i));
+        } else {
+            out.writeByte(mask | nbits);
+            long length = i - nbits;
+            for (; (length & ~0x7F) != 0; length >>>= 7) {
+                out.writeByte((int) ((length & 0x7F) | 0x80));
+            }
+            out.writeByte((int) length);
+        }
+    }
+
+    /**
      * Encode the header field into the header block.
      *
      * <strong>The given {@link CharSequence}s must be immutable!</strong>
      */
-    public void encodeHeaders(int streamId, ByteBuf out, Http2Headers headers, SensitivityDetector sensitivityDetector)
-            throws Http2Exception {
+    public void encodeHeaders(int streamId, ByteBuf out, Http2Headers headers, SensitivityDetector sensitivityDetector) throws Http2Exception {
         if (ignoreMaxHeaderListSize) {
             encodeHeadersIgnoreMaxHeaderListSize(out, headers, sensitivityDetector);
         } else {
@@ -113,9 +120,7 @@ final class HpackEncoder {
         }
     }
 
-    private void encodeHeadersEnforceMaxHeaderListSize(int streamId, ByteBuf out, Http2Headers headers,
-                                                       SensitivityDetector sensitivityDetector)
-            throws Http2Exception {
+    private void encodeHeadersEnforceMaxHeaderListSize(int streamId, ByteBuf out, Http2Headers headers, SensitivityDetector sensitivityDetector) throws Http2Exception {
         long headerSize = 0;
         // To ensure we stay consistent with our peer check the size is valid before we potentially modify HPACK state.
         for (Map.Entry<CharSequence, CharSequence> header : headers) {
@@ -131,13 +136,11 @@ final class HpackEncoder {
         encodeHeadersIgnoreMaxHeaderListSize(out, headers, sensitivityDetector);
     }
 
-    private void encodeHeadersIgnoreMaxHeaderListSize(ByteBuf out, Http2Headers headers,
-                                                      SensitivityDetector sensitivityDetector) throws Http2Exception {
+    private void encodeHeadersIgnoreMaxHeaderListSize(ByteBuf out, Http2Headers headers, SensitivityDetector sensitivityDetector) throws Http2Exception {
         for (Map.Entry<CharSequence, CharSequence> header : headers) {
             CharSequence name = header.getKey();
             CharSequence value = header.getValue();
-            encodeHeader(out, name, value, sensitivityDetector.isSensitive(name, value),
-                         HpackHeaderField.sizeOf(name, value));
+            encodeHeader(out, name, value, sensitivityDetector.isSensitive(name, value), HpackHeaderField.sizeOf(name, value));
         }
     }
 
@@ -196,8 +199,7 @@ final class HpackEncoder {
      */
     public void setMaxHeaderTableSize(ByteBuf out, long maxHeaderTableSize) throws Http2Exception {
         if (maxHeaderTableSize < MIN_HEADER_TABLE_SIZE || maxHeaderTableSize > MAX_HEADER_TABLE_SIZE) {
-            throw connectionError(PROTOCOL_ERROR, "Header Table Size must be >= %d and <= %d but was %d",
-                    MIN_HEADER_TABLE_SIZE, MAX_HEADER_TABLE_SIZE, maxHeaderTableSize);
+            throw connectionError(PROTOCOL_ERROR, "Header Table Size must be >= %d and <= %d but was %d", MIN_HEADER_TABLE_SIZE, MAX_HEADER_TABLE_SIZE, maxHeaderTableSize);
         }
         if (this.maxHeaderTableSize == maxHeaderTableSize) {
             return;
@@ -215,41 +217,15 @@ final class HpackEncoder {
         return maxHeaderTableSize;
     }
 
-    public void setMaxHeaderListSize(long maxHeaderListSize) throws Http2Exception {
-        if (maxHeaderListSize < MIN_HEADER_LIST_SIZE || maxHeaderListSize > MAX_HEADER_LIST_SIZE) {
-            throw connectionError(PROTOCOL_ERROR, "Header List Size must be >= %d and <= %d but was %d",
-                    MIN_HEADER_LIST_SIZE, MAX_HEADER_LIST_SIZE, maxHeaderListSize);
-        }
-        this.maxHeaderListSize = maxHeaderListSize;
-    }
-
     public long getMaxHeaderListSize() {
         return maxHeaderListSize;
     }
 
-    /**
-     * Encode integer according to <a href="https://tools.ietf.org/html/rfc7541#section-5.1">Section 5.1</a>.
-     */
-    private static void encodeInteger(ByteBuf out, int mask, int n, int i) {
-        encodeInteger(out, mask, n, (long) i);
-    }
-
-    /**
-     * Encode integer according to <a href="https://tools.ietf.org/html/rfc7541#section-5.1">Section 5.1</a>.
-     */
-    private static void encodeInteger(ByteBuf out, int mask, int n, long i) {
-        assert n >= 0 && n <= 8 : "N: " + n;
-        int nbits = 0xFF >>> (8 - n);
-        if (i < nbits) {
-            out.writeByte((int) (mask | i));
-        } else {
-            out.writeByte(mask | nbits);
-            long length = i - nbits;
-            for (; (length & ~0x7F) != 0; length >>>= 7) {
-                out.writeByte((int) ((length & 0x7F) | 0x80));
-            }
-            out.writeByte((int) length);
+    public void setMaxHeaderListSize(long maxHeaderListSize) throws Http2Exception {
+        if (maxHeaderListSize < MIN_HEADER_LIST_SIZE || maxHeaderListSize > MAX_HEADER_LIST_SIZE) {
+            throw connectionError(PROTOCOL_ERROR, "Header List Size must be >= %d and <= %d but was %d", MIN_HEADER_LIST_SIZE, MAX_HEADER_LIST_SIZE, maxHeaderListSize);
         }
+        this.maxHeaderListSize = maxHeaderListSize;
     }
 
     /**
@@ -257,8 +233,7 @@ final class HpackEncoder {
      */
     private void encodeStringLiteral(ByteBuf out, CharSequence string) {
         int huffmanLength;
-        if (string.length() >= huffCodeThreshold
-                && (huffmanLength = hpackHuffmanEncoder.getEncodedLength(string)) < string.length()) {
+        if (string.length() >= huffCodeThreshold && (huffmanLength = hpackHuffmanEncoder.getEncodedLength(string)) < string.length()) {
             encodeInteger(out, 0x80, 7, huffmanLength);
             hpackHuffmanEncoder.encode(out, string);
         } else {
@@ -278,8 +253,7 @@ final class HpackEncoder {
     /**
      * Encode literal header field according to Section 6.2.
      */
-    private void encodeLiteral(ByteBuf out, CharSequence name, CharSequence value, IndexType indexType,
-                               int nameIndex) {
+    private void encodeLiteral(ByteBuf out, CharSequence name, CharSequence value, IndexType indexType, int nameIndex) {
         boolean nameIndexValid = nameIndex != -1;
         switch (indexType) {
             case INCREMENTAL:

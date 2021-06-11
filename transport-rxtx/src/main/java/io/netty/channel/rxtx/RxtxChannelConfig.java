@@ -26,7 +26,7 @@ import io.netty.channel.WriteBufferWaterMark;
  * A configuration class for RXTX device connections.
  *
  * <h3>Available options</h3>
- *
+ * <p>
  * In addition to the options provided by {@link ChannelConfig},
  * {@link DefaultRxtxChannelConfig} allows the following options in the option map:
  *
@@ -54,121 +54,11 @@ import io.netty.channel.WriteBufferWaterMark;
  */
 @Deprecated
 public interface RxtxChannelConfig extends ChannelConfig {
-    enum Stopbits {
-        /**
-         * 1 stop bit will be sent at the end of every character
-         */
-        STOPBITS_1(SerialPort.STOPBITS_1),
-        /**
-         * 2 stop bits will be sent at the end of every character
-         */
-        STOPBITS_2(SerialPort.STOPBITS_2),
-        /**
-         * 1.5 stop bits will be sent at the end of every character
-         */
-        STOPBITS_1_5(SerialPort.STOPBITS_1_5);
+    /**
+     * @return The configured baud rate, defaulting to 115200 if unset
+     */
+    int getBaudrate();
 
-        private final int value;
-
-        Stopbits(int value) {
-            this.value = value;
-        }
-
-        public int value() {
-            return value;
-        }
-
-        public static Stopbits valueOf(int value) {
-            for (Stopbits stopbit : Stopbits.values()) {
-                if (stopbit.value == value) {
-                    return stopbit;
-                }
-            }
-            throw new IllegalArgumentException("unknown " + Stopbits.class.getSimpleName() + " value: " + value);
-        }
-    }
-
-    enum Databits {
-        /**
-         * 5 data bits will be used for each character (ie. Baudot code)
-         */
-        DATABITS_5(SerialPort.DATABITS_5),
-        /**
-         * 6 data bits will be used for each character
-         */
-        DATABITS_6(SerialPort.DATABITS_6),
-        /**
-         * 7 data bits will be used for each character (ie. ASCII)
-         */
-        DATABITS_7(SerialPort.DATABITS_7),
-        /**
-         * 8 data bits will be used for each character (ie. binary data)
-         */
-        DATABITS_8(SerialPort.DATABITS_8);
-
-        private final int value;
-
-        Databits(int value) {
-            this.value = value;
-        }
-
-        public int value() {
-            return value;
-        }
-
-        public static Databits valueOf(int value) {
-            for (Databits databit : Databits.values()) {
-                if (databit.value == value) {
-                    return databit;
-                }
-            }
-            throw new IllegalArgumentException("unknown " + Databits.class.getSimpleName() + " value: " + value);
-        }
-    }
-
-    enum Paritybit {
-        /**
-         * No parity bit will be sent with each data character at all
-         */
-        NONE(SerialPort.PARITY_NONE),
-        /**
-         * An odd parity bit will be sent with each data character, ie. will be set
-         * to 1 if the data character contains an even number of bits set to 1.
-         */
-        ODD(SerialPort.PARITY_ODD),
-        /**
-         * An even parity bit will be sent with each data character, ie. will be set
-         * to 1 if the data character contains an odd number of bits set to 1.
-         */
-        EVEN(SerialPort.PARITY_EVEN),
-        /**
-         * A mark parity bit (ie. always 1) will be sent with each data character
-         */
-        MARK(SerialPort.PARITY_MARK),
-        /**
-         * A space parity bit (ie. always 0) will be sent with each data character
-         */
-        SPACE(SerialPort.PARITY_SPACE);
-
-        private final int value;
-
-        Paritybit(int value) {
-            this.value = value;
-        }
-
-        public int value() {
-            return value;
-        }
-
-        public static Paritybit valueOf(int value) {
-            for (Paritybit paritybit : Paritybit.values()) {
-                if (paritybit.value == value) {
-                    return paritybit;
-                }
-            }
-            throw new IllegalArgumentException("unknown " + Paritybit.class.getSimpleName() + " value: " + value);
-        }
-    }
     /**
      * Sets the baud rate (ie. bits per second) for communication with the serial device.
      * The baud rate will include bits for framing (in the form of stop bits and parity),
@@ -179,12 +69,22 @@ public interface RxtxChannelConfig extends ChannelConfig {
     RxtxChannelConfig setBaudrate(int baudrate);
 
     /**
+     * @return The configured stop bits, defaulting to {@link Stopbits#STOPBITS_1} if unset
+     */
+    Stopbits getStopbits();
+
+    /**
      * Sets the number of stop bits to include at the end of every character to aid the
      * serial device in synchronising with the data.
      *
      * @param stopbits The number of stop bits to use
      */
     RxtxChannelConfig setStopbits(Stopbits stopbits);
+
+    /**
+     * @return The configured data bits, defaulting to {@link Databits#DATABITS_8} if unset
+     */
+    Databits getDatabits();
 
     /**
      * Sets the number of data bits to use to make up each character sent to the serial
@@ -195,31 +95,16 @@ public interface RxtxChannelConfig extends ChannelConfig {
     RxtxChannelConfig setDatabits(Databits databits);
 
     /**
+     * @return The configured parity bit, defaulting to {@link Paritybit#NONE} if unset
+     */
+    Paritybit getParitybit();
+
+    /**
      * Sets the type of parity bit to be used when communicating with the serial device.
      *
      * @param paritybit The type of parity bit to be used
      */
     RxtxChannelConfig setParitybit(Paritybit paritybit);
-
-    /**
-     * @return The configured baud rate, defaulting to 115200 if unset
-     */
-    int getBaudrate();
-
-    /**
-     * @return The configured stop bits, defaulting to {@link Stopbits#STOPBITS_1} if unset
-     */
-    Stopbits getStopbits();
-
-    /**
-     * @return The configured data bits, defaulting to {@link Databits#DATABITS_8} if unset
-     */
-    Databits getDatabits();
-
-    /**
-     * @return The configured parity bit, defaulting to {@link Paritybit#NONE} if unset
-     */
-    Paritybit getParitybit();
 
     /**
      * @return true if the serial device should support the Data Terminal Ready signal
@@ -249,7 +134,7 @@ public interface RxtxChannelConfig extends ChannelConfig {
 
     /**
      * @return The number of milliseconds to wait between opening the serial port and
-     *     initialising.
+     * initialising.
      */
     int getWaitTimeMillis();
 
@@ -259,20 +144,20 @@ public interface RxtxChannelConfig extends ChannelConfig {
      * occur.
      *
      * @param waitTimeMillis The number of milliseconds to wait, defaulting to 0 (no
-     *     wait) if unset
+     *                       wait) if unset
      * @throws IllegalArgumentException if the supplied value is &lt; 0
      */
     RxtxChannelConfig setWaitTimeMillis(int waitTimeMillis);
 
     /**
-     * Sets the maximal time (in ms) to block while try to read from the serial port. Default is 1000ms
-     */
-    RxtxChannelConfig setReadTimeout(int readTimeout);
-
-    /**
      * Return the maximal time (in ms) to block and wait for something to be ready to read.
      */
     int getReadTimeout();
+
+    /**
+     * Sets the maximal time (in ms) to block while try to read from the serial port. Default is 1000ms
+     */
+    RxtxChannelConfig setReadTimeout(int readTimeout);
 
     @Override
     RxtxChannelConfig setConnectTimeoutMillis(int connectTimeoutMillis);
@@ -307,4 +192,120 @@ public interface RxtxChannelConfig extends ChannelConfig {
 
     @Override
     RxtxChannelConfig setMessageSizeEstimator(MessageSizeEstimator estimator);
+
+    enum Stopbits {
+        /**
+         * 1 stop bit will be sent at the end of every character
+         */
+        STOPBITS_1(SerialPort.STOPBITS_1),
+        /**
+         * 2 stop bits will be sent at the end of every character
+         */
+        STOPBITS_2(SerialPort.STOPBITS_2),
+        /**
+         * 1.5 stop bits will be sent at the end of every character
+         */
+        STOPBITS_1_5(SerialPort.STOPBITS_1_5);
+
+        private final int value;
+
+        Stopbits(int value) {
+            this.value = value;
+        }
+
+        public static Stopbits valueOf(int value) {
+            for (Stopbits stopbit : Stopbits.values()) {
+                if (stopbit.value == value) {
+                    return stopbit;
+                }
+            }
+            throw new IllegalArgumentException("unknown " + Stopbits.class.getSimpleName() + " value: " + value);
+        }
+
+        public int value() {
+            return value;
+        }
+    }
+
+    enum Databits {
+        /**
+         * 5 data bits will be used for each character (ie. Baudot code)
+         */
+        DATABITS_5(SerialPort.DATABITS_5),
+        /**
+         * 6 data bits will be used for each character
+         */
+        DATABITS_6(SerialPort.DATABITS_6),
+        /**
+         * 7 data bits will be used for each character (ie. ASCII)
+         */
+        DATABITS_7(SerialPort.DATABITS_7),
+        /**
+         * 8 data bits will be used for each character (ie. binary data)
+         */
+        DATABITS_8(SerialPort.DATABITS_8);
+
+        private final int value;
+
+        Databits(int value) {
+            this.value = value;
+        }
+
+        public static Databits valueOf(int value) {
+            for (Databits databit : Databits.values()) {
+                if (databit.value == value) {
+                    return databit;
+                }
+            }
+            throw new IllegalArgumentException("unknown " + Databits.class.getSimpleName() + " value: " + value);
+        }
+
+        public int value() {
+            return value;
+        }
+    }
+
+    enum Paritybit {
+        /**
+         * No parity bit will be sent with each data character at all
+         */
+        NONE(SerialPort.PARITY_NONE),
+        /**
+         * An odd parity bit will be sent with each data character, ie. will be set
+         * to 1 if the data character contains an even number of bits set to 1.
+         */
+        ODD(SerialPort.PARITY_ODD),
+        /**
+         * An even parity bit will be sent with each data character, ie. will be set
+         * to 1 if the data character contains an odd number of bits set to 1.
+         */
+        EVEN(SerialPort.PARITY_EVEN),
+        /**
+         * A mark parity bit (ie. always 1) will be sent with each data character
+         */
+        MARK(SerialPort.PARITY_MARK),
+        /**
+         * A space parity bit (ie. always 0) will be sent with each data character
+         */
+        SPACE(SerialPort.PARITY_SPACE);
+
+        private final int value;
+
+        Paritybit(int value) {
+            this.value = value;
+        }
+
+        public static Paritybit valueOf(int value) {
+            for (Paritybit paritybit : Paritybit.values()) {
+                if (paritybit.value == value) {
+                    return paritybit;
+                }
+            }
+            throw new IllegalArgumentException("unknown " + Paritybit.class.getSimpleName() + " value: " + value);
+        }
+
+        public int value() {
+            return value;
+        }
+    }
 }

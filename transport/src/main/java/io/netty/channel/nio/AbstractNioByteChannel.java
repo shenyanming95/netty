@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.nio;
 
 import io.netty.buffer.ByteBuf;
@@ -35,9 +20,7 @@ import static io.netty.channel.internal.ChannelUtils.WRITE_STATUS_SNDBUF_FULL;
  */
 public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
-    private static final String EXPECTED_TYPES =
-            " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " +
-            StringUtil.simpleClassName(FileRegion.class) + ')';
+    private static final String EXPECTED_TYPES = " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " + StringUtil.simpleClassName(FileRegion.class) + ')';
 
     private final Runnable flushTask = new Runnable() {
         @Override
@@ -52,11 +35,15 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     /**
      * Create a new instance
      *
-     * @param parent            the parent {@link Channel} by which this instance was created. May be {@code null}
-     * @param ch                the underlying {@link SelectableChannel} on which it operates
+     * @param parent the parent {@link Channel} by which this instance was created. May be {@code null}
+     * @param ch     the underlying {@link SelectableChannel} on which it operates
      */
     protected AbstractNioByteChannel(Channel parent, SelectableChannel ch) {
         super(parent, ch, SelectionKey.OP_READ);
+    }
+
+    private static boolean isAllowHalfClosure(ChannelConfig config) {
+        return config instanceof SocketChannelConfig && ((SocketChannelConfig) config).isAllowHalfClosure();
     }
 
     /**
@@ -82,122 +69,9 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
         return isInputShutdown0() && (inputClosedSeenErrorOnRead || !isAllowHalfClosure(config));
     }
 
-    private static boolean isAllowHalfClosure(ChannelConfig config) {
-        return config instanceof SocketChannelConfig &&
-                ((SocketChannelConfig) config).isAllowHalfClosure();
-    }
-
-    protected class NioByteUnsafe extends AbstractNioUnsafe {
-
-        private void closeOnRead(ChannelPipeline pipeline) {
-            // 因为TCP是双通道的, 所以这边判断input这一方向是否关闭, 正常关闭流程中, 这边肯定为false, 所以走下面这个if语句
-            if (!isInputShutdown0()) {
-                // 判断是否支持半关？如果是, 关闭读, 触发事件
-                if (isAllowHalfClosure(config())) {
-                    shutdownInput();
-                    pipeline.fireUserEventTriggered(ChannelInputShutdownEvent.INSTANCE);
-                } else {
-                    // 大部分情况下是不支持半关, 调用close()方法
-                    close(voidPromise());
-                }
-            } else {
-                inputClosedSeenErrorOnRead = true;
-                pipeline.fireUserEventTriggered(ChannelInputShutdownReadComplete.INSTANCE);
-            }
-        }
-
-        private void handleReadException(ChannelPipeline pipeline, ByteBuf byteBuf, Throwable cause, boolean close,
-                RecvByteBufAllocator.Handle allocHandle) {
-            if (byteBuf != null) {
-                if (byteBuf.isReadable()) {
-                    readPending = false;
-                    pipeline.fireChannelRead(byteBuf);
-                } else {
-                    byteBuf.release();
-                }
-            }
-            allocHandle.readComplete();
-            pipeline.fireChannelReadComplete();
-            pipeline.fireExceptionCaught(cause);
-
-            // If oom will close the read event, release connection.
-            // See https://github.com/netty/netty/issues/10434
-            if (close || cause instanceof OutOfMemoryError || cause instanceof IOException) {
-                closeOnRead(pipeline);
-            }
-        }
-
-        @Override
-        public final void read() {
-            final ChannelConfig config = config();
-            if (shouldBreakReadReady(config)) {
-                clearReadPending();
-                return;
-            }
-            final ChannelPipeline pipeline = pipeline();
-            // 获取ByteBuf分配器
-            final ByteBufAllocator allocator = config.getAllocator();
-            // RecvByteBufAllocator可以动态地分配内存缓冲池
-            final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
-            allocHandle.reset(config);
-
-            ByteBuf byteBuf = null;
-            boolean close = false;
-            try {
-                // do..while循环, 重复多次读
-                do {
-                    // 首先获取一个ByteBuf
-                    byteBuf = allocHandle.allocate(allocator);
-                    // 调用doReadBytes()将数据装入byteBuf中, 然后记录读取的字节数
-                    allocHandle.lastBytesRead(doReadBytes(byteBuf));
-                    if (allocHandle.lastBytesRead() <= 0) {
-                        // 未读取到任何数据, 则释放byteBuf
-                        byteBuf.release();
-                        byteBuf = null;
-                        // 判断是否要关闭通道, 当接收的数据小于0, 说明就是要关闭通道了
-                        close = allocHandle.lastBytesRead() < 0;
-                        if (close) {
-                            // There is nothing left to read as we received an EOF.
-                            readPending = false;
-                        }
-                        break;
-                    }
-                    // 如果读取到数据了, 则计数+1
-                    allocHandle.incMessagesRead(1);
-                    readPending = false;
-                    // 触发业务读事件, 即netty会回调用户写的handler（业务逻辑处理就从这里开始调用）
-                    pipeline.fireChannelRead(byteBuf);
-                    byteBuf = null;
-                } while (allocHandle.continueReading());
-
-                // 跳出循环, 说明不需要再读取数据, 结束此次读事件, 同时记录读取了多少字节.
-                // 用于下次OP_READ事件来临时分配byteBuf大小使用
-                allocHandle.readComplete();
-                // 触发读取完毕事件, 即完成本次读取事件的处理
-                pipeline.fireChannelReadComplete();
-
-                if (close) {
-                    // 如果需要关闭, 关闭通道
-                    closeOnRead(pipeline);
-                }
-            } catch (Throwable t) {
-                handleReadException(pipeline, byteBuf, t, close, allocHandle);
-            } finally {
-                // Check if there is a readPending which was not processed yet.
-                // This could be for two reasons:
-                // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
-                // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
-                //
-                // See https://github.com/netty/netty/issues/2254
-                if (!readPending && !config.isAutoRead()) {
-                    removeReadOp();
-                }
-            }
-        }
-    }
-
     /**
      * Write objects to the OS.
+     *
      * @param in the collection which contains objects to write.
      * @return The value that should be decremented from the write quantum which starts at
      * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
@@ -289,8 +163,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             return msg;
         }
 
-        throw new UnsupportedOperationException(
-                "unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
+        throw new UnsupportedOperationException("unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
     }
 
     protected final void incompleteWrite(boolean setOpWrite) {
@@ -314,7 +187,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     /**
      * Write a {@link FileRegion}
      *
-     * @param region        the {@link FileRegion} from which the bytes should be written
+     * @param region the {@link FileRegion} from which the bytes should be written
      * @return amount       the amount of written bytes
      */
     protected abstract long doWriteFileRegion(FileRegion region) throws Exception;
@@ -326,7 +199,8 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
 
     /**
      * Write bytes form the given {@link ByteBuf} to the underlying {@link java.nio.channels.Channel}.
-     * @param buf           the {@link ByteBuf} from which the bytes should be written
+     *
+     * @param buf the {@link ByteBuf} from which the bytes should be written
      * @return amount       the amount of written bytes
      */
     protected abstract int doWriteBytes(ByteBuf buf) throws Exception;
@@ -356,6 +230,114 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
         final int interestOps = key.interestOps();
         if ((interestOps & SelectionKey.OP_WRITE) != 0) {
             key.interestOps(interestOps & ~SelectionKey.OP_WRITE);
+        }
+    }
+
+    protected class NioByteUnsafe extends AbstractNioUnsafe {
+
+        private void closeOnRead(ChannelPipeline pipeline) {
+            // 因为TCP是双通道的, 所以这边判断input这一方向是否关闭, 正常关闭流程中, 这边肯定为false, 所以走下面这个if语句
+            if (!isInputShutdown0()) {
+                // 判断是否支持半关？如果是, 关闭读, 触发事件
+                if (isAllowHalfClosure(config())) {
+                    shutdownInput();
+                    pipeline.fireUserEventTriggered(ChannelInputShutdownEvent.INSTANCE);
+                } else {
+                    // 大部分情况下是不支持半关, 调用close()方法
+                    close(voidPromise());
+                }
+            } else {
+                inputClosedSeenErrorOnRead = true;
+                pipeline.fireUserEventTriggered(ChannelInputShutdownReadComplete.INSTANCE);
+            }
+        }
+
+        private void handleReadException(ChannelPipeline pipeline, ByteBuf byteBuf, Throwable cause, boolean close, RecvByteBufAllocator.Handle allocHandle) {
+            if (byteBuf != null) {
+                if (byteBuf.isReadable()) {
+                    readPending = false;
+                    pipeline.fireChannelRead(byteBuf);
+                } else {
+                    byteBuf.release();
+                }
+            }
+            allocHandle.readComplete();
+            pipeline.fireChannelReadComplete();
+            pipeline.fireExceptionCaught(cause);
+
+            // If oom will close the read event, release connection.
+            // See https://github.com/netty/netty/issues/10434
+            if (close || cause instanceof OutOfMemoryError || cause instanceof IOException) {
+                closeOnRead(pipeline);
+            }
+        }
+
+        @Override
+        public final void read() {
+            final ChannelConfig config = config();
+            if (shouldBreakReadReady(config)) {
+                clearReadPending();
+                return;
+            }
+            final ChannelPipeline pipeline = pipeline();
+            // 获取ByteBuf分配器
+            final ByteBufAllocator allocator = config.getAllocator();
+            // RecvByteBufAllocator可以动态地分配内存缓冲池
+            final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
+            allocHandle.reset(config);
+
+            ByteBuf byteBuf = null;
+            boolean close = false;
+            try {
+                // do..while循环, 重复多次读
+                do {
+                    // 首先获取一个ByteBuf
+                    byteBuf = allocHandle.allocate(allocator);
+                    // 调用doReadBytes()将数据装入byteBuf中, 然后记录读取的字节数
+                    allocHandle.lastBytesRead(doReadBytes(byteBuf));
+                    if (allocHandle.lastBytesRead() <= 0) {
+                        // 未读取到任何数据, 则释放byteBuf
+                        byteBuf.release();
+                        byteBuf = null;
+                        // 判断是否要关闭通道, 当接收的数据小于0, 说明就是要关闭通道了
+                        close = allocHandle.lastBytesRead() < 0;
+                        if (close) {
+                            // There is nothing left to read as we received an EOF.
+                            readPending = false;
+                        }
+                        break;
+                    }
+                    // 如果读取到数据了, 则计数+1
+                    allocHandle.incMessagesRead(1);
+                    readPending = false;
+                    // 触发业务读事件, 即netty会回调用户写的handler（业务逻辑处理就从这里开始调用）
+                    pipeline.fireChannelRead(byteBuf);
+                    byteBuf = null;
+                } while (allocHandle.continueReading());
+
+                // 跳出循环, 说明不需要再读取数据, 结束此次读事件, 同时记录读取了多少字节.
+                // 用于下次OP_READ事件来临时分配byteBuf大小使用
+                allocHandle.readComplete();
+                // 触发读取完毕事件, 即完成本次读取事件的处理
+                pipeline.fireChannelReadComplete();
+
+                if (close) {
+                    // 如果需要关闭, 关闭通道
+                    closeOnRead(pipeline);
+                }
+            } catch (Throwable t) {
+                handleReadException(pipeline, byteBuf, t, close, allocHandle);
+            } finally {
+                // Check if there is a readPending which was not processed yet.
+                // This could be for two reasons:
+                // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
+                // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
+                //
+                // See https://github.com/netty/netty/issues/2254
+                if (!readPending && !config.isAutoRead()) {
+                    removeReadOp();
+                }
+            }
         }
     }
 }

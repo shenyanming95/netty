@@ -45,6 +45,10 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChannel {
     private static final ChannelMetadata METADATA = new ChannelMetadata(false);
+    final BsdSocket socket;
+    protected volatile boolean active;
+    boolean readReadyRunnablePending;
+    boolean inputClosedSeenErrorOnRead;
     /**
      * The future of the current connection attempt.  If not null, subsequent
      * connection attempts will fail.
@@ -52,13 +56,8 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
     private ChannelPromise connectPromise;
     private ScheduledFuture<?> connectTimeoutFuture;
     private SocketAddress requestedRemoteAddress;
-
-    final BsdSocket socket;
     private boolean readFilterEnabled;
     private boolean writeFilterEnabled;
-    boolean readReadyRunnablePending;
-    boolean inputClosedSeenErrorOnRead;
-    protected volatile boolean active;
     private volatile SocketAddress local;
     private volatile SocketAddress remote;
 
@@ -90,6 +89,27 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
         } catch (IOException e) {
             throw new ChannelException(e);
         }
+    }
+
+    private static ByteBuf newDirectBuffer0(Object holder, ByteBuf buf, ByteBufAllocator alloc, int capacity) {
+        final ByteBuf directBuf = alloc.directBuffer(capacity);
+        directBuf.writeBytes(buf, buf.readerIndex(), capacity);
+        ReferenceCountUtil.safeRelease(holder);
+        return directBuf;
+    }
+
+    protected static void checkResolvable(InetSocketAddress addr) {
+        if (addr.isUnresolved()) {
+            throw new UnresolvedAddressException();
+        }
+    }
+
+    private static boolean isAllowHalfClosure(ChannelConfig config) {
+        if (config instanceof KQueueDomainSocketChannelConfig) {
+            return ((KQueueDomainSocketChannelConfig) config).isAllowHalfClosure();
+        }
+
+        return config instanceof SocketChannelConfig && ((SocketChannelConfig) config).isAllowHalfClosure();
     }
 
     @Override
@@ -230,19 +250,6 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
         return directBuf;
     }
 
-    private static ByteBuf newDirectBuffer0(Object holder, ByteBuf buf, ByteBufAllocator alloc, int capacity) {
-        final ByteBuf directBuf = alloc.directBuffer(capacity);
-        directBuf.writeBytes(buf, buf.readerIndex(), capacity);
-        ReferenceCountUtil.safeRelease(holder);
-        return directBuf;
-    }
-
-    protected static void checkResolvable(InetSocketAddress addr) {
-        if (addr.isUnresolved()) {
-            throw new UnresolvedAddressException();
-        }
-    }
-
     /**
      * Read bytes into the given {@link ByteBuf} and return the amount.
      */
@@ -270,8 +277,7 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
                 return 1;
             }
         } else {
-            final ByteBuffer nioBuf = buf.nioBufferCount() == 1?
-                    buf.internalNioBuffer(buf.readerIndex(), buf.readableBytes()) : buf.nioBuffer();
+            final ByteBuffer nioBuf = buf.nioBufferCount() == 1 ? buf.internalNioBuffer(buf.readerIndex(), buf.readableBytes()) : buf.nioBuffer();
             int localFlushedAmount = socket.write(nioBuf, nioBuf.position(), nioBuf.limit());
             if (localFlushedAmount > 0) {
                 nioBuf.position(nioBuf.position() + localFlushedAmount);
@@ -284,15 +290,6 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
 
     final boolean shouldBreakReadReady(ChannelConfig config) {
         return socket.isInputShutdown() && (inputClosedSeenErrorOnRead || !isAllowHalfClosure(config));
-    }
-
-    private static boolean isAllowHalfClosure(ChannelConfig config) {
-        if (config instanceof KQueueDomainSocketChannelConfig) {
-            return ((KQueueDomainSocketChannelConfig) config).isAllowHalfClosure();
-        }
-
-        return config instanceof SocketChannelConfig &&
-                ((SocketChannelConfig) config).isAllowHalfClosure();
     }
 
     final void clearReadFilter() {
@@ -314,7 +311,7 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
                     }
                 });
             }
-        } else  {
+        } else {
             // The EventLoop is not registered atm so just update the flags so the correct value
             // will be used once the channel is registered
             readFilterEnabled = false;
@@ -350,6 +347,76 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
         if (isOpen()) {
             ((KQueueEventLoop) eventLoop()).evSet(this, filter, flags, fflags);
         }
+    }
+
+    @Override
+    protected void doBind(SocketAddress local) throws Exception {
+        if (local instanceof InetSocketAddress) {
+            checkResolvable((InetSocketAddress) local);
+        }
+        socket.bind(local);
+        this.local = socket.localAddress();
+    }
+
+    /**
+     * Connect to the remote peer
+     */
+    protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
+        if (localAddress instanceof InetSocketAddress) {
+            checkResolvable((InetSocketAddress) localAddress);
+        }
+
+        InetSocketAddress remoteSocketAddr = remoteAddress instanceof InetSocketAddress ? (InetSocketAddress) remoteAddress : null;
+        if (remoteSocketAddr != null) {
+            checkResolvable(remoteSocketAddr);
+        }
+
+        if (remote != null) {
+            // Check if already connected before trying to connect. This is needed as connect(...) will not return -1
+            // and set errno to EISCONN if a previous connect(...) attempt was setting errno to EINPROGRESS and finished
+            // later.
+            throw new AlreadyConnectedException();
+        }
+
+        if (localAddress != null) {
+            socket.bind(localAddress);
+        }
+
+        boolean connected = doConnect0(remoteAddress);
+        if (connected) {
+            remote = remoteSocketAddr == null ? remoteAddress : computeRemoteAddr(remoteSocketAddr, socket.remoteAddress());
+        }
+        // We always need to set the localAddress even if not connected yet as the bind already took place.
+        //
+        // See https://github.com/netty/netty/issues/3463
+        local = socket.localAddress();
+        return connected;
+    }
+
+    private boolean doConnect0(SocketAddress remote) throws Exception {
+        boolean success = false;
+        try {
+            boolean connected = socket.connect(remote);
+            if (!connected) {
+                writeFilter(true);
+            }
+            success = true;
+            return connected;
+        } finally {
+            if (!success) {
+                doClose();
+            }
+        }
+    }
+
+    @Override
+    protected SocketAddress localAddress0() {
+        return local;
+    }
+
+    @Override
+    protected SocketAddress remoteAddress0() {
+        return remote;
     }
 
     abstract class AbstractKQueueUnsafe extends AbstractUnsafe {
@@ -406,8 +473,7 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
                 // successfully complete the connectPromise and update the channel state to active (which is incorrect).
                 ChannelPromise connectPromise = AbstractKQueueChannel.this.connectPromise;
                 AbstractKQueueChannel.this.connectPromise = null;
-                if (connectPromise.tryFailure((cause instanceof ConnectException) ? cause
-                                : new ConnectException("failed to connect").initCause(cause))) {
+                if (connectPromise.tryFailure((cause instanceof ConnectException) ? cause : new ConnectException("failed to connect").initCause(cause))) {
                     closeIfClosed();
                     return true;
                 }
@@ -479,8 +545,7 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
         @Override
         public KQueueRecvByteAllocatorHandle recvBufAllocHandle() {
             if (allocHandle == null) {
-                allocHandle = new KQueueRecvByteAllocatorHandle(
-                        (RecvByteBufAllocator.ExtendedHandle) super.recvBufAllocHandle());
+                allocHandle = new KQueueRecvByteAllocatorHandle((RecvByteBufAllocator.ExtendedHandle) super.recvBufAllocHandle());
             }
             return allocHandle;
         }
@@ -522,8 +587,7 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
         }
 
         @Override
-        public void connect(
-                final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise promise) {
+        public void connect(final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise promise) {
             if (!promise.setUncancellable() || !ensureOpen(promise)) {
                 return;
             }
@@ -547,8 +611,7 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
                             @Override
                             public void run() {
                                 ChannelPromise connectPromise = AbstractKQueueChannel.this.connectPromise;
-                                ConnectTimeoutException cause =
-                                        new ConnectTimeoutException("connection timed out: " + remoteAddress);
+                                ConnectTimeoutException cause = new ConnectTimeoutException("connection timed out: " + remoteAddress);
                                 if (connectPromise != null && connectPromise.tryFailure(cause)) {
                                     close(voidPromise());
                                 }
@@ -652,77 +715,5 @@ abstract class AbstractKQueueChannel extends AbstractChannel implements UnixChan
             writeFilter(true);
             return false;
         }
-    }
-
-    @Override
-    protected void doBind(SocketAddress local) throws Exception {
-        if (local instanceof InetSocketAddress) {
-            checkResolvable((InetSocketAddress) local);
-        }
-        socket.bind(local);
-        this.local = socket.localAddress();
-    }
-
-    /**
-     * Connect to the remote peer
-     */
-    protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
-        if (localAddress instanceof InetSocketAddress) {
-            checkResolvable((InetSocketAddress) localAddress);
-        }
-
-        InetSocketAddress remoteSocketAddr = remoteAddress instanceof InetSocketAddress
-                ? (InetSocketAddress) remoteAddress : null;
-        if (remoteSocketAddr != null) {
-            checkResolvable(remoteSocketAddr);
-        }
-
-        if (remote != null) {
-            // Check if already connected before trying to connect. This is needed as connect(...) will not return -1
-            // and set errno to EISCONN if a previous connect(...) attempt was setting errno to EINPROGRESS and finished
-            // later.
-            throw new AlreadyConnectedException();
-        }
-
-        if (localAddress != null) {
-            socket.bind(localAddress);
-        }
-
-        boolean connected = doConnect0(remoteAddress);
-        if (connected) {
-            remote = remoteSocketAddr == null?
-                    remoteAddress : computeRemoteAddr(remoteSocketAddr, socket.remoteAddress());
-        }
-        // We always need to set the localAddress even if not connected yet as the bind already took place.
-        //
-        // See https://github.com/netty/netty/issues/3463
-        local = socket.localAddress();
-        return connected;
-    }
-
-    private boolean doConnect0(SocketAddress remote) throws Exception {
-        boolean success = false;
-        try {
-            boolean connected = socket.connect(remote);
-            if (!connected) {
-                writeFilter(true);
-            }
-            success = true;
-            return connected;
-        } finally {
-            if (!success) {
-                doClose();
-            }
-        }
-    }
-
-    @Override
-    protected SocketAddress localAddress0() {
-        return local;
-    }
-
-    @Override
-    protected SocketAddress remoteAddress0() {
-        return remote;
     }
 }

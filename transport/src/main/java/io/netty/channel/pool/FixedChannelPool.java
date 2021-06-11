@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.pool;
 
 import io.netty.bootstrap.Bootstrap;
@@ -35,22 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class FixedChannelPool extends SimpleChannelPool {
 
-    public enum AcquireTimeoutAction {
-        /**
-         * Create a new connection when the timeout is detected.
-         */
-        NEW,
-
-        /**
-         * Fail the {@link Future} of the acquire call with a {@link TimeoutException}.
-         */
-        FAIL
-    }
-
     private final EventExecutor executor;
     private final long acquireTimeoutNanos;
     private final Runnable timeoutTask;
-
     // There is no need to worry about synchronization as everything that modified the queue or counts is done
     // by the above EventExecutor.
     private final Queue<AcquireTask> pendingAcquireQueue = new ArrayDeque<AcquireTask>();
@@ -63,111 +35,95 @@ public class FixedChannelPool extends SimpleChannelPool {
     /**
      * Creates a new instance using the {@link ChannelHealthChecker#ACTIVE}.
      *
-     * @param bootstrap         the {@link Bootstrap} that is used for connections
-     * @param handler           the {@link ChannelPoolHandler} that will be notified for the different pool actions
-     * @param maxConnections    the number of maximal active connections, once this is reached new tries to acquire
-     *                          a {@link Channel} will be delayed until a connection is returned to the pool again.
+     * @param bootstrap      the {@link Bootstrap} that is used for connections
+     * @param handler        the {@link ChannelPoolHandler} that will be notified for the different pool actions
+     * @param maxConnections the number of maximal active connections, once this is reached new tries to acquire
+     *                       a {@link Channel} will be delayed until a connection is returned to the pool again.
      */
-    public FixedChannelPool(Bootstrap bootstrap,
-                            ChannelPoolHandler handler, int maxConnections) {
+    public FixedChannelPool(Bootstrap bootstrap, ChannelPoolHandler handler, int maxConnections) {
         this(bootstrap, handler, maxConnections, Integer.MAX_VALUE);
     }
 
     /**
      * Creates a new instance using the {@link ChannelHealthChecker#ACTIVE}.
      *
-     * @param bootstrap             the {@link Bootstrap} that is used for connections
-     * @param handler               the {@link ChannelPoolHandler} that will be notified for the different pool actions
-     * @param maxConnections        the number of maximal active connections, once this is reached new tries to
-     *                              acquire a {@link Channel} will be delayed until a connection is returned to the
-     *                              pool again.
-     * @param maxPendingAcquires    the maximum number of pending acquires. Once this is exceed acquire tries will
-     *                              be failed.
+     * @param bootstrap          the {@link Bootstrap} that is used for connections
+     * @param handler            the {@link ChannelPoolHandler} that will be notified for the different pool actions
+     * @param maxConnections     the number of maximal active connections, once this is reached new tries to
+     *                           acquire a {@link Channel} will be delayed until a connection is returned to the
+     *                           pool again.
+     * @param maxPendingAcquires the maximum number of pending acquires. Once this is exceed acquire tries will
+     *                           be failed.
      */
-    public FixedChannelPool(Bootstrap bootstrap,
-                            ChannelPoolHandler handler, int maxConnections, int maxPendingAcquires) {
+    public FixedChannelPool(Bootstrap bootstrap, ChannelPoolHandler handler, int maxConnections, int maxPendingAcquires) {
         this(bootstrap, handler, ChannelHealthChecker.ACTIVE, null, -1, maxConnections, maxPendingAcquires);
     }
 
     /**
      * Creates a new instance.
      *
-     * @param bootstrap             the {@link Bootstrap} that is used for connections
-     * @param handler               the {@link ChannelPoolHandler} that will be notified for the different pool actions
-     * @param healthCheck           the {@link ChannelHealthChecker} that will be used to check if a {@link Channel} is
-     *                              still healthy when obtain from the {@link ChannelPool}
-     * @param action                the {@link AcquireTimeoutAction} to use or {@code null} if non should be used.
-     *                              In this case {@param acquireTimeoutMillis} must be {@code -1}.
-     * @param acquireTimeoutMillis  the time (in milliseconds) after which an pending acquire must complete or
-     *                              the {@link AcquireTimeoutAction} takes place.
-     * @param maxConnections        the number of maximal active connections, once this is reached new tries to
-     *                              acquire a {@link Channel} will be delayed until a connection is returned to the
-     *                              pool again.
-     * @param maxPendingAcquires    the maximum number of pending acquires. Once this is exceed acquire tries will
-     *                              be failed.
+     * @param bootstrap            the {@link Bootstrap} that is used for connections
+     * @param handler              the {@link ChannelPoolHandler} that will be notified for the different pool actions
+     * @param healthCheck          the {@link ChannelHealthChecker} that will be used to check if a {@link Channel} is
+     *                             still healthy when obtain from the {@link ChannelPool}
+     * @param action               the {@link AcquireTimeoutAction} to use or {@code null} if non should be used.
+     *                             In this case {@param acquireTimeoutMillis} must be {@code -1}.
+     * @param acquireTimeoutMillis the time (in milliseconds) after which an pending acquire must complete or
+     *                             the {@link AcquireTimeoutAction} takes place.
+     * @param maxConnections       the number of maximal active connections, once this is reached new tries to
+     *                             acquire a {@link Channel} will be delayed until a connection is returned to the
+     *                             pool again.
+     * @param maxPendingAcquires   the maximum number of pending acquires. Once this is exceed acquire tries will
+     *                             be failed.
      */
-    public FixedChannelPool(Bootstrap bootstrap,
-                            ChannelPoolHandler handler,
-                            ChannelHealthChecker healthCheck, AcquireTimeoutAction action,
-                            final long acquireTimeoutMillis,
-                            int maxConnections, int maxPendingAcquires) {
+    public FixedChannelPool(Bootstrap bootstrap, ChannelPoolHandler handler, ChannelHealthChecker healthCheck, AcquireTimeoutAction action, final long acquireTimeoutMillis, int maxConnections, int maxPendingAcquires) {
         this(bootstrap, handler, healthCheck, action, acquireTimeoutMillis, maxConnections, maxPendingAcquires, true);
     }
 
     /**
      * Creates a new instance.
      *
-     * @param bootstrap             the {@link Bootstrap} that is used for connections
-     * @param handler               the {@link ChannelPoolHandler} that will be notified for the different pool actions
-     * @param healthCheck           the {@link ChannelHealthChecker} that will be used to check if a {@link Channel} is
-     *                              still healthy when obtain from the {@link ChannelPool}
-     * @param action                the {@link AcquireTimeoutAction} to use or {@code null} if non should be used.
-     *                              In this case {@param acquireTimeoutMillis} must be {@code -1}.
-     * @param acquireTimeoutMillis  the time (in milliseconds) after which an pending acquire must complete or
-     *                              the {@link AcquireTimeoutAction} takes place.
-     * @param maxConnections        the number of maximal active connections, once this is reached new tries to
-     *                              acquire a {@link Channel} will be delayed until a connection is returned to the
-     *                              pool again.
-     * @param maxPendingAcquires    the maximum number of pending acquires. Once this is exceed acquire tries will
-     *                              be failed.
-     * @param releaseHealthCheck    will check channel health before offering back if this parameter set to
-     *                              {@code true}.
+     * @param bootstrap            the {@link Bootstrap} that is used for connections
+     * @param handler              the {@link ChannelPoolHandler} that will be notified for the different pool actions
+     * @param healthCheck          the {@link ChannelHealthChecker} that will be used to check if a {@link Channel} is
+     *                             still healthy when obtain from the {@link ChannelPool}
+     * @param action               the {@link AcquireTimeoutAction} to use or {@code null} if non should be used.
+     *                             In this case {@param acquireTimeoutMillis} must be {@code -1}.
+     * @param acquireTimeoutMillis the time (in milliseconds) after which an pending acquire must complete or
+     *                             the {@link AcquireTimeoutAction} takes place.
+     * @param maxConnections       the number of maximal active connections, once this is reached new tries to
+     *                             acquire a {@link Channel} will be delayed until a connection is returned to the
+     *                             pool again.
+     * @param maxPendingAcquires   the maximum number of pending acquires. Once this is exceed acquire tries will
+     *                             be failed.
+     * @param releaseHealthCheck   will check channel health before offering back if this parameter set to
+     *                             {@code true}.
      */
-    public FixedChannelPool(Bootstrap bootstrap,
-                            ChannelPoolHandler handler,
-                            ChannelHealthChecker healthCheck, AcquireTimeoutAction action,
-                            final long acquireTimeoutMillis,
-                            int maxConnections, int maxPendingAcquires, final boolean releaseHealthCheck) {
-        this(bootstrap, handler, healthCheck, action, acquireTimeoutMillis, maxConnections, maxPendingAcquires,
-                releaseHealthCheck, true);
+    public FixedChannelPool(Bootstrap bootstrap, ChannelPoolHandler handler, ChannelHealthChecker healthCheck, AcquireTimeoutAction action, final long acquireTimeoutMillis, int maxConnections, int maxPendingAcquires, final boolean releaseHealthCheck) {
+        this(bootstrap, handler, healthCheck, action, acquireTimeoutMillis, maxConnections, maxPendingAcquires, releaseHealthCheck, true);
     }
 
     /**
      * Creates a new instance.
      *
-     * @param bootstrap             the {@link Bootstrap} that is used for connections
-     * @param handler               the {@link ChannelPoolHandler} that will be notified for the different pool actions
-     * @param healthCheck           the {@link ChannelHealthChecker} that will be used to check if a {@link Channel} is
-     *                              still healthy when obtain from the {@link ChannelPool}
-     * @param action                the {@link AcquireTimeoutAction} to use or {@code null} if non should be used.
-     *                              In this case {@param acquireTimeoutMillis} must be {@code -1}.
-     * @param acquireTimeoutMillis  the time (in milliseconds) after which an pending acquire must complete or
-     *                              the {@link AcquireTimeoutAction} takes place.
-     * @param maxConnections        the number of maximal active connections, once this is reached new tries to
-     *                              acquire a {@link Channel} will be delayed until a connection is returned to the
-     *                              pool again.
-     * @param maxPendingAcquires    the maximum number of pending acquires. Once this is exceed acquire tries will
-     *                              be failed.
-     * @param releaseHealthCheck    will check channel health before offering back if this parameter set to
-     *                              {@code true}.
-     * @param lastRecentUsed        {@code true} {@link Channel} selection will be LIFO, if {@code false} FIFO.
+     * @param bootstrap            the {@link Bootstrap} that is used for connections
+     * @param handler              the {@link ChannelPoolHandler} that will be notified for the different pool actions
+     * @param healthCheck          the {@link ChannelHealthChecker} that will be used to check if a {@link Channel} is
+     *                             still healthy when obtain from the {@link ChannelPool}
+     * @param action               the {@link AcquireTimeoutAction} to use or {@code null} if non should be used.
+     *                             In this case {@param acquireTimeoutMillis} must be {@code -1}.
+     * @param acquireTimeoutMillis the time (in milliseconds) after which an pending acquire must complete or
+     *                             the {@link AcquireTimeoutAction} takes place.
+     * @param maxConnections       the number of maximal active connections, once this is reached new tries to
+     *                             acquire a {@link Channel} will be delayed until a connection is returned to the
+     *                             pool again.
+     * @param maxPendingAcquires   the maximum number of pending acquires. Once this is exceed acquire tries will
+     *                             be failed.
+     * @param releaseHealthCheck   will check channel health before offering back if this parameter set to
+     *                             {@code true}.
+     * @param lastRecentUsed       {@code true} {@link Channel} selection will be LIFO, if {@code false} FIFO.
      */
-    public FixedChannelPool(Bootstrap bootstrap,
-                            ChannelPoolHandler handler,
-                            ChannelHealthChecker healthCheck, AcquireTimeoutAction action,
-                            final long acquireTimeoutMillis,
-                            int maxConnections, int maxPendingAcquires,
-                            boolean releaseHealthCheck, boolean lastRecentUsed) {
+    public FixedChannelPool(Bootstrap bootstrap, ChannelPoolHandler handler, ChannelHealthChecker healthCheck, AcquireTimeoutAction action, final long acquireTimeoutMillis, int maxConnections, int maxPendingAcquires, boolean releaseHealthCheck, boolean lastRecentUsed) {
         super(bootstrap, handler, healthCheck, releaseHealthCheck, lastRecentUsed);
         if (maxConnections < 1) {
             throw new IllegalArgumentException("maxConnections: " + maxConnections + " (expected: >= 1)");
@@ -185,35 +141,34 @@ public class FixedChannelPool extends SimpleChannelPool {
         } else {
             acquireTimeoutNanos = TimeUnit.MILLISECONDS.toNanos(acquireTimeoutMillis);
             switch (action) {
-            case FAIL:
-                timeoutTask = new TimeoutTask() {
-                    @Override
-                    public void onTimeout(AcquireTask task) {
-                        // Fail the promise as we timed out.
-                        task.promise.setFailure(new TimeoutException(
-                                "Acquire operation took longer then configured maximum time") {
-                            @Override
-                            public Throwable fillInStackTrace() {
-                                return this;
-                            }
-                        });
-                    }
-                };
-                break;
-            case NEW:
-                timeoutTask = new TimeoutTask() {
-                    @Override
-                    public void onTimeout(AcquireTask task) {
-                        // Increment the acquire count and delegate to super to actually acquire a Channel which will
-                        // create a new connection.
-                        task.acquired();
+                case FAIL:
+                    timeoutTask = new TimeoutTask() {
+                        @Override
+                        public void onTimeout(AcquireTask task) {
+                            // Fail the promise as we timed out.
+                            task.promise.setFailure(new TimeoutException("Acquire operation took longer then configured maximum time") {
+                                @Override
+                                public Throwable fillInStackTrace() {
+                                    return this;
+                                }
+                            });
+                        }
+                    };
+                    break;
+                case NEW:
+                    timeoutTask = new TimeoutTask() {
+                        @Override
+                        public void onTimeout(AcquireTask task) {
+                            // Increment the acquire count and delegate to super to actually acquire a Channel which will
+                            // create a new connection.
+                            task.acquired();
 
-                        FixedChannelPool.super.acquire(task.promise);
-                    }
-                };
-                break;
-            default:
-                throw new Error();
+                            FixedChannelPool.super.acquire(task.promise);
+                        }
+                    };
+                    break;
+                default:
+                    throw new Error();
             }
         }
         executor = bootstrap.config().group().next();
@@ -221,7 +176,9 @@ public class FixedChannelPool extends SimpleChannelPool {
         this.maxPendingAcquires = maxPendingAcquires;
     }
 
-    /** Returns the number of acquired channels that this pool thinks it has. */
+    /**
+     * Returns the number of acquired channels that this pool thinks it has.
+     */
     public int acquiredChannelCount() {
         return acquiredChannelCount.get();
     }
@@ -355,6 +312,91 @@ public class FixedChannelPool extends SimpleChannelPool {
         assert acquiredChannelCount.get() >= 0;
     }
 
+    @Override
+    public void close() {
+        try {
+            closeAsync().await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Closes the pool in an async manner.
+     *
+     * @return Future which represents completion of the close task
+     */
+    @Override
+    public Future<Void> closeAsync() {
+        if (executor.inEventLoop()) {
+            return close0();
+        } else {
+            final Promise<Void> closeComplete = executor.newPromise();
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    close0().addListener(new FutureListener<Void>() {
+                        @Override
+                        public void operationComplete(Future<Void> f) throws Exception {
+                            if (f.isSuccess()) {
+                                closeComplete.setSuccess(null);
+                            } else {
+                                closeComplete.setFailure(f.cause());
+                            }
+                        }
+                    });
+                }
+            });
+            return closeComplete;
+        }
+    }
+
+    private Future<Void> close0() {
+        assert executor.inEventLoop();
+
+        if (!closed) {
+            closed = true;
+            for (; ; ) {
+                AcquireTask task = pendingAcquireQueue.poll();
+                if (task == null) {
+                    break;
+                }
+                ScheduledFuture<?> f = task.timeoutFuture;
+                if (f != null) {
+                    f.cancel(false);
+                }
+                task.promise.setFailure(new ClosedChannelException());
+            }
+            acquiredChannelCount.set(0);
+            pendingAcquireCount = 0;
+
+            // Ensure we dispatch this on another Thread as close0 will be called from the EventExecutor and we need
+            // to ensure we will not block in a EventExecutor.
+            return GlobalEventExecutor.INSTANCE.submit(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    FixedChannelPool.super.close();
+                    return null;
+                }
+            });
+        }
+
+        return GlobalEventExecutor.INSTANCE.newSucceededFuture(null);
+    }
+
+    public enum AcquireTimeoutAction {
+        /**
+         * Create a new connection when the timeout is detected.
+         */
+        NEW,
+
+        /**
+         * Fail the {@link Future} of the acquire call with a {@link TimeoutException}.
+         */
+        FAIL
+    }
+
     // AcquireTask extends AcquireListener to reduce object creations and so GC pressure
     private final class AcquireTask extends AcquireListener {
         final Promise<Channel> promise;
@@ -374,7 +416,7 @@ public class FixedChannelPool extends SimpleChannelPool {
         public final void run() {
             assert executor.inEventLoop();
             long nanoTime = System.nanoTime();
-            for (;;) {
+            for (; ; ) {
                 AcquireTask task = pendingAcquireQueue.peek();
                 // Compare nanoTime as descripted in the javadocs of System.nanoTime()
                 //
@@ -434,78 +476,5 @@ public class FixedChannelPool extends SimpleChannelPool {
             acquiredChannelCount.incrementAndGet();
             acquired = true;
         }
-    }
-
-    @Override
-    public void close() {
-        try {
-            closeAsync().await();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Closes the pool in an async manner.
-     *
-     * @return Future which represents completion of the close task
-     */
-    @Override
-    public Future<Void> closeAsync() {
-        if (executor.inEventLoop()) {
-            return close0();
-        } else {
-            final Promise<Void> closeComplete = executor.newPromise();
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    close0().addListener(new FutureListener<Void>() {
-                        @Override
-                        public void operationComplete(Future<Void> f) throws Exception {
-                            if (f.isSuccess()) {
-                                closeComplete.setSuccess(null);
-                            } else {
-                                closeComplete.setFailure(f.cause());
-                            }
-                        }
-                    });
-                }
-            });
-            return closeComplete;
-        }
-    }
-
-    private Future<Void> close0() {
-        assert executor.inEventLoop();
-
-        if (!closed) {
-            closed = true;
-            for (;;) {
-                AcquireTask task = pendingAcquireQueue.poll();
-                if (task == null) {
-                    break;
-                }
-                ScheduledFuture<?> f = task.timeoutFuture;
-                if (f != null) {
-                    f.cancel(false);
-                }
-                task.promise.setFailure(new ClosedChannelException());
-            }
-            acquiredChannelCount.set(0);
-            pendingAcquireCount = 0;
-
-            // Ensure we dispatch this on another Thread as close0 will be called from the EventExecutor and we need
-            // to ensure we will not block in a EventExecutor.
-            return GlobalEventExecutor.INSTANCE.submit(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    FixedChannelPool.super.close();
-                    return null;
-                }
-            });
-        }
-
-        return GlobalEventExecutor.INSTANCE.newSucceededFuture(null);
     }
 }

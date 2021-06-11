@@ -23,7 +23,8 @@ import io.netty.util.internal.logging.InternalLogger;
  */
 public final class PromiseNotificationUtil {
 
-    private PromiseNotificationUtil() { }
+    private PromiseNotificationUtil() {
+    }
 
     /**
      * Try to cancel the {@link Promise} and log if {@code logger} is not {@code null} in case this fails.
@@ -34,9 +35,7 @@ public final class PromiseNotificationUtil {
             if (err == null) {
                 logger.warn("Failed to cancel promise because it has succeeded already: {}", p);
             } else {
-                logger.warn(
-                        "Failed to cancel promise because it has failed already: {}, unnotified cause:",
-                        p, err);
+                logger.warn("Failed to cancel promise because it has failed already: {}, unnotified cause:", p, err);
             }
         }
     }
@@ -50,9 +49,7 @@ public final class PromiseNotificationUtil {
             if (err == null) {
                 logger.warn("Failed to mark a promise as success because it has succeeded already: {}", p);
             } else {
-                logger.warn(
-                        "Failed to mark a promise as success because it has failed already: {}, unnotified cause:",
-                        p, err);
+                logger.warn("Failed to mark a promise as success because it has failed already: {}, unnotified cause:", p, err);
             }
         }
     }
@@ -66,9 +63,7 @@ public final class PromiseNotificationUtil {
             if (err == null) {
                 logger.warn("Failed to mark a promise as failure because it has succeeded already: {}", p, cause);
             } else if (logger.isWarnEnabled()) {
-                logger.warn(
-                        "Failed to mark a promise as failure because it has failed already: {}, unnotified cause: {}",
-                        p, ThrowableUtil.stackTraceToString(err), cause);
+                logger.warn("Failed to mark a promise as failure because it has failed already: {}, unnotified cause: {}", p, ThrowableUtil.stackTraceToString(err), cause);
             }
         }
     }

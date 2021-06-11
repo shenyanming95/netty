@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.memcache.binary;
 
 import io.netty.buffer.ByteBuf;
@@ -37,8 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * will be passed up the pipeline and not queued up to the chunk size.
  */
 @UnstableApi
-public final class BinaryMemcacheClientCodec extends
-        CombinedChannelDuplexHandler<BinaryMemcacheResponseDecoder, BinaryMemcacheRequestEncoder> {
+public final class BinaryMemcacheClientCodec extends CombinedChannelDuplexHandler<BinaryMemcacheResponseDecoder, BinaryMemcacheRequestEncoder> {
 
     private final boolean failOnMissingResponse;
     private final AtomicLong requestResponseCounter = new AtomicLong();
@@ -95,7 +79,7 @@ public final class BinaryMemcacheClientCodec extends
 
             if (failOnMissingResponse) {
                 final int size = out.size();
-                for (int i = oldSize; i < size; i ++) {
+                for (int i = oldSize; i < size; i++) {
                     Object msg = out.get(i);
                     if (msg instanceof LastMemcacheContent) {
                         requestResponseCounter.decrementAndGet();
@@ -111,9 +95,7 @@ public final class BinaryMemcacheClientCodec extends
             if (failOnMissingResponse) {
                 long missingResponses = requestResponseCounter.get();
                 if (missingResponses > 0) {
-                    ctx.fireExceptionCaught(new PrematureChannelClosureException(
-                        "channel gone inactive with " + missingResponses +
-                            " missing response(s)"));
+                    ctx.fireExceptionCaught(new PrematureChannelClosureException("channel gone inactive with " + missingResponses + " missing response(s)"));
                 }
             }
         }

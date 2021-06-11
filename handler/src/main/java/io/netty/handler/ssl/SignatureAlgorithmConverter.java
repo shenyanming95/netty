@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import java.util.Locale;
@@ -22,11 +7,9 @@ import java.util.regex.Pattern;
 /**
  * Converts OpenSSL signature Algorithm names to
  * <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#Signature">
- *     Java signature Algorithm names</a>.
+ * Java signature Algorithm names</a>.
  */
 final class SignatureAlgorithmConverter {
-
-    private SignatureAlgorithmConverter() { }
 
     // OpenSSL has 3 different formats it uses at the moment we will match against all of these.
     // For example:
@@ -42,10 +25,13 @@ final class SignatureAlgorithmConverter {
     private static final Pattern PATTERN = Pattern.compile(
             // group 1 - 2
             "(?:(^[a-zA-Z].+)With(.+)Encryption$)|" +
-            // group 3 - 4
-            "(?:(^[a-zA-Z].+)(?:_with_|-with-|_pkcs1_|_pss_rsae_)(.+$))|" +
-            // group 5 - 6
-            "(?:(^[a-zA-Z].+)_(.+$))");
+                    // group 3 - 4
+                    "(?:(^[a-zA-Z].+)(?:_with_|-with-|_pkcs1_|_pss_rsae_)(.+$))|" +
+                    // group 5 - 6
+                    "(?:(^[a-zA-Z].+)_(.+$))");
+
+    private SignatureAlgorithmConverter() {
+    }
 
     /**
      * Converts an OpenSSL algorithm name to a Java algorithm name and return it,

@@ -26,12 +26,18 @@ import java.util.List;
 public class CodecOutputListBenchmark extends AbstractMicrobenchmark {
 
     private static final Object ELEMENT = new Object();
+    @Param({"1", "4"})
+    public int elements;
     private CodecOutputList codecOutputList;
     private RecyclableArrayList recycleableArrayList;
     private List<Object> arrayList;
 
-    @Param({ "1", "4" })
-    public int elements;
+    private static void benchmarkAddAndClear(List<Object> list, int elements) {
+        for (int i = 0; i < elements; i++) {
+            list.add(ELEMENT);
+        }
+        list.clear();
+    }
 
     @TearDown
     public void destroy() {
@@ -55,12 +61,5 @@ public class CodecOutputListBenchmark extends AbstractMicrobenchmark {
     public void arrayList() {
         arrayList = new ArrayList<Object>(16);
         benchmarkAddAndClear(arrayList, elements);
-    }
-
-    private static void benchmarkAddAndClear(List<Object> list, int elements) {
-        for (int i = 0; i < elements; i++) {
-            list.add(ELEMENT);
-        }
-        list.clear();
     }
 }

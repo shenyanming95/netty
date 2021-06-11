@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.handler.ssl;
 
 import io.netty.buffer.ByteBuf;
@@ -39,16 +23,17 @@ final class PemReader {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PemReader.class);
 
-    private static final Pattern CERT_PATTERN = Pattern.compile(
-            "-+BEGIN\\s+.*CERTIFICATE[^-]*-+(?:\\s|\\r|\\n)+" + // Header
+    private static final Pattern CERT_PATTERN = Pattern.compile("-+BEGIN\\s+.*CERTIFICATE[^-]*-+(?:\\s|\\r|\\n)+" + // Header
                     "([a-z0-9+/=\\r\\n]+)" +                    // Base64 text
                     "-+END\\s+.*CERTIFICATE[^-]*-+",            // Footer
             Pattern.CASE_INSENSITIVE);
-    private static final Pattern KEY_PATTERN = Pattern.compile(
-            "-+BEGIN\\s+.*PRIVATE\\s+KEY[^-]*-+(?:\\s|\\r|\\n)+" + // Header
+    private static final Pattern KEY_PATTERN = Pattern.compile("-+BEGIN\\s+.*PRIVATE\\s+KEY[^-]*-+(?:\\s|\\r|\\n)+" + // Header
                     "([a-z0-9+/=\\r\\n]+)" +                       // Base64 text
                     "-+END\\s+.*PRIVATE\\s+KEY[^-]*-+",            // Footer
             Pattern.CASE_INSENSITIVE);
+
+    private PemReader() {
+    }
 
     static ByteBuf[] readCertificates(File file) throws CertificateException {
         try {
@@ -75,7 +60,7 @@ final class PemReader {
         List<ByteBuf> certs = new ArrayList<ByteBuf>();
         Matcher m = CERT_PATTERN.matcher(content);
         int start = 0;
-        for (;;) {
+        for (; ; ) {
             if (!m.find(start)) {
                 break;
             }
@@ -119,8 +104,7 @@ final class PemReader {
 
         Matcher m = KEY_PATTERN.matcher(content);
         if (!m.find()) {
-            throw new KeyException("could not find a PKCS #8 private key in input stream" +
-                    " (see https://netty.io/wiki/sslcontextbuilder-and-private-key.html for more information)");
+            throw new KeyException("could not find a PKCS #8 private key in input stream" + " (see https://netty.io/wiki/sslcontextbuilder-and-private-key.html for more information)");
         }
 
         ByteBuf base64 = Unpooled.copiedBuffer(m.group(1), CharsetUtil.US_ASCII);
@@ -133,7 +117,7 @@ final class PemReader {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             byte[] buf = new byte[8192];
-            for (;;) {
+            for (; ; ) {
                 int ret = in.read(buf);
                 if (ret < 0) {
                     break;
@@ -161,6 +145,4 @@ final class PemReader {
             logger.warn("Failed to close a stream.", e);
         }
     }
-
-    private PemReader() { }
 }

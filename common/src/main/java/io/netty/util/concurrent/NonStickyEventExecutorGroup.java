@@ -60,8 +60,7 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
         while (executors.hasNext()) {
             EventExecutor executor = executors.next();
             if (executor instanceof OrderedEventExecutor) {
-                throw new IllegalArgumentException("EventExecutorGroup " + group
-                        + " contains OrderedEventExecutors: " + executor);
+                throw new IllegalArgumentException("EventExecutorGroup " + group + " contains OrderedEventExecutors: " + executor);
             }
         }
         return group;
@@ -180,14 +179,12 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
     }
 
     @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks) throws InterruptedException {
+    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
         return group.invokeAll(tasks);
     }
 
     @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
         return group.invokeAll(tasks, timeout, unit);
     }
 
@@ -197,8 +194,7 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
+    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         return group.invokeAny(tasks, timeout, unit);
     }
 
@@ -207,15 +203,12 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
         group.execute(command);
     }
 
-    private static final class NonStickyOrderedEventExecutor extends AbstractEventExecutor
-            implements Runnable, OrderedEventExecutor {
-        private final EventExecutor executor;
-        private final Queue<Runnable> tasks = PlatformDependent.newMpscQueue();
-
+    private static final class NonStickyOrderedEventExecutor extends AbstractEventExecutor implements Runnable, OrderedEventExecutor {
         private static final int NONE = 0;
         private static final int SUBMITTED = 1;
         private static final int RUNNING = 2;
-
+        private final EventExecutor executor;
+        private final Queue<Runnable> tasks = PlatformDependent.newMpscQueue();
         private final AtomicInteger state = new AtomicInteger();
         private final int maxTaskExecutePerRun;
 
@@ -230,7 +223,7 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
             if (!state.compareAndSet(SUBMITTED, RUNNING)) {
                 return;
             }
-            for (;;) {
+            for (; ; ) {
                 int i = 0;
                 try {
                     for (; i < maxTaskExecutePerRun; i++) {

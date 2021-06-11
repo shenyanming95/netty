@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.spdy;
 
 import java.util.Set;
@@ -22,14 +7,14 @@ import java.util.Set;
  */
 public interface SpdySettingsFrame extends SpdyFrame {
 
-    int SETTINGS_MINOR_VERSION                  = 0;
-    int SETTINGS_UPLOAD_BANDWIDTH               = 1;
-    int SETTINGS_DOWNLOAD_BANDWIDTH             = 2;
-    int SETTINGS_ROUND_TRIP_TIME                = 3;
-    int SETTINGS_MAX_CONCURRENT_STREAMS         = 4;
-    int SETTINGS_CURRENT_CWND                   = 5;
-    int SETTINGS_DOWNLOAD_RETRANS_RATE          = 6;
-    int SETTINGS_INITIAL_WINDOW_SIZE            = 7;
+    int SETTINGS_MINOR_VERSION = 0;
+    int SETTINGS_UPLOAD_BANDWIDTH = 1;
+    int SETTINGS_DOWNLOAD_BANDWIDTH = 2;
+    int SETTINGS_ROUND_TRIP_TIME = 3;
+    int SETTINGS_MAX_CONCURRENT_STREAMS = 4;
+    int SETTINGS_CURRENT_CWND = 5;
+    int SETTINGS_DOWNLOAD_RETRANS_RATE = 6;
+    int SETTINGS_INITIAL_WINDOW_SIZE = 7;
     int SETTINGS_CLIENT_CERTIFICATE_VECTOR_SIZE = 8;
 
     /**
@@ -72,7 +57,7 @@ public interface SpdySettingsFrame extends SpdyFrame {
     /**
      * Returns {@code true} if this setting should be persisted.
      * Returns {@code false} if this setting should not be persisted
-     *         or if the setting ID has no value.
+     * or if the setting ID has no value.
      */
     boolean isPersistValue(int id);
 
@@ -85,7 +70,7 @@ public interface SpdySettingsFrame extends SpdyFrame {
     /**
      * Returns {@code true} if this setting is persisted.
      * Returns {@code false} if this setting should not be persisted
-     *         or if the setting ID has no value.
+     * or if the setting ID has no value.
      */
     boolean isPersisted(int id);
 

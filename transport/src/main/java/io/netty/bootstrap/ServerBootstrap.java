@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.bootstrap;
 
 import io.netty.channel.*;
@@ -29,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * {@link Bootstrap} sub-class which allows easy bootstrap of {@link ServerChannel}
- *
  */
 public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerChannel> {
 
@@ -43,7 +27,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     private volatile EventLoopGroup childGroup;
     private volatile ChannelHandler childHandler;
 
-    public ServerBootstrap() { }
+    public ServerBootstrap() {
+    }
 
     private ServerBootstrap(ServerBootstrap bootstrap) {
         super(bootstrap);
@@ -163,8 +148,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
-                        pipeline.addLast(new ServerBootstrapAcceptor(
-                                ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
+                        pipeline.addLast(new ServerBootstrapAcceptor(ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
                     }
                 });
             }
@@ -182,84 +166,6 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             childGroup = config.group();
         }
         return this;
-    }
-
-    private static class ServerBootstrapAcceptor extends ChannelInboundHandlerAdapter {
-
-        private final EventLoopGroup childGroup;
-        private final ChannelHandler childHandler;
-        private final Entry<ChannelOption<?>, Object>[] childOptions;
-        private final Entry<AttributeKey<?>, Object>[] childAttrs;
-        private final Runnable enableAutoReadTask;
-
-        ServerBootstrapAcceptor(
-                final Channel channel, EventLoopGroup childGroup, ChannelHandler childHandler,
-                Entry<ChannelOption<?>, Object>[] childOptions, Entry<AttributeKey<?>, Object>[] childAttrs) {
-            this.childGroup = childGroup;
-            this.childHandler = childHandler;
-            this.childOptions = childOptions;
-            this.childAttrs = childAttrs;
-
-            // Task which is scheduled to re-enable auto-read.
-            // It's important to create this Runnable before we try to submit it as otherwise the URLClassLoader may
-            // not be able to load the class because of the file limit it already reached.
-            //
-            // See https://github.com/netty/netty/issues/1328
-            enableAutoReadTask = new Runnable() {
-                @Override
-                public void run() {
-                    channel.config().setAutoRead(true);
-                }
-            };
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public void channelRead(ChannelHandlerContext ctx, Object msg) {
-            // 会接收ServerSocketChannel获取到的SocketChannel，也就是参数msg
-            final Channel child = (Channel) msg;
-            // 加入我们在ServerBootstrap设置的childHandler
-            child.pipeline().addLast(childHandler);
-            // 设置一些属性和参数值
-            setChannelOptions(child, childOptions, logger);
-            setAttributes(child, childAttrs);
-
-            try {
-                // 注意：然后会将当前获取到的SocketChannel注册到childGroup中，这个childGroup
-                // 就是我们在ServerBootstrap初始化的时候创建的：EventLoopGroup workerGroup = new NioEventLoopGroup();
-                // 即证明了Netty确实是使用了主从Reactor模式，把Channel的监听交给BossGroup就是Main Reactor,
-                // 把Channel的读写交给WorkerGroup就是Sub Reactor.
-                childGroup.register(child).addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                        if (!future.isSuccess()) {
-                            forceClose(child, future.cause());
-                        }
-                    }
-                });
-            } catch (Throwable t) {
-                forceClose(child, t);
-            }
-        }
-
-        private static void forceClose(Channel child, Throwable t) {
-            child.unsafe().closeForcibly();
-            logger.warn("Failed to register an accepted channel: {}", child, t);
-        }
-
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            final ChannelConfig config = ctx.channel().config();
-            if (config.isAutoRead()) {
-                // stop accept new connections for 1 second to allow the channel to recover
-                // See https://github.com/netty/netty/issues/1328
-                config.setAutoRead(false);
-                ctx.channel().eventLoop().schedule(enableAutoReadTask, 1, TimeUnit.SECONDS);
-            }
-            // still let the exceptionCaught event flow through the pipeline to give the user
-            // a chance to do something with it
-            ctx.fireExceptionCaught(cause);
-        }
     }
 
     @Override
@@ -296,5 +202,81 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     @Override
     public final ServerBootstrapConfig config() {
         return config;
+    }
+
+    private static class ServerBootstrapAcceptor extends ChannelInboundHandlerAdapter {
+
+        private final EventLoopGroup childGroup;
+        private final ChannelHandler childHandler;
+        private final Entry<ChannelOption<?>, Object>[] childOptions;
+        private final Entry<AttributeKey<?>, Object>[] childAttrs;
+        private final Runnable enableAutoReadTask;
+
+        ServerBootstrapAcceptor(final Channel channel, EventLoopGroup childGroup, ChannelHandler childHandler, Entry<ChannelOption<?>, Object>[] childOptions, Entry<AttributeKey<?>, Object>[] childAttrs) {
+            this.childGroup = childGroup;
+            this.childHandler = childHandler;
+            this.childOptions = childOptions;
+            this.childAttrs = childAttrs;
+
+            // Task which is scheduled to re-enable auto-read.
+            // It's important to create this Runnable before we try to submit it as otherwise the URLClassLoader may
+            // not be able to load the class because of the file limit it already reached.
+            //
+            // See https://github.com/netty/netty/issues/1328
+            enableAutoReadTask = new Runnable() {
+                @Override
+                public void run() {
+                    channel.config().setAutoRead(true);
+                }
+            };
+        }
+
+        private static void forceClose(Channel child, Throwable t) {
+            child.unsafe().closeForcibly();
+            logger.warn("Failed to register an accepted channel: {}", child, t);
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            // 会接收ServerSocketChannel获取到的SocketChannel，也就是参数msg
+            final Channel child = (Channel) msg;
+            // 加入我们在ServerBootstrap设置的childHandler
+            child.pipeline().addLast(childHandler);
+            // 设置一些属性和参数值
+            setChannelOptions(child, childOptions, logger);
+            setAttributes(child, childAttrs);
+
+            try {
+                // 注意：然后会将当前获取到的SocketChannel注册到childGroup中，这个childGroup
+                // 就是我们在ServerBootstrap初始化的时候创建的：EventLoopGroup workerGroup = new NioEventLoopGroup();
+                // 即证明了Netty确实是使用了主从Reactor模式，把Channel的监听交给BossGroup就是Main Reactor,
+                // 把Channel的读写交给WorkerGroup就是Sub Reactor.
+                childGroup.register(child).addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        if (!future.isSuccess()) {
+                            forceClose(child, future.cause());
+                        }
+                    }
+                });
+            } catch (Throwable t) {
+                forceClose(child, t);
+            }
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+            final ChannelConfig config = ctx.channel().config();
+            if (config.isAutoRead()) {
+                // stop accept new connections for 1 second to allow the channel to recover
+                // See https://github.com/netty/netty/issues/1328
+                config.setAutoRead(false);
+                ctx.channel().eventLoop().schedule(enableAutoReadTask, 1, TimeUnit.SECONDS);
+            }
+            // still let the exceptionCaught event flow through the pipeline to give the user
+            // a chance to do something with it
+            ctx.fireExceptionCaught(cause);
+        }
     }
 }

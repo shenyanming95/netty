@@ -50,8 +50,7 @@ public final class NoopDnsCache implements DnsCache {
     }
 
     @Override
-    public DnsCacheEntry cache(String hostname, DnsRecord[] additional,
-                               InetAddress address, long originalTtl, EventLoop loop) {
+    public DnsCacheEntry cache(String hostname, DnsRecord[] additional, InetAddress address, long originalTtl, EventLoop loop) {
         return new NoopDnsCacheEntry(address);
     }
 

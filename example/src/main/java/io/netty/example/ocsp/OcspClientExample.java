@@ -60,26 +60,16 @@ public class OcspClientExample {
         //
         String host = "www.wikipedia.org";
 
-        ReferenceCountedOpenSslContext context
-            = (ReferenceCountedOpenSslContext) SslContextBuilder.forClient()
-                .sslProvider(SslProvider.OPENSSL)
-                .enableOcsp(true)
-                .build();
+        ReferenceCountedOpenSslContext context = (ReferenceCountedOpenSslContext) SslContextBuilder.forClient().sslProvider(SslProvider.OPENSSL).enableOcsp(true).build();
 
         try {
             EventLoopGroup group = new NioEventLoopGroup();
             try {
                 Promise<FullHttpResponse> promise = group.next().newPromise();
 
-                Bootstrap bootstrap = new Bootstrap()
-                        .channel(NioSocketChannel.class)
-                        .group(group)
-                        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5 * 1000)
-                        .handler(newClientHandler(context, host, promise));
+                Bootstrap bootstrap = new Bootstrap().channel(NioSocketChannel.class).group(group).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5 * 1000).handler(newClientHandler(context, host, promise));
 
-                Channel channel = bootstrap.connect(host, 443)
-                        .syncUninterruptibly()
-                        .channel();
+                Channel channel = bootstrap.connect(host, 443).syncUninterruptibly().channel();
 
                 try {
                     FullHttpResponse response = promise.get();
@@ -95,15 +85,13 @@ public class OcspClientExample {
         }
     }
 
-    private static ChannelInitializer<Channel> newClientHandler(final ReferenceCountedOpenSslContext context,
-            final String host, final Promise<FullHttpResponse> promise) {
+    private static ChannelInitializer<Channel> newClientHandler(final ReferenceCountedOpenSslContext context, final String host, final Promise<FullHttpResponse> promise) {
 
         return new ChannelInitializer<Channel>() {
             @Override
             protected void initChannel(Channel ch) throws Exception {
                 SslHandler sslHandler = context.newHandler(ch.alloc());
-                ReferenceCountedOpenSslEngine engine
-                    = (ReferenceCountedOpenSslEngine) sslHandler.engine();
+                ReferenceCountedOpenSslEngine engine = (ReferenceCountedOpenSslEngine) sslHandler.engine();
 
                 ChannelPipeline pipeline = ch.pipeline();
                 pipeline.addLast(sslHandler);
@@ -144,8 +132,7 @@ public class OcspClientExample {
 
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            FullHttpRequest request = new DefaultFullHttpRequest(
-                    HttpVersion.HTTP_1_1, HttpMethod.GET, "/", Unpooled.EMPTY_BUFFER);
+            FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/", Unpooled.EMPTY_BUFFER);
             request.headers().set(HttpHeaderNames.HOST, host);
             request.headers().set(HttpHeaderNames.USER_AGENT, "netty-ocsp-example/1.0");
 
@@ -211,14 +198,7 @@ public class OcspClientExample {
             // equals() or you'll NPE!
             CertificateStatus status = first.getCertStatus();
             BigInteger ocspSerial = first.getCertID().getSerialNumber();
-            String message = new StringBuilder()
-                .append("OCSP status of ").append(ctx.channel().remoteAddress())
-                .append("\n  Status: ").append(status == CertificateStatus.GOOD ? "Good" : status)
-                .append("\n  This Update: ").append(first.getThisUpdate())
-                .append("\n  Next Update: ").append(first.getNextUpdate())
-                .append("\n  Cert Serial: ").append(certSerial)
-                .append("\n  OCSP Serial: ").append(ocspSerial)
-                .toString();
+            String message = new StringBuilder().append("OCSP status of ").append(ctx.channel().remoteAddress()).append("\n  Status: ").append(status == CertificateStatus.GOOD ? "Good" : status).append("\n  This Update: ").append(first.getThisUpdate()).append("\n  Next Update: ").append(first.getNextUpdate()).append("\n  Cert Serial: ").append(certSerial).append("\n  OCSP Serial: ").append(ocspSerial).toString();
             System.out.println(message);
 
             return status == CertificateStatus.GOOD && certSerial.equals(ocspSerial);

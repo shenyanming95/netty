@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.unix;
 
 import io.netty.util.internal.EmptyArrays;
@@ -51,54 +36,10 @@ public final class Errors {
      * Holds the mappings for errno codes to String messages.
      * This eliminates the need to call back into JNI to get the right String message on an exception
      * and thus is faster.
-     *
+     * <p>
      * The array length of 512 should be more then enough because errno.h only holds < 200 codes.
      */
     private static final String[] ERRORS = new String[512];
-
-    /**
-     * <strong>Internal usage only!</strong>
-     */
-    public static final class NativeIoException extends IOException {
-        private static final long serialVersionUID = 8222160204268655526L;
-        private final int expectedErr;
-        private final boolean fillInStackTrace;
-
-        public NativeIoException(String method, int expectedErr) {
-            this(method, expectedErr, true);
-        }
-
-        public NativeIoException(String method, int expectedErr, boolean fillInStackTrace) {
-            super(method + "(..) failed: " + ERRORS[-expectedErr]);
-            this.expectedErr = expectedErr;
-            this.fillInStackTrace = fillInStackTrace;
-        }
-
-        public int expectedErr() {
-            return expectedErr;
-        }
-
-        @Override
-        public synchronized Throwable fillInStackTrace() {
-            if (fillInStackTrace) {
-                return super.fillInStackTrace();
-            }
-            return this;
-        }
-    }
-
-    static final class NativeConnectException extends ConnectException {
-        private static final long serialVersionUID = -5532328671712318161L;
-        private final int expectedErr;
-        NativeConnectException(String method, int expectedErr) {
-            super(method + "(..) failed: " + ERRORS[-expectedErr]);
-            this.expectedErr = expectedErr;
-        }
-
-        int expectedErr() {
-            return expectedErr;
-        }
-    }
 
     static {
         for (int i = 0; i < ERRORS.length; i++) {
@@ -107,8 +48,10 @@ public final class Errors {
         }
     }
 
-    static void throwConnectException(String method, int err)
-            throws IOException {
+    private Errors() {
+    }
+
+    static void throwConnectException(String method, int err) throws IOException {
         if (err == ERROR_EALREADY_NEGATIVE) {
             throw new ConnectionPendingException();
         }
@@ -135,8 +78,7 @@ public final class Errors {
     }
 
     @Deprecated
-    public static int ioResult(String method, int err, NativeIoException resetCause,
-                               ClosedChannelException closedCause) throws IOException {
+    public static int ioResult(String method, int err, NativeIoException resetCause, ClosedChannelException closedCause) throws IOException {
         // network stack saturated... try again later
         if (err == ERRNO_EAGAIN_NEGATIVE || err == ERRNO_EWOULDBLOCK_NEGATIVE) {
             return 0;
@@ -177,5 +119,48 @@ public final class Errors {
         throw new NativeIoException(method, err, false);
     }
 
-    private Errors() { }
+    /**
+     * <strong>Internal usage only!</strong>
+     */
+    public static final class NativeIoException extends IOException {
+        private static final long serialVersionUID = 8222160204268655526L;
+        private final int expectedErr;
+        private final boolean fillInStackTrace;
+
+        public NativeIoException(String method, int expectedErr) {
+            this(method, expectedErr, true);
+        }
+
+        public NativeIoException(String method, int expectedErr, boolean fillInStackTrace) {
+            super(method + "(..) failed: " + ERRORS[-expectedErr]);
+            this.expectedErr = expectedErr;
+            this.fillInStackTrace = fillInStackTrace;
+        }
+
+        public int expectedErr() {
+            return expectedErr;
+        }
+
+        @Override
+        public synchronized Throwable fillInStackTrace() {
+            if (fillInStackTrace) {
+                return super.fillInStackTrace();
+            }
+            return this;
+        }
+    }
+
+    static final class NativeConnectException extends ConnectException {
+        private static final long serialVersionUID = -5532328671712318161L;
+        private final int expectedErr;
+
+        NativeConnectException(String method, int expectedErr) {
+            super(method + "(..) failed: " + ERRORS[-expectedErr]);
+            this.expectedErr = expectedErr;
+        }
+
+        int expectedErr() {
+            return expectedErr;
+        }
+    }
 }

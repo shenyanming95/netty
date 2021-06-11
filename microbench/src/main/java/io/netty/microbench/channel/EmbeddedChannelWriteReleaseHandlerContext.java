@@ -26,8 +26,7 @@ public abstract class EmbeddedChannelWriteReleaseHandlerContext extends Embedded
         this(alloc, handler, new EmbeddedChannel());
     }
 
-    protected EmbeddedChannelWriteReleaseHandlerContext(ByteBufAllocator alloc, ChannelHandler handler,
-            EmbeddedChannel channel) {
+    protected EmbeddedChannelWriteReleaseHandlerContext(ByteBufAllocator alloc, ChannelHandler handler, EmbeddedChannel channel) {
         super(alloc, handler, channel);
     }
 

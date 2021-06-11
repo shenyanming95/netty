@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.dns;
 
 import io.netty.buffer.ByteBuf;
@@ -51,9 +36,7 @@ public class DatagramDnsQueryEncoder extends MessageToMessageEncoder<AddressedEn
     }
 
     @Override
-    protected void encode(
-        ChannelHandlerContext ctx,
-        AddressedEnvelope<DnsQuery, InetSocketAddress> in, List<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, AddressedEnvelope<DnsQuery, InetSocketAddress> in, List<Object> out) throws Exception {
 
         final InetSocketAddress recipient = in.recipient();
         final DnsQuery query = in.content();
@@ -76,9 +59,7 @@ public class DatagramDnsQueryEncoder extends MessageToMessageEncoder<AddressedEn
      * Allocate a {@link ByteBuf} which will be used for constructing a datagram packet.
      * Sub-classes may override this method to return a {@link ByteBuf} with a perfect matching initial capacity.
      */
-    protected ByteBuf allocateBuffer(
-        ChannelHandlerContext ctx,
-        @SuppressWarnings("unused") AddressedEnvelope<DnsQuery, InetSocketAddress> msg) throws Exception {
+    protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, @SuppressWarnings("unused") AddressedEnvelope<DnsQuery, InetSocketAddress> msg) throws Exception {
         return ctx.alloc().ioBuffer(1024);
     }
 }

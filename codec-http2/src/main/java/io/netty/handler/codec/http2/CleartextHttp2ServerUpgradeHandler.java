@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http2;
 
 import io.netty.buffer.ByteBuf;
@@ -48,14 +33,12 @@ public final class CleartextHttp2ServerUpgradeHandler extends ByteToMessageDecod
      * Creates the channel handler provide cleartext HTTP/2 upgrade from HTTP
      * upgrade or prior knowledge
      *
-     * @param httpServerCodec the http server codec
+     * @param httpServerCodec          the http server codec
      * @param httpServerUpgradeHandler the http server upgrade handler for HTTP/2
-     * @param http2ServerHandler the http2 server handler, will be added into pipeline
-     *                           when starting HTTP/2 by prior knowledge
+     * @param http2ServerHandler       the http2 server handler, will be added into pipeline
+     *                                 when starting HTTP/2 by prior knowledge
      */
-    public CleartextHttp2ServerUpgradeHandler(HttpServerCodec httpServerCodec,
-                                              HttpServerUpgradeHandler httpServerUpgradeHandler,
-                                              ChannelHandler http2ServerHandler) {
+    public CleartextHttp2ServerUpgradeHandler(HttpServerCodec httpServerCodec, HttpServerUpgradeHandler httpServerUpgradeHandler, ChannelHandler http2ServerHandler) {
         this.httpServerCodec = checkNotNull(httpServerCodec, "httpServerCodec");
         this.httpServerUpgradeHandler = checkNotNull(httpServerUpgradeHandler, "httpServerUpgradeHandler");
         this.http2ServerHandler = checkNotNull(http2ServerHandler, "http2ServerHandler");
@@ -63,9 +46,7 @@ public final class CleartextHttp2ServerUpgradeHandler extends ByteToMessageDecod
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        ctx.pipeline()
-                .addAfter(ctx.name(), null, httpServerUpgradeHandler)
-                .addAfter(ctx.name(), null, httpServerCodec);
+        ctx.pipeline().addAfter(ctx.name(), null, httpServerUpgradeHandler).addAfter(ctx.name(), null, httpServerCodec);
     }
 
     /**
@@ -77,15 +58,12 @@ public final class CleartextHttp2ServerUpgradeHandler extends ByteToMessageDecod
         int prefaceLength = CONNECTION_PREFACE.readableBytes();
         int bytesRead = Math.min(in.readableBytes(), prefaceLength);
 
-        if (!ByteBufUtil.equals(CONNECTION_PREFACE, CONNECTION_PREFACE.readerIndex(),
-                in, in.readerIndex(), bytesRead)) {
+        if (!ByteBufUtil.equals(CONNECTION_PREFACE, CONNECTION_PREFACE.readerIndex(), in, in.readerIndex(), bytesRead)) {
             ctx.pipeline().remove(this);
         } else if (bytesRead == prefaceLength) {
             // Full h2 preface match, removed source codec, using http2 codec to handle
             // following network traffic
-            ctx.pipeline()
-                    .remove(httpServerCodec)
-                    .remove(httpServerUpgradeHandler);
+            ctx.pipeline().remove(httpServerCodec).remove(httpServerUpgradeHandler);
 
             ctx.pipeline().addAfter(ctx.name(), null, http2ServerHandler);
             ctx.pipeline().remove(this);

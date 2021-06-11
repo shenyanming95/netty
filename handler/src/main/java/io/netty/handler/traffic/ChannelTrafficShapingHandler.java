@@ -69,18 +69,13 @@ public class ChannelTrafficShapingHandler extends AbstractTrafficShapingHandler 
     /**
      * Create a new instance.
      *
-     * @param writeLimit
-     *            0 or a limit in bytes/s
-     * @param readLimit
-     *            0 or a limit in bytes/s
-     * @param checkInterval
-     *            The delay between two computations of performances for
-     *            channels or 0 if no stats are to be computed.
-     * @param maxTime
-     *            The maximum delay to wait in case of traffic excess.
+     * @param writeLimit    0 or a limit in bytes/s
+     * @param readLimit     0 or a limit in bytes/s
+     * @param checkInterval The delay between two computations of performances for
+     *                      channels or 0 if no stats are to be computed.
+     * @param maxTime       The maximum delay to wait in case of traffic excess.
      */
-    public ChannelTrafficShapingHandler(long writeLimit, long readLimit,
-            long checkInterval, long maxTime) {
+    public ChannelTrafficShapingHandler(long writeLimit, long readLimit, long checkInterval, long maxTime) {
         super(writeLimit, readLimit, checkInterval, maxTime);
     }
 
@@ -88,16 +83,12 @@ public class ChannelTrafficShapingHandler extends AbstractTrafficShapingHandler 
      * Create a new instance using default
      * max time as delay allowed value of 15000 ms.
      *
-     * @param writeLimit
-     *          0 or a limit in bytes/s
-     * @param readLimit
-     *          0 or a limit in bytes/s
-     * @param checkInterval
-     *          The delay between two computations of performances for
-     *            channels or 0 if no stats are to be computed.
+     * @param writeLimit    0 or a limit in bytes/s
+     * @param readLimit     0 or a limit in bytes/s
+     * @param checkInterval The delay between two computations of performances for
+     *                      channels or 0 if no stats are to be computed.
      */
-    public ChannelTrafficShapingHandler(long writeLimit,
-            long readLimit, long checkInterval) {
+    public ChannelTrafficShapingHandler(long writeLimit, long readLimit, long checkInterval) {
         super(writeLimit, readLimit, checkInterval);
     }
 
@@ -105,13 +96,10 @@ public class ChannelTrafficShapingHandler extends AbstractTrafficShapingHandler 
      * Create a new instance using default Check Interval value of 1000 ms and
      * max time as delay allowed value of 15000 ms.
      *
-     * @param writeLimit
-     *          0 or a limit in bytes/s
-     * @param readLimit
-     *          0 or a limit in bytes/s
+     * @param writeLimit 0 or a limit in bytes/s
+     * @param readLimit  0 or a limit in bytes/s
      */
-    public ChannelTrafficShapingHandler(long writeLimit,
-            long readLimit) {
+    public ChannelTrafficShapingHandler(long writeLimit, long readLimit) {
         super(writeLimit, readLimit);
     }
 
@@ -119,9 +107,8 @@ public class ChannelTrafficShapingHandler extends AbstractTrafficShapingHandler 
      * Create a new instance using
      * default max time as delay allowed value of 15000 ms and no limit.
      *
-     * @param checkInterval
-     *          The delay between two computations of performances for
-     *            channels or 0 if no stats are to be computed.
+     * @param checkInterval The delay between two computations of performances for
+     *                      channels or 0 if no stats are to be computed.
      */
     public ChannelTrafficShapingHandler(long checkInterval) {
         super(checkInterval);
@@ -129,8 +116,7 @@ public class ChannelTrafficShapingHandler extends AbstractTrafficShapingHandler 
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        TrafficCounter trafficCounter = new TrafficCounter(this, ctx.executor(), "ChannelTC" +
-                ctx.channel().hashCode(), checkInterval);
+        TrafficCounter trafficCounter = new TrafficCounter(this, ctx.executor(), "ChannelTC" + ctx.channel().hashCode(), checkInterval);
         setTrafficCounter(trafficCounter);
         trafficCounter.start();
         super.handlerAdded(ctx);
@@ -162,22 +148,8 @@ public class ChannelTrafficShapingHandler extends AbstractTrafficShapingHandler 
         super.handlerRemoved(ctx);
     }
 
-    private static final class ToSend {
-        final long relativeTimeAction;
-        final Object toSend;
-        final ChannelPromise promise;
-
-        private ToSend(final long delay, final Object toSend, final ChannelPromise promise) {
-            relativeTimeAction = delay;
-            this.toSend = toSend;
-            this.promise = promise;
-        }
-    }
-
     @Override
-    void submitWrite(final ChannelHandlerContext ctx, final Object msg,
-            final long size, final long delay, final long now,
-            final ChannelPromise promise) {
+    void submitWrite(final ChannelHandlerContext ctx, final Object msg, final long size, final long delay, final long now, final ChannelPromise promise) {
         final ToSend newToSend;
         // write order control
         synchronized (this) {
@@ -223,9 +195,21 @@ public class ChannelTrafficShapingHandler extends AbstractTrafficShapingHandler 
     }
 
     /**
-    * @return current size in bytes of the write buffer.
-    */
-   public long queueSize() {
-       return queueSize;
-   }
+     * @return current size in bytes of the write buffer.
+     */
+    public long queueSize() {
+        return queueSize;
+    }
+
+    private static final class ToSend {
+        final long relativeTimeAction;
+        final Object toSend;
+        final ChannelPromise promise;
+
+        private ToSend(final long delay, final Object toSend, final ChannelPromise promise) {
+            relativeTimeAction = delay;
+            this.toSend = toSend;
+            this.promise = promise;
+        }
+    }
 }

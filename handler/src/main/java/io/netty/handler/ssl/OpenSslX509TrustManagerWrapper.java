@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.util.internal.EmptyArrays;
@@ -33,14 +18,13 @@ import java.security.cert.X509Certificate;
 /**
  * Utility which allows to wrap {@link X509TrustManager} implementations with the internal implementation used by
  * {@code SSLContextImpl} that provides extended verification.
- *
+ * <p>
  * This is really a "hack" until there is an official API as requested on the in
  * <a href="https://bugs.openjdk.java.net/projects/JDK/issues/JDK-8210843">JDK-8210843</a>.
  */
 @SuppressJava6Requirement(reason = "Usage guarded by java version check")
 final class OpenSslX509TrustManagerWrapper {
-    private static final InternalLogger LOGGER = InternalLoggerFactory
-            .getInstance(OpenSslX509TrustManagerWrapper.class);
+    private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(OpenSslX509TrustManagerWrapper.class);
     private static final TrustManagerWrapper WRAPPER;
 
     static {
@@ -65,26 +49,22 @@ final class OpenSslX509TrustManagerWrapper {
                 // See:
                 // - http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/file/
                 //          cadea780bc76/src/share/classes/sun/security/ssl/SSLContextImpl.java#l127
-                context.init(null, new TrustManager[] {
-                        new X509TrustManager() {
-                            @Override
-                            public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
-                                    throws CertificateException {
-                                throw new CertificateException();
-                            }
+                context.init(null, new TrustManager[]{new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                        throw new CertificateException();
+                    }
 
-                            @Override
-                            public void checkServerTrusted(X509Certificate[] x509Certificates, String s)
-                                    throws CertificateException {
-                                throw new CertificateException();
-                            }
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                        throw new CertificateException();
+                    }
 
-                            @Override
-                            public X509Certificate[] getAcceptedIssuers() {
-                                return EmptyArrays.EMPTY_X509_CERTIFICATES;
-                            }
-                        }
-                }, null);
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return EmptyArrays.EMPTY_X509_CERTIFICATES;
+                    }
+                }}, null);
             } catch (Throwable error) {
                 context = null;
                 cause = error;
@@ -139,20 +119,21 @@ final class OpenSslX509TrustManagerWrapper {
         WRAPPER = wrapper;
     }
 
-    private OpenSslX509TrustManagerWrapper() { }
+    private OpenSslX509TrustManagerWrapper() {
+    }
 
     static X509TrustManager wrapIfNeeded(X509TrustManager trustManager) {
         return WRAPPER.wrapIfNeeded(trustManager);
-    }
-
-    private interface TrustManagerWrapper {
-        X509TrustManager wrapIfNeeded(X509TrustManager manager);
     }
 
     private static SSLContext newSSLContext() throws NoSuchAlgorithmException, NoSuchProviderException {
         // As this depends on the implementation detail we should explicit select the correct provider.
         // See https://github.com/netty/netty/issues/10374
         return SSLContext.getInstance("TLS", "SunJSSE");
+    }
+
+    private interface TrustManagerWrapper {
+        X509TrustManager wrapIfNeeded(X509TrustManager manager);
     }
 
     private static final class UnsafeTrustManagerWrapper implements TrustManagerWrapper {
@@ -170,7 +151,7 @@ final class OpenSslX509TrustManagerWrapper {
             if (!(manager instanceof X509ExtendedTrustManager)) {
                 try {
                     SSLContext ctx = newSSLContext();
-                    ctx.init(null, new TrustManager[] { manager }, null);
+                    ctx.init(null, new TrustManager[]{manager}, null);
                     Object spi = PlatformDependent.getObject(ctx, spiOffset);
                     if (spi != null) {
                         Object tm = PlatformDependent.getObject(spi, tmOffset);

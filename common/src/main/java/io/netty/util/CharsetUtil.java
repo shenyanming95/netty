@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util;
 
 import io.netty.util.internal.InternalThreadLocalMap;
@@ -63,8 +48,10 @@ public final class CharsetUtil {
      */
     public static final Charset US_ASCII = Charset.forName("US-ASCII");
 
-    private static final Charset[] CHARSETS = new Charset[]
-            { UTF_16, UTF_16BE, UTF_16LE, UTF_8, ISO_8859_1, US_ASCII };
+    private static final Charset[] CHARSETS = new Charset[]{UTF_16, UTF_16BE, UTF_16LE, UTF_8, ISO_8859_1, US_ASCII};
+
+    private CharsetUtil() {
+    }
 
     public static Charset[] values() {
         return CHARSETS;
@@ -81,13 +68,12 @@ public final class CharsetUtil {
     /**
      * Returns a new {@link CharsetEncoder} for the {@link Charset} with specified error actions.
      *
-     * @param charset The specified charset
-     * @param malformedInputAction The encoder's action for malformed-input errors
+     * @param charset                   The specified charset
+     * @param malformedInputAction      The encoder's action for malformed-input errors
      * @param unmappableCharacterAction The encoder's action for unmappable-character errors
      * @return The encoder for the specified {@code charset}
      */
-    public static CharsetEncoder encoder(Charset charset, CodingErrorAction malformedInputAction,
-                                         CodingErrorAction unmappableCharacterAction) {
+    public static CharsetEncoder encoder(Charset charset, CodingErrorAction malformedInputAction, CodingErrorAction unmappableCharacterAction) {
         checkNotNull(charset, "charset");
         CharsetEncoder e = charset.newEncoder();
         e.onMalformedInput(malformedInputAction).onUnmappableCharacter(unmappableCharacterAction);
@@ -97,7 +83,7 @@ public final class CharsetUtil {
     /**
      * Returns a new {@link CharsetEncoder} for the {@link Charset} with the specified error action.
      *
-     * @param charset The specified charset
+     * @param charset           The specified charset
      * @param codingErrorAction The encoder's action for malformed-input and unmappable-character errors
      * @return The encoder for the specified {@code charset}
      */
@@ -137,13 +123,12 @@ public final class CharsetUtil {
     /**
      * Returns a new {@link CharsetDecoder} for the {@link Charset} with specified error actions.
      *
-     * @param charset The specified charset
-     * @param malformedInputAction The decoder's action for malformed-input errors
+     * @param charset                   The specified charset
+     * @param malformedInputAction      The decoder's action for malformed-input errors
      * @param unmappableCharacterAction The decoder's action for unmappable-character errors
      * @return The decoder for the specified {@code charset}
      */
-    public static CharsetDecoder decoder(Charset charset, CodingErrorAction malformedInputAction,
-                                         CodingErrorAction unmappableCharacterAction) {
+    public static CharsetDecoder decoder(Charset charset, CodingErrorAction malformedInputAction, CodingErrorAction unmappableCharacterAction) {
         checkNotNull(charset, "charset");
         CharsetDecoder d = charset.newDecoder();
         d.onMalformedInput(malformedInputAction).onUnmappableCharacter(unmappableCharacterAction);
@@ -153,7 +138,7 @@ public final class CharsetUtil {
     /**
      * Returns a new {@link CharsetDecoder} for the {@link Charset} with the specified error action.
      *
-     * @param charset The specified charset
+     * @param charset           The specified charset
      * @param codingErrorAction The decoder's action for malformed-input and unmappable-character errors
      * @return The decoder for the specified {@code charset}
      */
@@ -181,6 +166,4 @@ public final class CharsetUtil {
         map.put(charset, d);
         return d;
     }
-
-    private CharsetUtil() { }
 }

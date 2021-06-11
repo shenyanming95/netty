@@ -1,19 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.buffer;
 
 import io.netty.util.internal.StringUtil;
@@ -34,10 +18,9 @@ final class PoolChunkList<T> implements PoolChunkListMetric {
     private final int minUsage;
     private final int maxUsage;
     private final int maxCapacity;
-    private PoolChunk<T> head;
     private final int freeMinThreshold;
     private final int freeMaxThreshold;
-
+    private PoolChunk<T> head;
     // This is only update once when create the linked like list of PoolChunkList in PoolArena constructor.
     private PoolChunkList<T> prevList;
 
@@ -88,7 +71,11 @@ final class PoolChunkList<T> implements PoolChunkListMetric {
         // As an example:
         // - If a PoolChunkList has minUsage == 25 we are allowed to allocate at most 75% of the chunkSize because
         //   this is the maximum amount available in any PoolChunk in this PoolChunkList.
-        return  (int) (chunkSize * (100L - minUsage) / 100L);
+        return (int) (chunkSize * (100L - minUsage) / 100L);
+    }
+
+    private static int minUsage0(int value) {
+        return max(1, value);
     }
 
     void prevList(PoolChunkList<T> prevList) {
@@ -203,10 +190,6 @@ final class PoolChunkList<T> implements PoolChunkListMetric {
         return min(maxUsage, 100);
     }
 
-    private static int minUsage0(int value) {
-        return max(1, value);
-    }
-
     @Override
     public Iterator<PoolChunkMetric> iterator() {
         synchronized (arena) {
@@ -214,7 +197,7 @@ final class PoolChunkList<T> implements PoolChunkListMetric {
                 return EMPTY_METRICS;
             }
             List<PoolChunkMetric> metrics = new ArrayList<PoolChunkMetric>();
-            for (PoolChunk<T> cur = head;;) {
+            for (PoolChunk<T> cur = head; ; ) {
                 metrics.add(cur);
                 cur = cur.next;
                 if (cur == null) {
@@ -233,7 +216,7 @@ final class PoolChunkList<T> implements PoolChunkListMetric {
                 return "none";
             }
 
-            for (PoolChunk<T> cur = head;;) {
+            for (PoolChunk<T> cur = head; ; ) {
                 buf.append(cur);
                 cur = cur.next;
                 if (cur == null) {

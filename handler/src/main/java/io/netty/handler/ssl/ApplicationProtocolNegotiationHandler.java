@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.channel.*;
@@ -60,8 +45,7 @@ import javax.net.ssl.SSLException;
  */
 public abstract class ApplicationProtocolNegotiationHandler extends ChannelInboundHandlerAdapter {
 
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(ApplicationProtocolNegotiationHandler.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ApplicationProtocolNegotiationHandler.class);
 
     private final String fallbackProtocol;
 
@@ -83,8 +67,7 @@ public abstract class ApplicationProtocolNegotiationHandler extends ChannelInbou
                 if (handshakeEvent.isSuccess()) {
                     SslHandler sslHandler = ctx.pipeline().get(SslHandler.class);
                     if (sslHandler == null) {
-                        throw new IllegalStateException("cannot find an SslHandler in the pipeline (required for "
-                                + "application-level protocol negotiation)");
+                        throw new IllegalStateException("cannot find an SslHandler in the pipeline (required for " + "application-level protocol negotiation)");
                     }
                     String protocol = sslHandler.applicationProtocol();
                     configurePipeline(ctx, protocol != null ? protocol : fallbackProtocol);
@@ -114,6 +97,7 @@ public abstract class ApplicationProtocolNegotiationHandler extends ChannelInbou
             pipeline.remove(this);
         }
     }
+
     /**
      * Invoked on successful initial SSL/TLS handshake. Implement this method to configure your pipeline
      * for the negotiated application-level protocol.

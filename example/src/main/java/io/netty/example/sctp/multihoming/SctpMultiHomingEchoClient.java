@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.sctp.multihoming;
 
 import io.netty.bootstrap.Bootstrap;
@@ -47,17 +32,14 @@ public final class SctpMultiHomingEchoClient {
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
-            b.group(group)
-             .channel(NioSctpChannel.class)
-             .option(SctpChannelOption.SCTP_NODELAY, true)
-             .handler(new ChannelInitializer<SctpChannel>() {
-                 @Override
-                 public void initChannel(SctpChannel ch) throws Exception {
-                     ch.pipeline().addLast(
+            b.group(group).channel(NioSctpChannel.class).option(SctpChannelOption.SCTP_NODELAY, true).handler(new ChannelInitializer<SctpChannel>() {
+                @Override
+                public void initChannel(SctpChannel ch) throws Exception {
+                    ch.pipeline().addLast(
 //                             new LoggingHandler(LogLevel.INFO),
-                             new SctpEchoClientHandler());
-                 }
-             });
+                            new SctpEchoClientHandler());
+                }
+            });
 
             InetSocketAddress localAddress = SocketUtils.socketAddress(CLIENT_PRIMARY_HOST, CLIENT_PORT);
             InetAddress localSecondaryAddress = SocketUtils.addressByName(CLIENT_SECONDARY_HOST);

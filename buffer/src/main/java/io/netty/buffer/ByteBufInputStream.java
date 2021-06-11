@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.buffer;
 
 import io.netty.util.ReferenceCounted;
@@ -41,7 +26,6 @@ public class ByteBufInputStream extends InputStream implements DataInput {
     private final ByteBuf buffer;
     private final int startIndex;
     private final int endIndex;
-    private boolean closed;
     /**
      * To preserve backwards compatibility (which didn't transfer ownership) we support a conditional flag which
      * indicates if {@link #buffer} should be released when this {@link InputStream} is closed.
@@ -49,11 +33,14 @@ public class ByteBufInputStream extends InputStream implements DataInput {
      * {@link ReferenceCounted#retain()} if necessary.
      */
     private final boolean releaseOnClose;
+    private boolean closed;
+    private StringBuilder lineBuf;
 
     /**
      * Creates a new stream which reads data from the specified {@code buffer}
      * starting at the current {@code readerIndex} and ending at the current
      * {@code writerIndex}.
+     *
      * @param buffer The buffer which provides the content for this {@link InputStream}.
      */
     public ByteBufInputStream(ByteBuf buffer) {
@@ -64,11 +51,11 @@ public class ByteBufInputStream extends InputStream implements DataInput {
      * Creates a new stream which reads data from the specified {@code buffer}
      * starting at the current {@code readerIndex} and ending at
      * {@code readerIndex + length}.
+     *
      * @param buffer The buffer which provides the content for this {@link InputStream}.
      * @param length The length of the buffer to use for this {@link InputStream}.
-     * @throws IndexOutOfBoundsException
-     *         if {@code readerIndex + length} is greater than
-     *            {@code writerIndex}
+     * @throws IndexOutOfBoundsException if {@code readerIndex + length} is greater than
+     *                                   {@code writerIndex}
      */
     public ByteBufInputStream(ByteBuf buffer, int length) {
         this(buffer, length, false);
@@ -78,7 +65,8 @@ public class ByteBufInputStream extends InputStream implements DataInput {
      * Creates a new stream which reads data from the specified {@code buffer}
      * starting at the current {@code readerIndex} and ending at the current
      * {@code writerIndex}.
-     * @param buffer The buffer which provides the content for this {@link InputStream}.
+     *
+     * @param buffer         The buffer which provides the content for this {@link InputStream}.
      * @param releaseOnClose {@code true} means that when {@link #close()} is called then {@link ByteBuf#release()} will
      *                       be called on {@code buffer}.
      */
@@ -90,13 +78,13 @@ public class ByteBufInputStream extends InputStream implements DataInput {
      * Creates a new stream which reads data from the specified {@code buffer}
      * starting at the current {@code readerIndex} and ending at
      * {@code readerIndex + length}.
-     * @param buffer The buffer which provides the content for this {@link InputStream}.
-     * @param length The length of the buffer to use for this {@link InputStream}.
+     *
+     * @param buffer         The buffer which provides the content for this {@link InputStream}.
+     * @param length         The length of the buffer to use for this {@link InputStream}.
      * @param releaseOnClose {@code true} means that when {@link #close()} is called then {@link ByteBuf#release()} will
      *                       be called on {@code buffer}.
-     * @throws IndexOutOfBoundsException
-     *         if {@code readerIndex + length} is greater than
-     *            {@code writerIndex}
+     * @throws IndexOutOfBoundsException if {@code readerIndex + length} is greater than
+     *                                   {@code writerIndex}
      */
     public ByteBufInputStream(ByteBuf buffer, int length, boolean releaseOnClose) {
         ObjectUtil.checkNotNull(buffer, "buffer");
@@ -110,8 +98,7 @@ public class ByteBufInputStream extends InputStream implements DataInput {
             if (releaseOnClose) {
                 buffer.release();
             }
-            throw new IndexOutOfBoundsException("Too many bytes to be read - Needs "
-                    + length + ", maximum is " + buffer.readableBytes());
+            throw new IndexOutOfBoundsException("Too many bytes to be read - Needs " + length + ", maximum is " + buffer.readableBytes());
         }
 
         this.releaseOnClose = releaseOnClose;
@@ -238,8 +225,6 @@ public class ByteBufInputStream extends InputStream implements DataInput {
         return buffer.readInt();
     }
 
-    private StringBuilder lineBuf;
-
     @Override
     public String readLine() throws IOException {
         int available = available();
@@ -251,7 +236,8 @@ public class ByteBufInputStream extends InputStream implements DataInput {
             lineBuf.setLength(0);
         }
 
-        loop: do {
+        loop:
+        do {
             int c = buffer.readUnsignedByte();
             --available;
             switch (c) {
@@ -315,8 +301,7 @@ public class ByteBufInputStream extends InputStream implements DataInput {
             throw new IndexOutOfBoundsException("fieldSize cannot be a negative number");
         }
         if (fieldSize > available()) {
-            throw new EOFException("fieldSize is too long! Length is " + fieldSize
-                    + ", but maximum is " + available());
+            throw new EOFException("fieldSize is too long! Length is " + fieldSize + ", but maximum is " + available());
         }
     }
 }

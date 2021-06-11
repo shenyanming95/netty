@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.dns;
 
 import io.netty.buffer.ByteBuf;
@@ -32,8 +17,8 @@ public class DefaultDnsRawRecord extends AbstractDnsRecord implements DnsRawReco
     /**
      * Creates a new {@link #CLASS_IN IN-class} record.
      *
-     * @param name the domain name
-     * @param type the type of the record
+     * @param name       the domain name
+     * @param type       the type of the record
      * @param timeToLive the TTL value of the record
      */
     public DefaultDnsRawRecord(String name, DnsRecordType type, long timeToLive, ByteBuf content) {
@@ -43,21 +28,20 @@ public class DefaultDnsRawRecord extends AbstractDnsRecord implements DnsRawReco
     /**
      * Creates a new record.
      *
-     * @param name the domain name
-     * @param type the type of the record
-     * @param dnsClass the class of the record, usually one of the following:
-     *                 <ul>
-     *                     <li>{@link #CLASS_IN}</li>
-     *                     <li>{@link #CLASS_CSNET}</li>
-     *                     <li>{@link #CLASS_CHAOS}</li>
-     *                     <li>{@link #CLASS_HESIOD}</li>
-     *                     <li>{@link #CLASS_NONE}</li>
-     *                     <li>{@link #CLASS_ANY}</li>
-     *                 </ul>
+     * @param name       the domain name
+     * @param type       the type of the record
+     * @param dnsClass   the class of the record, usually one of the following:
+     *                   <ul>
+     *                       <li>{@link #CLASS_IN}</li>
+     *                       <li>{@link #CLASS_CSNET}</li>
+     *                       <li>{@link #CLASS_CHAOS}</li>
+     *                       <li>{@link #CLASS_HESIOD}</li>
+     *                       <li>{@link #CLASS_NONE}</li>
+     *                       <li>{@link #CLASS_ANY}</li>
+     *                   </ul>
      * @param timeToLive the TTL value of the record
      */
-    public DefaultDnsRawRecord(
-            String name, DnsRecordType type, int dnsClass, long timeToLive, ByteBuf content) {
+    public DefaultDnsRawRecord(String name, DnsRecordType type, int dnsClass, long timeToLive, ByteBuf content) {
         super(name, type, dnsClass, timeToLive);
         this.content = checkNotNull(content, "content");
     }
@@ -131,24 +115,14 @@ public class DefaultDnsRawRecord extends AbstractDnsRecord implements DnsRawReco
         final StringBuilder buf = new StringBuilder(64).append(StringUtil.simpleClassName(this)).append('(');
         final DnsRecordType type = type();
         if (type != DnsRecordType.OPT) {
-            buf.append(name().isEmpty()? "<root>" : name())
-               .append(' ')
-               .append(timeToLive())
-               .append(' ');
+            buf.append(name().isEmpty() ? "<root>" : name()).append(' ').append(timeToLive()).append(' ');
 
-            DnsMessageUtil.appendRecordClass(buf, dnsClass())
-                          .append(' ')
-                          .append(type.name());
+            DnsMessageUtil.appendRecordClass(buf, dnsClass()).append(' ').append(type.name());
         } else {
-            buf.append("OPT flags:")
-               .append(timeToLive())
-               .append(" udp:")
-               .append(dnsClass());
+            buf.append("OPT flags:").append(timeToLive()).append(" udp:").append(dnsClass());
         }
 
-        buf.append(' ')
-           .append(content().readableBytes())
-           .append("B)");
+        buf.append(' ').append(content().readableBytes()).append("B)");
 
         return buf.toString();
     }

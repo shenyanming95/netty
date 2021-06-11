@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.sctp.oio;
 
 import com.sun.nio.sctp.SctpChannel;
@@ -36,29 +21,18 @@ import java.util.*;
 /**
  * {@link io.netty.channel.sctp.SctpServerChannel} implementation which use blocking mode to accept new
  * connections and create the {@link OioSctpChannel} for them.
- *
+ * <p>
  * Be aware that not all operations systems support SCTP. Please refer to the documentation of your operation system,
  * to understand what you need to do to use it. Also this feature is only supported on Java 7+.
  *
  * @deprecated use {@link io.netty.channel.sctp.nio.NioSctpServerChannel}.
  */
 @Deprecated
-public class OioSctpServerChannel extends AbstractOioMessageChannel
-        implements io.netty.channel.sctp.SctpServerChannel {
+public class OioSctpServerChannel extends AbstractOioMessageChannel implements io.netty.channel.sctp.SctpServerChannel {
 
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(OioSctpServerChannel.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(OioSctpServerChannel.class);
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 1);
-
-    private static SctpServerChannel newServerSocket() {
-        try {
-            return SctpServerChannel.open();
-        } catch (IOException e) {
-            throw new ChannelException("failed to create a sctp server channel", e);
-        }
-    }
-
     private final SctpServerChannel sch;
     private final SctpServerChannelConfig config;
     private final Selector selector;
@@ -73,7 +47,7 @@ public class OioSctpServerChannel extends AbstractOioMessageChannel
     /**
      * Create a new instance from the given {@link SctpServerChannel}
      *
-     * @param sch    the {@link SctpServerChannel} which is used by this instance
+     * @param sch the {@link SctpServerChannel} which is used by this instance
      */
     public OioSctpServerChannel(SctpServerChannel sch) {
         super(null);
@@ -95,6 +69,14 @@ public class OioSctpServerChannel extends AbstractOioMessageChannel
                     logger.warn("Failed to close a sctp server channel.", e);
                 }
             }
+        }
+    }
+
+    private static SctpServerChannel newServerSocket() {
+        try {
+            return SctpServerChannel.open();
+        } catch (IOException e) {
+            throw new ChannelException("failed to create a sctp server channel", e);
         }
     }
 
@@ -182,14 +164,14 @@ public class OioSctpServerChannel extends AbstractOioMessageChannel
             final int selectedKeys = selector.select(SO_TIMEOUT);
             if (selectedKeys > 0) {
                 final Iterator<SelectionKey> selectionKeys = selector.selectedKeys().iterator();
-                for (;;) {
+                for (; ; ) {
                     SelectionKey key = selectionKeys.next();
                     selectionKeys.remove();
                     if (key.isAcceptable()) {
                         s = sch.accept();
                         if (s != null) {
                             buf.add(new OioSctpChannel(this, s));
-                            acceptedChannels ++;
+                            acceptedChannels++;
                         }
                     }
                     if (!selectionKeys.hasNext()) {
@@ -262,8 +244,7 @@ public class OioSctpServerChannel extends AbstractOioMessageChannel
     }
 
     @Override
-    protected void doConnect(
-            SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
+    protected void doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         throw new UnsupportedOperationException();
     }
 

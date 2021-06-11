@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.concurrent;
 
 import io.netty.util.internal.UnstableApi;
@@ -32,20 +17,17 @@ import java.util.concurrent.TimeUnit;
  * Abstract base class for {@link EventExecutor} implementations.
  */
 public abstract class AbstractEventExecutor extends AbstractExecutorService implements EventExecutor {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractEventExecutor.class);
-
     /**
      * 如果没有超过 DEFAULT_SHUTDOWN_TIMEOUT 指定的时间, netty会等待一定时间,
      * 观察是否有任务执行, 若没有的话, 就关闭服务; 如果有, 则会重新进入关闭逻辑.
      * 这个参数就是来指定等待的时间
      */
     static final long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2;
-
     /**
      * 优雅关闭的最大等待时间, 超过此时间, netty会直接关闭服务
      */
     static final long DEFAULT_SHUTDOWN_TIMEOUT = 15;
-
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractEventExecutor.class);
     private final EventExecutorGroup parent;
     private final Collection<EventExecutor> selfCollection = Collections.<EventExecutor>singleton(this);
 
@@ -55,6 +37,17 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
 
     protected AbstractEventExecutor(EventExecutorGroup parent) {
         this.parent = parent;
+    }
+
+    /**
+     * Try to execute the given {@link Runnable} and just log if it throws a {@link Throwable}.
+     */
+    protected static void safeExecute(Runnable task) {
+        try {
+            task.run();
+        } catch (Throwable t) {
+            logger.warn("A task raised an exception. Task: {}", task, t);
+        }
     }
 
     @Override
@@ -145,8 +138,7 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
     }
 
     @Override
-    public ScheduledFuture<?> schedule(Runnable command, long delay,
-                                       TimeUnit unit) {
+    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
         throw new UnsupportedOperationException();
     }
 
@@ -166,23 +158,12 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
     }
 
     /**
-     * Try to execute the given {@link Runnable} and just log if it throws a {@link Throwable}.
-     */
-    protected static void safeExecute(Runnable task) {
-        try {
-            task.run();
-        } catch (Throwable t) {
-            logger.warn("A task raised an exception. Task: {}", task, t);
-        }
-    }
-
-    /**
      * Like {@link #execute(Runnable)} but does not guarantee the task will be run until either
      * a non-lazy task is executed or the executor is shut down.
-     *
+     * <p>
      * This is equivalent to submitting a {@link EventExecutor.LazyRunnable} to
      * {@link #execute(Runnable)} but for an arbitrary {@link Runnable}.
-     *
+     * <p>
      * The default implementation just delegates to {@link #execute(Runnable)}.
      */
     @UnstableApi
@@ -195,5 +176,6 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
      * but does not need to run immediately.
      */
     @UnstableApi
-    public interface LazyRunnable extends Runnable { }
+    public interface LazyRunnable extends Runnable {
+    }
 }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.factorial;
 
 import io.netty.bootstrap.Bootstrap;
@@ -39,8 +24,7 @@ public final class FactorialClient {
         // Configure SSL.
         final SslContext sslCtx;
         if (SSL) {
-            sslCtx = SslContextBuilder.forClient()
-                .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+            sslCtx = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         } else {
             sslCtx = null;
         }
@@ -48,16 +32,13 @@ public final class FactorialClient {
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
-            b.group(group)
-             .channel(NioSocketChannel.class)
-             .handler(new FactorialClientInitializer(sslCtx));
+            b.group(group).channel(NioSocketChannel.class).handler(new FactorialClientInitializer(sslCtx));
 
             // Make a new connection.
             ChannelFuture f = b.connect(HOST, PORT).sync();
 
             // Get the handler instance to retrieve the answer.
-            FactorialClientHandler handler =
-                (FactorialClientHandler) f.channel().pipeline().last();
+            FactorialClientHandler handler = (FactorialClientHandler) f.channel().pipeline().last();
 
             // Print out the answer.
             System.err.format("Factorial of %,d is: %,d", COUNT, handler.getFactorial());

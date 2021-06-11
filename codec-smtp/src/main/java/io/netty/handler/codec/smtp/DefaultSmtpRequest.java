@@ -55,8 +55,7 @@ public final class DefaultSmtpRequest implements SmtpRequest {
 
     DefaultSmtpRequest(SmtpCommand command, List<CharSequence> parameters) {
         this.command = ObjectUtil.checkNotNull(command, "command");
-        this.parameters = parameters != null ?
-                Collections.unmodifiableList(parameters) : Collections.<CharSequence>emptyList();
+        this.parameters = parameters != null ? Collections.unmodifiableList(parameters) : Collections.<CharSequence>emptyList();
     }
 
     @Override
@@ -86,15 +85,11 @@ public final class DefaultSmtpRequest implements SmtpRequest {
 
         DefaultSmtpRequest other = (DefaultSmtpRequest) o;
 
-        return command().equals(other.command()) &&
-                parameters().equals(other.parameters());
+        return command().equals(other.command()) && parameters().equals(other.parameters());
     }
 
     @Override
     public String toString() {
-        return "DefaultSmtpRequest{" +
-                "command=" + command +
-                ", parameters=" + parameters +
-                '}';
+        return "DefaultSmtpRequest{" + "command=" + command + ", parameters=" + parameters + '}';
     }
 }

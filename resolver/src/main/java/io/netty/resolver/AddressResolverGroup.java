@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.resolver;
 
 import io.netty.util.concurrent.EventExecutor;
@@ -40,13 +24,12 @@ public abstract class AddressResolverGroup<T extends SocketAddress> implements C
     /**
      * Note that we do not use a {@link ConcurrentMap} here because it is usually expensive to instantiate a resolver.
      */
-    private final Map<EventExecutor, AddressResolver<T>> resolvers =
-            new IdentityHashMap<EventExecutor, AddressResolver<T>>();
+    private final Map<EventExecutor, AddressResolver<T>> resolvers = new IdentityHashMap<EventExecutor, AddressResolver<T>>();
 
-    private final Map<EventExecutor, GenericFutureListener<Future<Object>>> executorTerminationListeners =
-            new IdentityHashMap<EventExecutor, GenericFutureListener<Future<Object>>>();
+    private final Map<EventExecutor, GenericFutureListener<Future<Object>>> executorTerminationListeners = new IdentityHashMap<EventExecutor, GenericFutureListener<Future<Object>>>();
 
-    protected AddressResolverGroup() { }
+    protected AddressResolverGroup() {
+    }
 
     /**
      * Returns the {@link AddressResolver} associated with the specified {@link EventExecutor}. If there's no associated
@@ -104,7 +87,7 @@ public abstract class AddressResolverGroup<T extends SocketAddress> implements C
      * Closes all {@link NameResolver}s created by this group.
      */
     @Override
-    @SuppressWarnings({ "unchecked", "SuspiciousToArrayCall" })
+    @SuppressWarnings({"unchecked", "SuspiciousToArrayCall"})
     public void close() {
         final AddressResolver<T>[] rArray;
         final Map.Entry<EventExecutor, GenericFutureListener<Future<Object>>>[] listeners;
@@ -120,7 +103,7 @@ public abstract class AddressResolverGroup<T extends SocketAddress> implements C
             entry.getKey().terminationFuture().removeListener(entry.getValue());
         }
 
-        for (final AddressResolver<T> r: rArray) {
+        for (final AddressResolver<T> r : rArray) {
             try {
                 r.close();
             } catch (Throwable t) {

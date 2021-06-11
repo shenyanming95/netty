@@ -27,18 +27,16 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 final class KQueueRecvByteAllocatorHandle extends DelegatingHandle implements ExtendedHandle {
-    private final PreferredDirectByteBufAllocator preferredDirectByteBufAllocator =
-            new PreferredDirectByteBufAllocator();
-
+    private final PreferredDirectByteBufAllocator preferredDirectByteBufAllocator = new PreferredDirectByteBufAllocator();
+    private boolean overrideGuess;
+    private boolean readEOF;
+    private long numberBytesPending;
     private final UncheckedBooleanSupplier defaultMaybeMoreDataSupplier = new UncheckedBooleanSupplier() {
         @Override
         public boolean get() {
             return maybeMoreDataToRead();
         }
     };
-    private boolean overrideGuess;
-    private boolean readEOF;
-    private long numberBytesPending;
 
     KQueueRecvByteAllocatorHandle(ExtendedHandle handle) {
         super(handle);
@@ -59,8 +57,7 @@ final class KQueueRecvByteAllocatorHandle extends DelegatingHandle implements Ex
     public ByteBuf allocate(ByteBufAllocator alloc) {
         // We need to ensure we always allocate a direct ByteBuf as we can only use a direct buffer to read via JNI.
         preferredDirectByteBufAllocator.updateAllocator(alloc);
-        return overrideGuess ? preferredDirectByteBufAllocator.ioBuffer(guess0()) :
-                delegate().allocate(preferredDirectByteBufAllocator);
+        return overrideGuess ? preferredDirectByteBufAllocator.ioBuffer(guess0()) : delegate().allocate(preferredDirectByteBufAllocator);
     }
 
     @Override

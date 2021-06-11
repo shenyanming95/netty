@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.epoll;
 
 import io.netty.buffer.ByteBuf;
@@ -44,6 +29,10 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 abstract class AbstractEpollChannel extends AbstractChannel implements UnixChannel {
     private static final ChannelMetadata METADATA = new ChannelMetadata(false);
     final LinuxSocket socket;
+    protected int flags = Native.EPOLLET;
+    protected volatile boolean active;
+    boolean inputClosedSeenErrorOnRead;
+    boolean epollInReadyRunnablePending;
     /**
      * The future of the current connection attempt.  If not null, subsequent
      * connection attempts will fail.
@@ -51,15 +40,8 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
     private ChannelPromise connectPromise;
     private ScheduledFuture<?> connectTimeoutFuture;
     private SocketAddress requestedRemoteAddress;
-
     private volatile SocketAddress local;
     private volatile SocketAddress remote;
-
-    protected int flags = Native.EPOLLET;
-    boolean inputClosedSeenErrorOnRead;
-    boolean epollInReadyRunnablePending;
-
-    protected volatile boolean active;
 
     AbstractEpollChannel(LinuxSocket fd) {
         this(null, fd, false);
@@ -92,6 +74,26 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
             return fd.getSoError() == 0;
         } catch (IOException e) {
             throw new ChannelException(e);
+        }
+    }
+
+    private static boolean isAllowHalfClosure(ChannelConfig config) {
+        if (config instanceof EpollDomainSocketChannelConfig) {
+            return ((EpollDomainSocketChannelConfig) config).isAllowHalfClosure();
+        }
+        return config instanceof SocketChannelConfig && ((SocketChannelConfig) config).isAllowHalfClosure();
+    }
+
+    private static ByteBuf newDirectBuffer0(Object holder, ByteBuf buf, ByteBufAllocator alloc, int capacity) {
+        final ByteBuf directBuf = alloc.directBuffer(capacity);
+        directBuf.writeBytes(buf, buf.readerIndex(), capacity);
+        ReferenceCountUtil.safeRelease(holder);
+        return directBuf;
+    }
+
+    protected static void checkResolvable(InetSocketAddress addr) {
+        if (addr.isUnresolved()) {
+            throw new UnresolvedAddressException();
         }
     }
 
@@ -224,14 +226,6 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
         return socket.isInputShutdown() && (inputClosedSeenErrorOnRead || !isAllowHalfClosure(config));
     }
 
-    private static boolean isAllowHalfClosure(ChannelConfig config) {
-        if (config instanceof EpollDomainSocketChannelConfig) {
-            return ((EpollDomainSocketChannelConfig) config).isAllowHalfClosure();
-        }
-        return config instanceof SocketChannelConfig &&
-                ((SocketChannelConfig) config).isAllowHalfClosure();
-    }
-
     final void clearEpollIn() {
         // Only clear if registered with an EventLoop as otherwise
         if (isRegistered()) {
@@ -251,7 +245,7 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
                     }
                 });
             }
-        } else  {
+        } else {
             // The EventLoop is not registered atm so just update the flags so the correct value
             // will be used once the channel is registered
             flags &= ~Native.EPOLLIN;
@@ -310,19 +304,6 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
         return directBuf;
     }
 
-    private static ByteBuf newDirectBuffer0(Object holder, ByteBuf buf, ByteBufAllocator alloc, int capacity) {
-        final ByteBuf directBuf = alloc.directBuffer(capacity);
-        directBuf.writeBytes(buf, buf.readerIndex(), capacity);
-        ReferenceCountUtil.safeRelease(holder);
-        return directBuf;
-    }
-
-    protected static void checkResolvable(InetSocketAddress addr) {
-        if (addr.isUnresolved()) {
-            throw new UnresolvedAddressException();
-        }
-    }
-
     /**
      * Read bytes into the given {@link ByteBuf} and return the amount.
      */
@@ -350,8 +331,7 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
                 return 1;
             }
         } else {
-            final ByteBuffer nioBuf = buf.nioBufferCount() == 1 ?
-                    buf.internalNioBuffer(buf.readerIndex(), buf.readableBytes()) : buf.nioBuffer();
+            final ByteBuffer nioBuf = buf.nioBufferCount() == 1 ? buf.internalNioBuffer(buf.readerIndex(), buf.readableBytes()) : buf.nioBuffer();
             int localFlushedAmount = socket.write(nioBuf, nioBuf.position(), nioBuf.limit());
             if (localFlushedAmount > 0) {
                 nioBuf.position(nioBuf.position() + localFlushedAmount);
@@ -362,10 +342,77 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
         return WRITE_STATUS_SNDBUF_FULL;
     }
 
+    @Override
+    protected void doBind(SocketAddress local) throws Exception {
+        if (local instanceof InetSocketAddress) {
+            checkResolvable((InetSocketAddress) local);
+        }
+        socket.bind(local);
+        this.local = socket.localAddress();
+    }
+
+    /**
+     * Connect to the remote peer
+     */
+    protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
+        if (localAddress instanceof InetSocketAddress) {
+            checkResolvable((InetSocketAddress) localAddress);
+        }
+
+        InetSocketAddress remoteSocketAddr = remoteAddress instanceof InetSocketAddress ? (InetSocketAddress) remoteAddress : null;
+        if (remoteSocketAddr != null) {
+            checkResolvable(remoteSocketAddr);
+        }
+
+        if (remote != null) {
+            // Check if already connected before trying to connect. This is needed as connect(...) will not return -1
+            // and set errno to EISCONN if a previous connect(...) attempt was setting errno to EINPROGRESS and finished
+            // later.
+            throw new AlreadyConnectedException();
+        }
+
+        if (localAddress != null) {
+            socket.bind(localAddress);
+        }
+
+        boolean connected = doConnect0(remoteAddress);
+        if (connected) {
+            remote = remoteSocketAddr == null ? remoteAddress : computeRemoteAddr(remoteSocketAddr, socket.remoteAddress());
+        }
+        // We always need to set the localAddress even if not connected yet as the bind already took place.
+        //
+        // See https://github.com/netty/netty/issues/3463
+        local = socket.localAddress();
+        return connected;
+    }
+
+    private boolean doConnect0(SocketAddress remote) throws Exception {
+        boolean success = false;
+        try {
+            boolean connected = socket.connect(remote);
+            if (!connected) {
+                setFlag(Native.EPOLLOUT);
+            }
+            success = true;
+            return connected;
+        } finally {
+            if (!success) {
+                doClose();
+            }
+        }
+    }
+
+    @Override
+    protected SocketAddress localAddress0() {
+        return local;
+    }
+
+    @Override
+    protected SocketAddress remoteAddress0() {
+        return remote;
+    }
+
     protected abstract class AbstractEpollUnsafe extends AbstractUnsafe {
-        boolean readPending;
-        boolean maybeMoreDataToRead;
-        private EpollRecvByteAllocatorHandle allocHandle;
         private final Runnable epollInReadyRunnable = new Runnable() {
             @Override
             public void run() {
@@ -373,6 +420,9 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
                 epollInReady();
             }
         };
+        boolean readPending;
+        boolean maybeMoreDataToRead;
+        private EpollRecvByteAllocatorHandle allocHandle;
 
         /**
          * Called once EPOLLIN event is ready to be processed
@@ -490,6 +540,7 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
 
         /**
          * Create a new {@link EpollRecvByteAllocatorHandle} instance.
+         *
          * @param handle The handle to wrap with EPOLL specific logic.
          */
         EpollRecvByteAllocatorHandle newEpollHandle(RecvByteBufAllocator.ExtendedHandle handle) {
@@ -533,8 +584,7 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
         }
 
         @Override
-        public void connect(
-                final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise promise) {
+        public void connect(final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise promise) {
             if (!promise.setUncancellable() || !ensureOpen(promise)) {
                 return;
             }
@@ -558,8 +608,7 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
                             @Override
                             public void run() {
                                 ChannelPromise connectPromise = AbstractEpollChannel.this.connectPromise;
-                                ConnectTimeoutException cause =
-                                        new ConnectTimeoutException("connection timed out: " + remoteAddress);
+                                ConnectTimeoutException cause = new ConnectTimeoutException("connection timed out: " + remoteAddress);
                                 if (connectPromise != null && connectPromise.tryFailure(cause)) {
                                     close(voidPromise());
                                 }
@@ -667,77 +716,5 @@ abstract class AbstractEpollChannel extends AbstractChannel implements UnixChann
             setFlag(Native.EPOLLOUT);
             return false;
         }
-    }
-
-    @Override
-    protected void doBind(SocketAddress local) throws Exception {
-        if (local instanceof InetSocketAddress) {
-            checkResolvable((InetSocketAddress) local);
-        }
-        socket.bind(local);
-        this.local = socket.localAddress();
-    }
-
-    /**
-     * Connect to the remote peer
-     */
-    protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
-        if (localAddress instanceof InetSocketAddress) {
-            checkResolvable((InetSocketAddress) localAddress);
-        }
-
-        InetSocketAddress remoteSocketAddr = remoteAddress instanceof InetSocketAddress
-                ? (InetSocketAddress) remoteAddress : null;
-        if (remoteSocketAddr != null) {
-            checkResolvable(remoteSocketAddr);
-        }
-
-        if (remote != null) {
-            // Check if already connected before trying to connect. This is needed as connect(...) will not return -1
-            // and set errno to EISCONN if a previous connect(...) attempt was setting errno to EINPROGRESS and finished
-            // later.
-            throw new AlreadyConnectedException();
-        }
-
-        if (localAddress != null) {
-            socket.bind(localAddress);
-        }
-
-        boolean connected = doConnect0(remoteAddress);
-        if (connected) {
-            remote = remoteSocketAddr == null ?
-                    remoteAddress : computeRemoteAddr(remoteSocketAddr, socket.remoteAddress());
-        }
-        // We always need to set the localAddress even if not connected yet as the bind already took place.
-        //
-        // See https://github.com/netty/netty/issues/3463
-        local = socket.localAddress();
-        return connected;
-    }
-
-    private boolean doConnect0(SocketAddress remote) throws Exception {
-        boolean success = false;
-        try {
-            boolean connected = socket.connect(remote);
-            if (!connected) {
-                setFlag(Native.EPOLLOUT);
-            }
-            success = true;
-            return connected;
-        } finally {
-            if (!success) {
-                doClose();
-            }
-        }
-    }
-
-    @Override
-    protected SocketAddress localAddress0() {
-        return local;
-    }
-
-    @Override
-    protected SocketAddress remoteAddress0() {
-        return remote;
     }
 }

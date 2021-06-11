@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.socks;
 
 import io.netty.buffer.ByteBuf;
@@ -29,19 +14,14 @@ import java.net.IDN;
  * @see SocksCmdResponseDecoder
  */
 public final class SocksCmdResponse extends SocksResponse {
-    private final SocksCmdStatus cmdStatus;
-
-    private final SocksAddressType addressType;
-    private final String host;
-    private final int port;
-
     // All arrays are initialized on construction time to 0/false/null remove array Initialization
     private static final byte[] DOMAIN_ZEROED = {0x00};
     private static final byte[] IPv4_HOSTNAME_ZEROED = {0x00, 0x00, 0x00, 0x00};
-    private static final byte[] IPv6_HOSTNAME_ZEROED = {0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00};
+    private static final byte[] IPv6_HOSTNAME_ZEROED = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    private final SocksCmdStatus cmdStatus;
+    private final SocksAddressType addressType;
+    private final String host;
+    private final int port;
 
     public SocksCmdResponse(SocksCmdStatus cmdStatus, SocksAddressType addressType) {
         this(cmdStatus, addressType, null, 0);
@@ -50,13 +30,13 @@ public final class SocksCmdResponse extends SocksResponse {
     /**
      * Constructs new response and includes provided host and port as part of it.
      *
-     * @param cmdStatus status of the response
+     * @param cmdStatus   status of the response
      * @param addressType type of host parameter
-     * @param host host (BND.ADDR field) is address that server used when connecting to the target host.
-     *             When null a value of 4/8 0x00 octets will be used for IPv4/IPv6 and a single 0x00 byte will be
-     *             used for domain addressType. Value is converted to ASCII using {@link IDN#toASCII(String)}.
-     * @param port port (BND.PORT field) that the server assigned to connect to the target host
-     * @throws NullPointerException in case cmdStatus or addressType are missing
+     * @param host        host (BND.ADDR field) is address that server used when connecting to the target host.
+     *                    When null a value of 4/8 0x00 octets will be used for IPv4/IPv6 and a single 0x00 byte will be
+     *                    used for domain addressType. Value is converted to ASCII using {@link IDN#toASCII(String)}.
+     * @param port        port (BND.PORT field) that the server assigned to connect to the target host
+     * @throws NullPointerException     in case cmdStatus or addressType are missing
      * @throws IllegalArgumentException in case host or port cannot be validated
      * @see IDN#toASCII(String)
      */
@@ -120,7 +100,7 @@ public final class SocksCmdResponse extends SocksResponse {
      * This is typically different from address which client uses to connect to the SOCKS server.
      *
      * @return host that is used as a parameter in {@link SocksCmdType}
-     *         or null when there was no host specified during response construction
+     * or null when there was no host specified during response construction
      */
     public String host() {
         return host != null && addressType == SocksAddressType.DOMAIN ? IDN.toUnicode(host) : host;
@@ -144,8 +124,7 @@ public final class SocksCmdResponse extends SocksResponse {
         byteBuf.writeByte(addressType.byteValue());
         switch (addressType) {
             case IPv4: {
-                byte[] hostContent = host == null ?
-                        IPv4_HOSTNAME_ZEROED : NetUtil.createByteArrayFromIpAddressString(host);
+                byte[] hostContent = host == null ? IPv4_HOSTNAME_ZEROED : NetUtil.createByteArrayFromIpAddressString(host);
                 byteBuf.writeBytes(hostContent);
                 byteBuf.writeShort(port);
                 break;
@@ -162,8 +141,7 @@ public final class SocksCmdResponse extends SocksResponse {
                 break;
             }
             case IPv6: {
-                byte[] hostContent = host == null
-                        ? IPv6_HOSTNAME_ZEROED : NetUtil.createByteArrayFromIpAddressString(host);
+                byte[] hostContent = host == null ? IPv6_HOSTNAME_ZEROED : NetUtil.createByteArrayFromIpAddressString(host);
                 byteBuf.writeBytes(hostContent);
                 byteBuf.writeShort(port);
                 break;

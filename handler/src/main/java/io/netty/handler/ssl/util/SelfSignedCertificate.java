@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.handler.ssl.util;
 
 import io.netty.buffer.ByteBuf;
@@ -53,20 +37,21 @@ public final class SelfSignedCertificate {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(SelfSignedCertificate.class);
 
-    /** Current time minus 1 year, just in case software clock goes back due to time synchronization */
-    private static final Date DEFAULT_NOT_BEFORE = new Date(SystemPropertyUtil.getLong(
-            "io.netty.selfSignedCertificate.defaultNotBefore", System.currentTimeMillis() - 86400000L * 365));
-    /** The maximum possible value in X.509 specification: 9999-12-31 23:59:59 */
-    private static final Date DEFAULT_NOT_AFTER = new Date(SystemPropertyUtil.getLong(
-            "io.netty.selfSignedCertificate.defaultNotAfter", 253402300799000L));
+    /**
+     * Current time minus 1 year, just in case software clock goes back due to time synchronization
+     */
+    private static final Date DEFAULT_NOT_BEFORE = new Date(SystemPropertyUtil.getLong("io.netty.selfSignedCertificate.defaultNotBefore", System.currentTimeMillis() - 86400000L * 365));
+    /**
+     * The maximum possible value in X.509 specification: 9999-12-31 23:59:59
+     */
+    private static final Date DEFAULT_NOT_AFTER = new Date(SystemPropertyUtil.getLong("io.netty.selfSignedCertificate.defaultNotAfter", 253402300799000L));
 
     /**
      * FIPS 140-2 encryption requires the RSA key length to be 2048 bits or greater.
      * Let's use that as a sane default but allow the default to be set dynamically
      * for those that need more stringent security requirements.
      */
-    private static final int DEFAULT_KEY_LENGTH_BITS =
-            SystemPropertyUtil.getInt("io.netty.handler.ssl.util.selfSignedKeyStrength", 2048);
+    private static final int DEFAULT_KEY_LENGTH_BITS = SystemPropertyUtil.getInt("io.netty.handler.ssl.util.selfSignedKeyStrength", 2048);
 
     private final File certificate;
     private final File privateKey;
@@ -88,8 +73,7 @@ public final class SelfSignedCertificate {
      * @param notBefore Certificate is not valid before this time
      * @param notAfter  Certificate is not valid after this time
      */
-    public SelfSignedCertificate(Date notBefore, Date notAfter)
-            throws CertificateException {
+    public SelfSignedCertificate(Date notBefore, Date notAfter) throws CertificateException {
         this("localhost", notBefore, notAfter, "RSA", DEFAULT_KEY_LENGTH_BITS);
     }
 
@@ -101,8 +85,7 @@ public final class SelfSignedCertificate {
      * @param algorithm Key pair algorithm
      * @param bits      the number of bits of the generated private key
      */
-    public SelfSignedCertificate(Date notBefore, Date notAfter, String algorithm, int bits)
-            throws CertificateException {
+    public SelfSignedCertificate(Date notBefore, Date notAfter, String algorithm, int bits) throws CertificateException {
         this("localhost", notBefore, notAfter, algorithm, bits);
     }
 
@@ -150,8 +133,7 @@ public final class SelfSignedCertificate {
      * @param algorithm Key pair algorithm
      * @param bits      the number of bits of the generated private key
      */
-    public SelfSignedCertificate(String fqdn, Date notBefore, Date notAfter, String algorithm, int bits)
-            throws CertificateException {
+    public SelfSignedCertificate(String fqdn, Date notBefore, Date notAfter, String algorithm, int bits) throws CertificateException {
         // Bypass entropy collection by using insecure random generator.
         // We just want to generate it without any delay because it's for testing purposes only.
         this(fqdn, ThreadLocalInsecureRandom.current(), bits, notBefore, notAfter, algorithm);
@@ -161,12 +143,11 @@ public final class SelfSignedCertificate {
      * Creates a new instance.
      * <p> Algorithm: RSA </p>
      *
-     * @param fqdn      a fully qualified domain name
-     * @param random    the {@link SecureRandom} to use
-     * @param bits      the number of bits of the generated private key
+     * @param fqdn   a fully qualified domain name
+     * @param random the {@link SecureRandom} to use
+     * @param bits   the number of bits of the generated private key
      */
-    public SelfSignedCertificate(String fqdn, SecureRandom random, int bits)
-            throws CertificateException {
+    public SelfSignedCertificate(String fqdn, SecureRandom random, int bits) throws CertificateException {
         this(fqdn, random, bits, DEFAULT_NOT_BEFORE, DEFAULT_NOT_AFTER, "RSA");
     }
 
@@ -178,8 +159,7 @@ public final class SelfSignedCertificate {
      * @param algorithm Key pair algorithm
      * @param bits      the number of bits of the generated private key
      */
-    public SelfSignedCertificate(String fqdn, SecureRandom random, String algorithm, int bits)
-            throws CertificateException {
+    public SelfSignedCertificate(String fqdn, SecureRandom random, String algorithm, int bits) throws CertificateException {
         this(fqdn, random, bits, DEFAULT_NOT_BEFORE, DEFAULT_NOT_AFTER, algorithm);
     }
 
@@ -193,8 +173,7 @@ public final class SelfSignedCertificate {
      * @param notBefore Certificate is not valid before this time
      * @param notAfter  Certificate is not valid after this time
      */
-    public SelfSignedCertificate(String fqdn, SecureRandom random, int bits, Date notBefore, Date notAfter)
-            throws CertificateException {
+    public SelfSignedCertificate(String fqdn, SecureRandom random, int bits, Date notBefore, Date notAfter) throws CertificateException {
         this(fqdn, random, bits, notBefore, notAfter, "RSA");
     }
 
@@ -208,8 +187,7 @@ public final class SelfSignedCertificate {
      * @param notAfter  Certificate is not valid after this time
      * @param algorithm Key pair algorithm
      */
-    public SelfSignedCertificate(String fqdn, SecureRandom random, int bits, Date notBefore, Date notAfter,
-                                 String algorithm) throws CertificateException {
+    public SelfSignedCertificate(String fqdn, SecureRandom random, int bits, Date notBefore, Date notAfter, String algorithm) throws CertificateException {
 
         if (!algorithm.equalsIgnoreCase("EC") && !algorithm.equalsIgnoreCase("RSA")) {
             throw new IllegalArgumentException("Algorithm not valid: " + algorithm);
@@ -233,13 +211,10 @@ public final class SelfSignedCertificate {
             logger.debug("Failed to generate a self-signed X.509 certificate using sun.security.x509:", t);
             try {
                 // Try Bouncy Castle if the current JVM didn't have sun.security.x509.
-                paths = BouncyCastleSelfSignedCertGenerator.generate(
-                        fqdn, keypair, random, notBefore, notAfter, algorithm);
+                paths = BouncyCastleSelfSignedCertGenerator.generate(fqdn, keypair, random, notBefore, notAfter, algorithm);
             } catch (Throwable t2) {
                 logger.debug("Failed to generate a self-signed X.509 certificate using Bouncy Castle:", t2);
-                final CertificateException certificateException = new CertificateException(
-                        "No provider succeeded to generate a self-signed certificate. " +
-                                "See debug log for the root cause.", t2);
+                final CertificateException certificateException = new CertificateException("No provider succeeded to generate a self-signed certificate. " + "See debug log for the root cause.", t2);
                 ThrowableUtil.addSuppressed(certificateException, t);
                 throw certificateException;
             }
@@ -267,44 +242,7 @@ public final class SelfSignedCertificate {
         }
     }
 
-    /**
-     * Returns the generated X.509 certificate file in PEM format.
-     */
-    public File certificate() {
-        return certificate;
-    }
-
-    /**
-     * Returns the generated RSA private key file in PEM format.
-     */
-    public File privateKey() {
-        return privateKey;
-    }
-
-    /**
-     *  Returns the generated X.509 certificate.
-     */
-    public X509Certificate cert() {
-        return cert;
-    }
-
-    /**
-     * Returns the generated RSA private key.
-     */
-    public PrivateKey key() {
-        return key;
-    }
-
-    /**
-     * Deletes the generated X.509 certificate file and RSA private key file.
-     */
-    public void delete() {
-        safeDelete(certificate);
-        safeDelete(privateKey);
-    }
-
-    static String[] newSelfSignedCertificate(
-            String fqdn, PrivateKey key, X509Certificate cert) throws IOException, CertificateEncodingException {
+    static String[] newSelfSignedCertificate(String fqdn, PrivateKey key, X509Certificate cert) throws IOException, CertificateEncodingException {
         // Encode the private key into a file.
         ByteBuf wrappedBuf = Unpooled.wrappedBuffer(key.getEncoded());
         ByteBuf encodedBuf;
@@ -312,9 +250,7 @@ public final class SelfSignedCertificate {
         try {
             encodedBuf = Base64.encode(wrappedBuf, true);
             try {
-                keyText = "-----BEGIN PRIVATE KEY-----\n" +
-                        encodedBuf.toString(CharsetUtil.US_ASCII) +
-                        "\n-----END PRIVATE KEY-----\n";
+                keyText = "-----BEGIN PRIVATE KEY-----\n" + encodedBuf.toString(CharsetUtil.US_ASCII) + "\n-----END PRIVATE KEY-----\n";
             } finally {
                 encodedBuf.release();
             }
@@ -343,9 +279,7 @@ public final class SelfSignedCertificate {
             encodedBuf = Base64.encode(wrappedBuf, true);
             try {
                 // Encode the certificate into a CRT file.
-                certText = "-----BEGIN CERTIFICATE-----\n" +
-                        encodedBuf.toString(CharsetUtil.US_ASCII) +
-                        "\n-----END CERTIFICATE-----\n";
+                certText = "-----BEGIN CERTIFICATE-----\n" + encodedBuf.toString(CharsetUtil.US_ASCII) + "\n-----END CERTIFICATE-----\n";
             } finally {
                 encodedBuf.release();
             }
@@ -369,7 +303,7 @@ public final class SelfSignedCertificate {
             }
         }
 
-        return new String[] { certFile.getPath(), keyFile.getPath() };
+        return new String[]{certFile.getPath(), keyFile.getPath()};
     }
 
     private static void safeDelete(File certFile) {
@@ -388,5 +322,41 @@ public final class SelfSignedCertificate {
                 logger.warn("Failed to close a file: " + keyFile, e);
             }
         }
+    }
+
+    /**
+     * Returns the generated X.509 certificate file in PEM format.
+     */
+    public File certificate() {
+        return certificate;
+    }
+
+    /**
+     * Returns the generated RSA private key file in PEM format.
+     */
+    public File privateKey() {
+        return privateKey;
+    }
+
+    /**
+     * Returns the generated X.509 certificate.
+     */
+    public X509Certificate cert() {
+        return cert;
+    }
+
+    /**
+     * Returns the generated RSA private key.
+     */
+    public PrivateKey key() {
+        return key;
+    }
+
+    /**
+     * Deletes the generated X.509 certificate file and RSA private key file.
+     */
+    public void delete() {
+        safeDelete(certificate);
+        safeDelete(privateKey);
     }
 }

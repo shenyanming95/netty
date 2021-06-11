@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.timeout;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -91,7 +76,18 @@ import java.util.concurrent.TimeUnit;
  */
 public class IdleStateHandler extends ChannelDuplexHandler {
     private static final long MIN_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(1);
-
+    private final boolean observeOutput;
+    private final long readerIdleTimeNanos;
+    private final long writerIdleTimeNanos;
+    private final long allIdleTimeNanos;
+    private ScheduledFuture<?> readerIdleTimeout;
+    private long lastReadTime;
+    private boolean firstReaderIdleEvent = true;
+    private ScheduledFuture<?> writerIdleTimeout;
+    private long lastWriteTime;
+    private boolean firstWriterIdleEvent = true;
+    private ScheduledFuture<?> allIdleTimeout;
+    private boolean firstAllIdleEvent = true;
     // Not create a new ChannelFutureListener per write operation to reduce GC pressure.
     private final ChannelFutureListener writeListener = new ChannelFutureListener() {
         @Override
@@ -100,23 +96,6 @@ public class IdleStateHandler extends ChannelDuplexHandler {
             firstWriterIdleEvent = firstAllIdleEvent = true;
         }
     };
-
-    private final boolean observeOutput;
-    private final long readerIdleTimeNanos;
-    private final long writerIdleTimeNanos;
-    private final long allIdleTimeNanos;
-
-    private ScheduledFuture<?> readerIdleTimeout;
-    private long lastReadTime;
-    private boolean firstReaderIdleEvent = true;
-
-    private ScheduledFuture<?> writerIdleTimeout;
-    private long lastWriteTime;
-    private boolean firstWriterIdleEvent = true;
-
-    private ScheduledFuture<?> allIdleTimeout;
-    private boolean firstAllIdleEvent = true;
-
     private byte state; // 0 - none, 1 - initialized, 2 - destroyed
     private boolean reading;
 
@@ -128,62 +107,46 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     /**
      * Creates a new instance firing {@link IdleStateEvent}s.
      *
-     * @param readerIdleTimeSeconds
-     *        an {@link IdleStateEvent} whose state is {@link IdleState#READER_IDLE}
-     *        will be triggered when no read was performed for the specified
-     *        period of time.  Specify {@code 0} to disable.
-     * @param writerIdleTimeSeconds
-     *        an {@link IdleStateEvent} whose state is {@link IdleState#WRITER_IDLE}
-     *        will be triggered when no write was performed for the specified
-     *        period of time.  Specify {@code 0} to disable.
-     * @param allIdleTimeSeconds
-     *        an {@link IdleStateEvent} whose state is {@link IdleState#ALL_IDLE}
-     *        will be triggered when neither read nor write was performed for
-     *        the specified period of time.  Specify {@code 0} to disable.
+     * @param readerIdleTimeSeconds an {@link IdleStateEvent} whose state is {@link IdleState#READER_IDLE}
+     *                              will be triggered when no read was performed for the specified
+     *                              period of time.  Specify {@code 0} to disable.
+     * @param writerIdleTimeSeconds an {@link IdleStateEvent} whose state is {@link IdleState#WRITER_IDLE}
+     *                              will be triggered when no write was performed for the specified
+     *                              period of time.  Specify {@code 0} to disable.
+     * @param allIdleTimeSeconds    an {@link IdleStateEvent} whose state is {@link IdleState#ALL_IDLE}
+     *                              will be triggered when neither read nor write was performed for
+     *                              the specified period of time.  Specify {@code 0} to disable.
      */
-    public IdleStateHandler(
-            int readerIdleTimeSeconds,
-            int writerIdleTimeSeconds,
-            int allIdleTimeSeconds) {
+    public IdleStateHandler(int readerIdleTimeSeconds, int writerIdleTimeSeconds, int allIdleTimeSeconds) {
 
-        this(readerIdleTimeSeconds, writerIdleTimeSeconds, allIdleTimeSeconds,
-             TimeUnit.SECONDS);
+        this(readerIdleTimeSeconds, writerIdleTimeSeconds, allIdleTimeSeconds, TimeUnit.SECONDS);
     }
 
     /**
      * @see #IdleStateHandler(boolean, long, long, long, TimeUnit)
      */
-    public IdleStateHandler(
-            long readerIdleTime, long writerIdleTime, long allIdleTime,
-            TimeUnit unit) {
+    public IdleStateHandler(long readerIdleTime, long writerIdleTime, long allIdleTime, TimeUnit unit) {
         this(false, readerIdleTime, writerIdleTime, allIdleTime, unit);
     }
 
     /**
      * Creates a new instance firing {@link IdleStateEvent}s.
      *
-     * @param observeOutput
-     *        whether or not the consumption of {@code bytes} should be taken into
-     *        consideration when assessing write idleness. The default is {@code false}.
-     * @param readerIdleTime
-     *        an {@link IdleStateEvent} whose state is {@link IdleState#READER_IDLE}
-     *        will be triggered when no read was performed for the specified
-     *        period of time.  Specify {@code 0} to disable.
-     * @param writerIdleTime
-     *        an {@link IdleStateEvent} whose state is {@link IdleState#WRITER_IDLE}
-     *        will be triggered when no write was performed for the specified
-     *        period of time.  Specify {@code 0} to disable.
-     * @param allIdleTime
-     *        an {@link IdleStateEvent} whose state is {@link IdleState#ALL_IDLE}
-     *        will be triggered when neither read nor write was performed for
-     *        the specified period of time.  Specify {@code 0} to disable.
-     * @param unit
-     *        the {@link TimeUnit} of {@code readerIdleTime},
-     *        {@code writeIdleTime}, and {@code allIdleTime}
+     * @param observeOutput  whether or not the consumption of {@code bytes} should be taken into
+     *                       consideration when assessing write idleness. The default is {@code false}.
+     * @param readerIdleTime an {@link IdleStateEvent} whose state is {@link IdleState#READER_IDLE}
+     *                       will be triggered when no read was performed for the specified
+     *                       period of time.  Specify {@code 0} to disable.
+     * @param writerIdleTime an {@link IdleStateEvent} whose state is {@link IdleState#WRITER_IDLE}
+     *                       will be triggered when no write was performed for the specified
+     *                       period of time.  Specify {@code 0} to disable.
+     * @param allIdleTime    an {@link IdleStateEvent} whose state is {@link IdleState#ALL_IDLE}
+     *                       will be triggered when neither read nor write was performed for
+     *                       the specified period of time.  Specify {@code 0} to disable.
+     * @param unit           the {@link TimeUnit} of {@code readerIdleTime},
+     *                       {@code writeIdleTime}, and {@code allIdleTime}
      */
-    public IdleStateHandler(boolean observeOutput,
-            long readerIdleTime, long writerIdleTime, long allIdleTime,
-            TimeUnit unit) {
+    public IdleStateHandler(boolean observeOutput, long readerIdleTime, long writerIdleTime, long allIdleTime, TimeUnit unit) {
         ObjectUtil.checkNotNull(unit, "unit");
 
         this.observeOutput = observeOutput;
@@ -207,7 +170,6 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
     /**
      * Return the readerIdleTime that was given when instance this class in milliseconds.
-     *
      */
     public long getReaderIdleTimeInMillis() {
         return TimeUnit.NANOSECONDS.toMillis(readerIdleTimeNanos);
@@ -215,7 +177,6 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
     /**
      * Return the writerIdleTime that was given when instance this class in milliseconds.
-     *
      */
     public long getWriterIdleTimeInMillis() {
         return TimeUnit.NANOSECONDS.toMillis(writerIdleTimeNanos);
@@ -223,7 +184,6 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
     /**
      * Return the allIdleTime that was given when instance this class in milliseconds.
-     *
      */
     public long getAllIdleTimeInMillis() {
         return TimeUnit.NANOSECONDS.toMillis(allIdleTimeNanos);
@@ -302,9 +262,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         // Avoid the case where destroy() is called before scheduling timeouts.
         // See: https://github.com/netty/netty/issues/143
         switch (state) {
-        case 1:
-        case 2:
-            return;
+            case 1:
+            case 2:
+                return;
         }
 
         state = 1;
@@ -312,16 +272,13 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
         lastReadTime = lastWriteTime = ticksInNanos();
         if (readerIdleTimeNanos > 0) {
-            readerIdleTimeout = schedule(ctx, new ReaderIdleTimeoutTask(ctx),
-                    readerIdleTimeNanos, TimeUnit.NANOSECONDS);
+            readerIdleTimeout = schedule(ctx, new ReaderIdleTimeoutTask(ctx), readerIdleTimeNanos, TimeUnit.NANOSECONDS);
         }
         if (writerIdleTimeNanos > 0) {
-            writerIdleTimeout = schedule(ctx, new WriterIdleTimeoutTask(ctx),
-                    writerIdleTimeNanos, TimeUnit.NANOSECONDS);
+            writerIdleTimeout = schedule(ctx, new WriterIdleTimeoutTask(ctx), writerIdleTimeNanos, TimeUnit.NANOSECONDS);
         }
         if (allIdleTimeNanos > 0) {
-            allIdleTimeout = schedule(ctx, new AllIdleTimeoutTask(ctx),
-                    allIdleTimeNanos, TimeUnit.NANOSECONDS);
+            allIdleTimeout = schedule(ctx, new AllIdleTimeoutTask(ctx), allIdleTimeNanos, TimeUnit.NANOSECONDS);
         }
     }
 
@@ -401,7 +358,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
      * Returns {@code true} if and only if the {@link IdleStateHandler} was constructed
      * with {@link #observeOutput} enabled and there has been an observed change in the
      * {@link ChannelOutboundBuffer} between two consecutive calls of this method.
-     *
+     * <p>
      * https://github.com/netty/netty/issues/6150
      */
     private boolean hasOutputChanged(ChannelHandlerContext ctx, boolean first) {

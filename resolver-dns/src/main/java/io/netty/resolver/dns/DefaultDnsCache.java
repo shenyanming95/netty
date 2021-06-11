@@ -66,18 +66,26 @@ public class DefaultDnsCache implements DnsCache {
 
     /**
      * Create a cache.
-     * @param minTtl the minimum TTL
-     * @param maxTtl the maximum TTL
+     *
+     * @param minTtl      the minimum TTL
+     * @param maxTtl      the maximum TTL
      * @param negativeTtl the TTL for failed queries
      */
     public DefaultDnsCache(int minTtl, int maxTtl, int negativeTtl) {
         this.minTtl = Math.min(Cache.MAX_SUPPORTED_TTL_SECS, checkPositiveOrZero(minTtl, "minTtl"));
         this.maxTtl = Math.min(Cache.MAX_SUPPORTED_TTL_SECS, checkPositiveOrZero(maxTtl, "maxTtl"));
         if (minTtl > maxTtl) {
-            throw new IllegalArgumentException(
-                    "minTtl: " + minTtl + ", maxTtl: " + maxTtl + " (expected: 0 <= minTtl <= maxTtl)");
+            throw new IllegalArgumentException("minTtl: " + minTtl + ", maxTtl: " + maxTtl + " (expected: 0 <= minTtl <= maxTtl)");
         }
         this.negativeTtl = checkPositiveOrZero(negativeTtl, "negativeTtl");
+    }
+
+    private static boolean emptyAdditionals(DnsRecord[] additionals) {
+        return additionals == null || additionals.length == 0;
+    }
+
+    private static String appendDot(String hostname) {
+        return StringUtil.endsWith(hostname, '.') ? hostname : hostname + '.';
     }
 
     /**
@@ -117,10 +125,6 @@ public class DefaultDnsCache implements DnsCache {
         return resolveCache.clear(appendDot(hostname));
     }
 
-    private static boolean emptyAdditionals(DnsRecord[] additionals) {
-        return additionals == null || additionals.length == 0;
-    }
-
     @Override
     public List<? extends DnsCacheEntry> get(String hostname, DnsRecord[] additionals) {
         checkNotNull(hostname, "hostname");
@@ -132,8 +136,7 @@ public class DefaultDnsCache implements DnsCache {
     }
 
     @Override
-    public DnsCacheEntry cache(String hostname, DnsRecord[] additionals,
-                               InetAddress address, long originalTtl, EventLoop loop) {
+    public DnsCacheEntry cache(String hostname, DnsRecord[] additionals, InetAddress address, long originalTtl, EventLoop loop) {
         checkNotNull(hostname, "hostname");
         checkNotNull(address, "address");
         checkNotNull(loop, "loop");
@@ -162,13 +165,7 @@ public class DefaultDnsCache implements DnsCache {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("DefaultDnsCache(minTtl=")
-                .append(minTtl).append(", maxTtl=")
-                .append(maxTtl).append(", negativeTtl=")
-                .append(negativeTtl).append(", cached resolved hostname=")
-                .append(resolveCache.size()).append(')')
-                .toString();
+        return new StringBuilder().append("DefaultDnsCache(minTtl=").append(minTtl).append(", maxTtl=").append(maxTtl).append(", negativeTtl=").append(negativeTtl).append(", cached resolved hostname=").append(resolveCache.size()).append(')').toString();
     }
 
     private static final class DefaultDnsCacheEntry implements DnsCacheEntry {
@@ -210,9 +207,5 @@ public class DefaultDnsCache implements DnsCache {
                 return address.toString();
             }
         }
-    }
-
-    private static String appendDot(String hostname) {
-        return StringUtil.endsWith(hostname, '.') ? hostname : hostname + '.';
     }
 }

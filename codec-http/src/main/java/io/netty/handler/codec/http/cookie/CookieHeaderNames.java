@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.cookie;
 
 public final class CookieHeaderNames {
@@ -30,14 +15,16 @@ public final class CookieHeaderNames {
 
     public static final String SAMESITE = "SameSite";
 
+    private CookieHeaderNames() {
+        // Unused.
+    }
+
     /**
      * Possible values for the SameSite attribute.
      * See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-05">changes to RFC6265bis</a>
      */
     public enum SameSite {
-        Lax,
-        Strict,
-        None;
+        Lax, Strict, None;
 
         /**
          * Return the enum value corresponding to the passed in same-site-flag, using a case insensitive comparison.
@@ -55,9 +42,5 @@ public final class CookieHeaderNames {
             }
             return null;
         }
-    }
-
-    private CookieHeaderNames() {
-        // Unused.
     }
 }

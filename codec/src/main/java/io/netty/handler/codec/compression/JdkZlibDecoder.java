@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.compression;
 
 import io.netty.buffer.ByteBuf;
@@ -35,31 +20,15 @@ public class JdkZlibDecoder extends ZlibDecoder {
     private static final int FNAME = 0x08;
     private static final int FCOMMENT = 0x10;
     private static final int FRESERVED = 0xE0;
-
-    private Inflater inflater;
     private final byte[] dictionary;
-
     // GZIP related
     private final ByteBufChecksum crc;
     private final boolean decompressConcatenated;
-
-    private enum GzipState {
-        HEADER_START,
-        HEADER_END,
-        FLG_READ,
-        XLEN_READ,
-        SKIP_FNAME,
-        SKIP_COMMENT,
-        PROCESS_FHCRC,
-        FOOTER_START,
-    }
-
+    private Inflater inflater;
     private GzipState gzipState = GzipState.HEADER_START;
     private int flags = -1;
     private int xlen = -1;
-
     private volatile boolean finished;
-
     private boolean decideZlibOrNone;
 
     /**
@@ -73,9 +42,8 @@ public class JdkZlibDecoder extends ZlibDecoder {
      * Creates a new instance with the default wrapper ({@link ZlibWrapper#ZLIB})
      * and the specified maximum buffer allocation.
      *
-     * @param maxAllocation
-     *          Maximum size of the decompression buffer. Must be &gt;= 0.
-     *          If zero, maximum size is decided by the {@link ByteBufAllocator}.
+     * @param maxAllocation Maximum size of the decompression buffer. Must be &gt;= 0.
+     *                      If zero, maximum size is decided by the {@link ByteBufAllocator}.
      */
     public JdkZlibDecoder(int maxAllocation) {
         this(ZlibWrapper.ZLIB, null, false, maxAllocation);
@@ -95,9 +63,8 @@ public class JdkZlibDecoder extends ZlibDecoder {
      * The wrapper is always {@link ZlibWrapper#ZLIB} because it is the only format that
      * supports the preset dictionary.
      *
-     * @param maxAllocation
-     *          Maximum size of the decompression buffer. Must be &gt;= 0.
-     *          If zero, maximum size is decided by the {@link ByteBufAllocator}.
+     * @param maxAllocation Maximum size of the decompression buffer. Must be &gt;= 0.
+     *                      If zero, maximum size is decided by the {@link ByteBufAllocator}.
      */
     public JdkZlibDecoder(byte[] dictionary, int maxAllocation) {
         this(ZlibWrapper.ZLIB, dictionary, false, maxAllocation);
@@ -117,9 +84,8 @@ public class JdkZlibDecoder extends ZlibDecoder {
      * Be aware that only {@link ZlibWrapper#GZIP}, {@link ZlibWrapper#ZLIB} and {@link ZlibWrapper#NONE} are
      * supported atm.
      *
-     * @param maxAllocation
-     *          Maximum size of the decompression buffer. Must be &gt;= 0.
-     *          If zero, maximum size is decided by the {@link ByteBufAllocator}.
+     * @param maxAllocation Maximum size of the decompression buffer. Must be &gt;= 0.
+     *                      If zero, maximum size is decided by the {@link ByteBufAllocator}.
      */
     public JdkZlibDecoder(ZlibWrapper wrapper, int maxAllocation) {
         this(wrapper, null, false, maxAllocation);
@@ -169,6 +135,17 @@ public class JdkZlibDecoder extends ZlibDecoder {
                 throw new IllegalArgumentException("Only GZIP or ZLIB is supported, but you used " + wrapper);
         }
         this.dictionary = dictionary;
+    }
+
+    /*
+     * Returns true if the cmf_flg parameter (think: first two bytes of a zlib stream)
+     * indicates that this is a zlib stream.
+     * <p>
+     * You can lookup the details in the ZLIB RFC:
+     * <a href="http://tools.ietf.org/html/rfc1950#section-2.2">RFC 1950</a>.
+     */
+    private static boolean looksLikeZlib(short cmf_flg) {
+        return (cmf_flg & 0x7800) == 0x7800 && cmf_flg % 31 == 0;
     }
 
     @Override
@@ -242,8 +219,7 @@ public class JdkZlibDecoder extends ZlibDecoder {
                 } else {
                     if (inflater.needsDictionary()) {
                         if (dictionary == null) {
-                            throw new DecompressionException(
-                                    "decompression failure, unable to set dictionary as non was specified");
+                            throw new DecompressionException("decompression failure, unable to set dictionary as non was specified");
                         }
                         inflater.setDictionary(dictionary);
                     }
@@ -318,8 +294,7 @@ public class JdkZlibDecoder extends ZlibDecoder {
 
                 int method = in.readUnsignedByte();
                 if (method != Deflater.DEFLATED) {
-                    throw new DecompressionException("Unsupported compression method "
-                            + method + " in the GZIP header");
+                    throw new DecompressionException("Unsupported compression method " + method + " in the GZIP header");
                 }
                 crc.update(method);
 
@@ -327,8 +302,7 @@ public class JdkZlibDecoder extends ZlibDecoder {
                 crc.update(flags);
 
                 if ((flags & FRESERVED) != 0) {
-                    throw new DecompressionException(
-                            "Reserved flags are set in the GZIP header");
+                    throw new DecompressionException("Reserved flags are set in the GZIP header");
                 }
 
                 // mtime (int)
@@ -425,8 +399,7 @@ public class JdkZlibDecoder extends ZlibDecoder {
         }
         int readLength = inflater.getTotalOut();
         if (dataLength != readLength) {
-            throw new DecompressionException(
-                    "Number of bytes mismatch. Expected: " + dataLength + ", Got: " + readLength);
+            throw new DecompressionException("Number of bytes mismatch. Expected: " + dataLength + ", Got: " + readLength);
         }
         return true;
     }
@@ -438,20 +411,11 @@ public class JdkZlibDecoder extends ZlibDecoder {
         }
         long readCrc = crc.getValue();
         if (crcValue != readCrc) {
-            throw new DecompressionException(
-                    "CRC value mismatch. Expected: " + crcValue + ", Got: " + readCrc);
+            throw new DecompressionException("CRC value mismatch. Expected: " + crcValue + ", Got: " + readCrc);
         }
     }
 
-    /*
-     * Returns true if the cmf_flg parameter (think: first two bytes of a zlib stream)
-     * indicates that this is a zlib stream.
-     * <p>
-     * You can lookup the details in the ZLIB RFC:
-     * <a href="http://tools.ietf.org/html/rfc1950#section-2.2">RFC 1950</a>.
-     */
-    private static boolean looksLikeZlib(short cmf_flg) {
-        return (cmf_flg & 0x7800) == 0x7800 &&
-                cmf_flg % 31 == 0;
+    private enum GzipState {
+        HEADER_START, HEADER_END, FLG_READ, XLEN_READ, SKIP_FNAME, SKIP_COMMENT, PROCESS_FHCRC, FOOTER_START,
     }
 }

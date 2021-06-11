@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.http.websocketx.benchmarkserver;
 
 import io.netty.buffer.ByteBuf;
@@ -36,6 +21,31 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 
     private WebSocketServerHandshaker handshaker;
 
+    private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
+        // Generate an error page if response getStatus code is not OK (200).
+        HttpResponseStatus responseStatus = res.status();
+        if (responseStatus.code() != 200) {
+            ByteBufUtil.writeUtf8(res.content(), responseStatus.toString());
+            HttpUtil.setContentLength(res, res.content().readableBytes());
+        }
+        // Send the response and close the connection if necessary.
+        boolean keepAlive = HttpUtil.isKeepAlive(req) && responseStatus.code() == 200;
+        HttpUtil.setKeepAlive(res, keepAlive);
+        ChannelFuture future = ctx.write(res); // Flushed in channelReadComplete()
+        if (!keepAlive) {
+            future.addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    private static String getWebSocketLocation(FullHttpRequest req) {
+        String location = req.headers().get(HttpHeaderNames.HOST) + WEBSOCKET_PATH;
+        if (WebSocketServer.SSL) {
+            return "wss://" + location;
+        } else {
+            return "ws://" + location;
+        }
+    }
+
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof FullHttpRequest) {
@@ -53,15 +63,13 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
     private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) {
         // Handle a bad request.
         if (!req.decoderResult().isSuccess()) {
-            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), BAD_REQUEST,
-                                                                   ctx.alloc().buffer(0)));
+            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), BAD_REQUEST, ctx.alloc().buffer(0)));
             return;
         }
 
         // Allow only GET methods.
         if (!GET.equals(req.method())) {
-            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), FORBIDDEN,
-                                                                   ctx.alloc().buffer(0)));
+            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), FORBIDDEN, ctx.alloc().buffer(0)));
             return;
         }
 
@@ -78,15 +86,13 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
         }
 
         if ("/favicon.ico".equals(req.uri())) {
-            FullHttpResponse res = new DefaultFullHttpResponse(req.protocolVersion(), NOT_FOUND,
-                                                               ctx.alloc().buffer(0));
+            FullHttpResponse res = new DefaultFullHttpResponse(req.protocolVersion(), NOT_FOUND, ctx.alloc().buffer(0));
             sendHttpResponse(ctx, req, res);
             return;
         }
 
         // Handshake
-        WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-                getWebSocketLocation(req), null, true, 5 * 1024 * 1024);
+        WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(req), null, true, 5 * 1024 * 1024);
         handshaker = wsFactory.newHandshaker(req);
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
@@ -117,34 +123,9 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
         }
     }
 
-    private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
-        // Generate an error page if response getStatus code is not OK (200).
-        HttpResponseStatus responseStatus = res.status();
-        if (responseStatus.code() != 200) {
-            ByteBufUtil.writeUtf8(res.content(), responseStatus.toString());
-            HttpUtil.setContentLength(res, res.content().readableBytes());
-        }
-        // Send the response and close the connection if necessary.
-        boolean keepAlive = HttpUtil.isKeepAlive(req) && responseStatus.code() == 200;
-        HttpUtil.setKeepAlive(res, keepAlive);
-        ChannelFuture future = ctx.write(res); // Flushed in channelReadComplete()
-        if (!keepAlive) {
-            future.addListener(ChannelFutureListener.CLOSE);
-        }
-    }
-
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
-    }
-
-    private static String getWebSocketLocation(FullHttpRequest req) {
-        String location =  req.headers().get(HttpHeaderNames.HOST) + WEBSOCKET_PATH;
-        if (WebSocketServer.SSL) {
-            return "wss://" + location;
-        } else {
-            return "ws://" + location;
-        }
     }
 }

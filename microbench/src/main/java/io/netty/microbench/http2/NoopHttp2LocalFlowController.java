@@ -26,7 +26,8 @@ import static io.netty.handler.codec.http2.Http2CodecUtil.MAX_INITIAL_WINDOW_SIZ
 public final class NoopHttp2LocalFlowController implements Http2LocalFlowController {
     public static final NoopHttp2LocalFlowController INSTANCE = new NoopHttp2LocalFlowController();
 
-    private NoopHttp2LocalFlowController() { }
+    private NoopHttp2LocalFlowController() {
+    }
 
     @Override
     public void initialWindowSize(int newWindowSize) throws Http2Exception {
@@ -52,8 +53,7 @@ public final class NoopHttp2LocalFlowController implements Http2LocalFlowControl
     }
 
     @Override
-    public void receiveFlowControlledFrame(Http2Stream stream, ByteBuf data, int padding, boolean endOfStream)
-            throws Http2Exception {
+    public void receiveFlowControlledFrame(Http2Stream stream, ByteBuf data, int padding, boolean endOfStream) throws Http2Exception {
     }
 
     @Override

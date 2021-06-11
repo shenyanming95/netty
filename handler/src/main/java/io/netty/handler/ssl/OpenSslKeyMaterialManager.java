@@ -47,6 +47,7 @@ final class OpenSslKeyMaterialManager {
 
     // key type mappings for types.
     private static final Map<String, String> KEY_TYPES = new HashMap<String, String>();
+
     static {
         KEY_TYPES.put("RSA", KEY_TYPE_RSA);
         KEY_TYPES.put("DHE_RSA", KEY_TYPE_RSA);
@@ -82,8 +83,7 @@ final class OpenSslKeyMaterialManager {
         }
     }
 
-    void setKeyMaterialClientSide(ReferenceCountedOpenSslEngine engine, String[] keyTypes,
-                                  X500Principal[] issuer) throws SSLException {
+    void setKeyMaterialClientSide(ReferenceCountedOpenSslEngine engine, String[] keyTypes, X500Principal[] issuer) throws SSLException {
         String alias = chooseClientAlias(engine, keyTypes, issuer);
         // Only try to set the keymaterial if we have a match. This is also consistent with what OpenJDK does:
         // http://hg.openjdk.java.net/jdk/jdk11/file/76072a077ee1/
@@ -108,8 +108,8 @@ final class OpenSslKeyMaterialManager {
             }
         }
     }
-    private String chooseClientAlias(ReferenceCountedOpenSslEngine engine,
-                                       String[] keyTypes, X500Principal[] issuer) {
+
+    private String chooseClientAlias(ReferenceCountedOpenSslEngine engine, String[] keyTypes, X500Principal[] issuer) {
         X509KeyManager manager = provider.keyManager();
         if (manager instanceof X509ExtendedKeyManager) {
             return ((X509ExtendedKeyManager) manager).chooseEngineClientAlias(keyTypes, issuer, engine);

@@ -24,12 +24,37 @@ import io.netty.util.internal.PlatformDependent;
  * to create an instance of this factory.
  * Use {@link KmpSearchProcessorFactory#newSearchProcessor} to get an instance of {@link io.netty.util.ByteProcessor}
  * implementation for performing the actual search.
+ *
  * @see AbstractSearchProcessorFactory
  */
 public class KmpSearchProcessorFactory extends AbstractSearchProcessorFactory {
 
     private final int[] jumpTable;
     private final byte[] needle;
+
+    KmpSearchProcessorFactory(byte[] needle) {
+        this.needle = needle.clone();
+        this.jumpTable = new int[needle.length + 1];
+
+        int j = 0;
+        for (int i = 1; i < needle.length; i++) {
+            while (j > 0 && needle[j] != needle[i]) {
+                j = jumpTable[j];
+            }
+            if (needle[j] == needle[i]) {
+                j++;
+            }
+            jumpTable[i + 1] = j;
+        }
+    }
+
+    /**
+     * Returns a new {@link Processor}.
+     */
+    @Override
+    public Processor newSearchProcessor() {
+        return new Processor(needle, jumpTable);
+    }
 
     public static class Processor implements SearchProcessor {
 
@@ -62,30 +87,6 @@ public class KmpSearchProcessorFactory extends AbstractSearchProcessorFactory {
         public void reset() {
             currentPosition = 0;
         }
-    }
-
-    KmpSearchProcessorFactory(byte[] needle) {
-        this.needle = needle.clone();
-        this.jumpTable = new int[needle.length + 1];
-
-        int j = 0;
-        for (int i = 1; i < needle.length; i++) {
-            while (j > 0 && needle[j] != needle[i]) {
-                j = jumpTable[j];
-            }
-            if (needle[j] == needle[i]) {
-                j++;
-            }
-            jumpTable[i + 1] = j;
-        }
-    }
-
-    /**
-     * Returns a new {@link Processor}.
-     */
-    @Override
-    public Processor newSearchProcessor() {
-        return new Processor(needle, jumpTable);
     }
 
 }

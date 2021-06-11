@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.spdy;
 
 import io.netty.buffer.ByteBuf;
@@ -40,23 +25,6 @@ public class SpdyFrameDecoder {
 
     private int numSettings;
 
-    private enum State {
-        READ_COMMON_HEADER,
-        READ_DATA_FRAME,
-        READ_SYN_STREAM_FRAME,
-        READ_SYN_REPLY_FRAME,
-        READ_RST_STREAM_FRAME,
-        READ_SETTINGS_FRAME,
-        READ_SETTING,
-        READ_PING_FRAME,
-        READ_GOAWAY_FRAME,
-        READ_HEADERS_FRAME,
-        READ_WINDOW_UPDATE_FRAME,
-        READ_HEADER_BLOCK,
-        DISCARD_FRAME,
-        FRAME_ERROR
-    }
-
     /**
      * Creates a new instance with the specified {@code version}
      * and the default {@code maxChunkSize (8192)}.
@@ -75,19 +43,95 @@ public class SpdyFrameDecoder {
         state = State.READ_COMMON_HEADER;
     }
 
+    private static boolean hasFlag(byte flags, byte flag) {
+        return (flags & flag) != 0;
+    }
+
+    private static State getNextState(int type, int length) {
+        switch (type) {
+            case SPDY_DATA_FRAME:
+                return State.READ_DATA_FRAME;
+
+            case SPDY_SYN_STREAM_FRAME:
+                return State.READ_SYN_STREAM_FRAME;
+
+            case SPDY_SYN_REPLY_FRAME:
+                return State.READ_SYN_REPLY_FRAME;
+
+            case SPDY_RST_STREAM_FRAME:
+                return State.READ_RST_STREAM_FRAME;
+
+            case SPDY_SETTINGS_FRAME:
+                return State.READ_SETTINGS_FRAME;
+
+            case SPDY_PING_FRAME:
+                return State.READ_PING_FRAME;
+
+            case SPDY_GOAWAY_FRAME:
+                return State.READ_GOAWAY_FRAME;
+
+            case SPDY_HEADERS_FRAME:
+                return State.READ_HEADERS_FRAME;
+
+            case SPDY_WINDOW_UPDATE_FRAME:
+                return State.READ_WINDOW_UPDATE_FRAME;
+
+            default:
+                if (length != 0) {
+                    return State.DISCARD_FRAME;
+                } else {
+                    return State.READ_COMMON_HEADER;
+                }
+        }
+    }
+
+    private static boolean isValidFrameHeader(int streamId, int type, byte flags, int length) {
+        switch (type) {
+            case SPDY_DATA_FRAME:
+                return streamId != 0;
+
+            case SPDY_SYN_STREAM_FRAME:
+                return length >= 10;
+
+            case SPDY_SYN_REPLY_FRAME:
+                return length >= 4;
+
+            case SPDY_RST_STREAM_FRAME:
+                return flags == 0 && length == 8;
+
+            case SPDY_SETTINGS_FRAME:
+                return length >= 4;
+
+            case SPDY_PING_FRAME:
+                return length == 4;
+
+            case SPDY_GOAWAY_FRAME:
+                return length == 8;
+
+            case SPDY_HEADERS_FRAME:
+                return length >= 4;
+
+            case SPDY_WINDOW_UPDATE_FRAME:
+                return length == 8;
+
+            default:
+                return true;
+        }
+    }
+
     public void decode(ByteBuf buffer) {
         boolean last;
         int statusCode;
 
         while (true) {
-            switch(state) {
+            switch (state) {
                 case READ_COMMON_HEADER:
                     if (buffer.readableBytes() < SPDY_HEADER_SIZE) {
                         return;
                     }
 
-                    int frameOffset  = buffer.readerIndex();
-                    int flagsOffset  = frameOffset + SPDY_HEADER_FLAGS_OFFSET;
+                    int frameOffset = buffer.readerIndex();
+                    int flagsOffset = frameOffset + SPDY_HEADER_FLAGS_OFFSET;
                     int lengthOffset = frameOffset + SPDY_HEADER_LENGTH_OFFSET;
                     buffer.skipBytes(SPDY_HEADER_SIZE);
 
@@ -107,7 +151,7 @@ public class SpdyFrameDecoder {
                         streamId = getUnsignedInt(buffer, frameOffset);
                     }
 
-                    flags  = buffer.getByte(flagsOffset);
+                    flags = buffer.getByte(flagsOffset);
                     length = getUnsignedMedium(buffer, lengthOffset);
 
                     // Check version first then validity
@@ -357,79 +401,7 @@ public class SpdyFrameDecoder {
         }
     }
 
-    private static boolean hasFlag(byte flags, byte flag) {
-        return (flags & flag) != 0;
-    }
-
-    private static State getNextState(int type, int length) {
-        switch (type) {
-            case SPDY_DATA_FRAME:
-                return State.READ_DATA_FRAME;
-
-            case SPDY_SYN_STREAM_FRAME:
-                return State.READ_SYN_STREAM_FRAME;
-
-            case SPDY_SYN_REPLY_FRAME:
-                return State.READ_SYN_REPLY_FRAME;
-
-            case SPDY_RST_STREAM_FRAME:
-                return State.READ_RST_STREAM_FRAME;
-
-            case SPDY_SETTINGS_FRAME:
-                return State.READ_SETTINGS_FRAME;
-
-            case SPDY_PING_FRAME:
-                return State.READ_PING_FRAME;
-
-            case SPDY_GOAWAY_FRAME:
-                return State.READ_GOAWAY_FRAME;
-
-            case SPDY_HEADERS_FRAME:
-                return State.READ_HEADERS_FRAME;
-
-            case SPDY_WINDOW_UPDATE_FRAME:
-                return State.READ_WINDOW_UPDATE_FRAME;
-
-            default:
-                if (length != 0) {
-                    return State.DISCARD_FRAME;
-                } else {
-                    return State.READ_COMMON_HEADER;
-                }
-        }
-    }
-
-    private static boolean isValidFrameHeader(int streamId, int type, byte flags, int length) {
-        switch (type) {
-            case SPDY_DATA_FRAME:
-                return streamId != 0;
-
-            case SPDY_SYN_STREAM_FRAME:
-                return length >= 10;
-
-            case SPDY_SYN_REPLY_FRAME:
-                return length >= 4;
-
-            case SPDY_RST_STREAM_FRAME:
-                return flags == 0 && length == 8;
-
-            case SPDY_SETTINGS_FRAME:
-                return length >= 4;
-
-            case SPDY_PING_FRAME:
-                return length == 4;
-
-            case SPDY_GOAWAY_FRAME:
-                return length == 8;
-
-            case SPDY_HEADERS_FRAME:
-                return length >= 4;
-
-            case SPDY_WINDOW_UPDATE_FRAME:
-                return length == 8;
-
-            default:
-                return true;
-        }
+    private enum State {
+        READ_COMMON_HEADER, READ_DATA_FRAME, READ_SYN_STREAM_FRAME, READ_SYN_REPLY_FRAME, READ_RST_STREAM_FRAME, READ_SETTINGS_FRAME, READ_SETTING, READ_PING_FRAME, READ_GOAWAY_FRAME, READ_HEADERS_FRAME, READ_WINDOW_UPDATE_FRAME, READ_HEADER_BLOCK, DISCARD_FRAME, FRAME_ERROR
     }
 }

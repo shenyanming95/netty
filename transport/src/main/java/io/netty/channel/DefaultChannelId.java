@@ -1,19 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.channel;
 
 import io.netty.buffer.ByteBufUtil;
@@ -47,13 +31,6 @@ public final class DefaultChannelId implements ChannelId {
     private static final int RANDOM_LEN = 4;
 
     private static final AtomicInteger nextSequence = new AtomicInteger();
-
-    /**
-     * Returns a new {@link DefaultChannelId} instance.
-     */
-    public static DefaultChannelId newInstance() {
-        return new DefaultChannelId();
-    }
 
     static {
         int processId = -1;
@@ -105,6 +82,43 @@ public final class DefaultChannelId implements ChannelId {
         MACHINE_ID = machineId;
     }
 
+    private final byte[] data;
+    private final int hashCode;
+    private transient String shortValue;
+    private transient String longValue;
+
+    private DefaultChannelId() {
+        data = new byte[MACHINE_ID.length + PROCESS_ID_LEN + SEQUENCE_LEN + TIMESTAMP_LEN + RANDOM_LEN];
+        int i = 0;
+
+        // machineId
+        System.arraycopy(MACHINE_ID, 0, data, i, MACHINE_ID.length);
+        i += MACHINE_ID.length;
+
+        // processId
+        i = writeInt(i, PROCESS_ID);
+
+        // sequence
+        i = writeInt(i, nextSequence.getAndIncrement());
+
+        // timestamp (kind of)
+        i = writeLong(i, Long.reverse(System.nanoTime()) ^ System.currentTimeMillis());
+
+        // random
+        int random = PlatformDependent.threadLocalRandom().nextInt();
+        i = writeInt(i, random);
+        assert i == data.length;
+
+        hashCode = Arrays.hashCode(data);
+    }
+
+    /**
+     * Returns a new {@link DefaultChannelId} instance.
+     */
+    public static DefaultChannelId newInstance() {
+        return new DefaultChannelId();
+    }
+
     private static int defaultProcessId() {
         ClassLoader loader = null;
         String value;
@@ -146,60 +160,29 @@ public final class DefaultChannelId implements ChannelId {
 
         if (pid < 0) {
             pid = PlatformDependent.threadLocalRandom().nextInt();
-            logger.warn("Failed to find the current process ID from '{}'; using a random value: {}",  value, pid);
+            logger.warn("Failed to find the current process ID from '{}'; using a random value: {}", value, pid);
         }
 
         return pid;
     }
 
-    private final byte[] data;
-    private final int hashCode;
-
-    private transient String shortValue;
-    private transient String longValue;
-
-    private DefaultChannelId() {
-        data = new byte[MACHINE_ID.length + PROCESS_ID_LEN + SEQUENCE_LEN + TIMESTAMP_LEN + RANDOM_LEN];
-        int i = 0;
-
-        // machineId
-        System.arraycopy(MACHINE_ID, 0, data, i, MACHINE_ID.length);
-        i += MACHINE_ID.length;
-
-        // processId
-        i = writeInt(i, PROCESS_ID);
-
-        // sequence
-        i = writeInt(i, nextSequence.getAndIncrement());
-
-        // timestamp (kind of)
-        i = writeLong(i, Long.reverse(System.nanoTime()) ^ System.currentTimeMillis());
-
-        // random
-        int random = PlatformDependent.threadLocalRandom().nextInt();
-        i = writeInt(i, random);
-        assert i == data.length;
-
-        hashCode = Arrays.hashCode(data);
-    }
-
     private int writeInt(int i, int value) {
-        data[i ++] = (byte) (value >>> 24);
-        data[i ++] = (byte) (value >>> 16);
-        data[i ++] = (byte) (value >>> 8);
-        data[i ++] = (byte) value;
+        data[i++] = (byte) (value >>> 24);
+        data[i++] = (byte) (value >>> 16);
+        data[i++] = (byte) (value >>> 8);
+        data[i++] = (byte) value;
         return i;
     }
 
     private int writeLong(int i, long value) {
-        data[i ++] = (byte) (value >>> 56);
-        data[i ++] = (byte) (value >>> 48);
-        data[i ++] = (byte) (value >>> 40);
-        data[i ++] = (byte) (value >>> 32);
-        data[i ++] = (byte) (value >>> 24);
-        data[i ++] = (byte) (value >>> 16);
-        data[i ++] = (byte) (value >>> 8);
-        data[i ++] = (byte) value;
+        data[i++] = (byte) (value >>> 56);
+        data[i++] = (byte) (value >>> 48);
+        data[i++] = (byte) (value >>> 40);
+        data[i++] = (byte) (value >>> 32);
+        data[i++] = (byte) (value >>> 24);
+        data[i++] = (byte) (value >>> 16);
+        data[i++] = (byte) (value >>> 8);
+        data[i++] = (byte) value;
         return i;
     }
 

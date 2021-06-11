@@ -41,13 +41,13 @@ import static java.lang.Math.min;
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class Http2FrameWriterDataBenchmark extends AbstractMicrobenchmark {
-    @Param({ "64", "1024", "4096", "16384", "1048576", "4194304" })
+    @Param({"64", "1024", "4096", "16384", "1048576", "4194304"})
     public int payloadSize;
 
-    @Param({ "0", "100", "255" })
+    @Param({"0", "100", "255"})
     public int padding;
 
-    @Param({ "true", "false" })
+    @Param({"true", "false"})
     public boolean pooled;
 
     private ByteBuf payload;
@@ -61,9 +61,7 @@ public class Http2FrameWriterDataBenchmark extends AbstractMicrobenchmark {
         oldWriter = new OldDefaultHttp2FrameWriter();
         payload = pooled ? PooledByteBufAllocator.DEFAULT.buffer(payloadSize) : Unpooled.buffer(payloadSize);
         payload.writeZero(payloadSize);
-        ctx = new EmbeddedChannelWriteReleaseHandlerContext(
-                pooled ? PooledByteBufAllocator.DEFAULT : UnpooledByteBufAllocator.DEFAULT,
-                new ChannelInboundHandlerAdapter()) {
+        ctx = new EmbeddedChannelWriteReleaseHandlerContext(pooled ? PooledByteBufAllocator.DEFAULT : UnpooledByteBufAllocator.DEFAULT, new ChannelInboundHandlerAdapter()) {
             @Override
             protected void handleException(Throwable t) {
                 handleUnexpectedException(t);
@@ -96,14 +94,32 @@ public class Http2FrameWriterDataBenchmark extends AbstractMicrobenchmark {
     }
 
     private static final class OldDefaultHttp2FrameWriter implements Http2DataWriter {
-        private static final ByteBuf ZERO_BUFFER =
-                unreleasableBuffer(directBuffer(MAX_UNSIGNED_BYTE).writeZero(MAX_UNSIGNED_BYTE)).asReadOnly();
+        private static final ByteBuf ZERO_BUFFER = unreleasableBuffer(directBuffer(MAX_UNSIGNED_BYTE).writeZero(MAX_UNSIGNED_BYTE)).asReadOnly();
         private int maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
+
+        private static void verifyStreamId(int streamId, String argumentName) {
+            if (streamId <= 0) {
+                throw new IllegalArgumentException(argumentName + " must be > 0");
+            }
+        }
+
+        private static int paddingBytes(int padding) {
+            // The padding parameter contains the 1 byte pad length field as well as the trailing padding bytes.
+            // Subtract 1, so to only get the number of padding bytes that need to be appended to the end of a frame.
+            return padding - 1;
+        }
+
+        private static void writePaddingLength(ByteBuf buf, int padding) {
+            if (padding > 0) {
+                // It is assumed that the padding length has been bounds checked before this
+                // Minus 1, as the pad length field is included in the padding parameter and is 1 byte wide.
+                buf.writeByte(padding - 1);
+            }
+        }
+
         @Override
-        public ChannelFuture writeData(ChannelHandlerContext ctx, int streamId, ByteBuf data,
-                                       int padding, boolean endStream, ChannelPromise promise) {
-            final Http2CodecUtil.SimpleChannelPromiseAggregator promiseAggregator =
-                    new Http2CodecUtil.SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
+        public ChannelFuture writeData(ChannelHandlerContext ctx, int streamId, ByteBuf data, int padding, boolean endStream, ChannelPromise promise) {
+            final Http2CodecUtil.SimpleChannelPromiseAggregator promiseAggregator = new Http2CodecUtil.SimpleChannelPromiseAggregator(promise, ctx.channel(), ctx.executor());
             final DataFrameHeader header = new DataFrameHeader(ctx, streamId);
             boolean needToReleaseHeaders = true;
             boolean needToReleaseData = true;
@@ -138,8 +154,7 @@ public class Http2FrameWriterDataBenchmark extends AbstractMicrobenchmark {
 
                     // Write the frame padding.
                     if (paddingBytes(framePaddingBytes) > 0) {
-                        ctx.write(ZERO_BUFFER.slice(0, paddingBytes(framePaddingBytes)),
-                                promiseAggregator.newPromise());
+                        ctx.write(ZERO_BUFFER.slice(0, paddingBytes(framePaddingBytes)), promiseAggregator.newPromise());
                     }
                 } while (!lastFrame);
             } catch (Throwable t) {
@@ -157,26 +172,6 @@ public class Http2FrameWriterDataBenchmark extends AbstractMicrobenchmark {
                 return promiseAggregator;
             }
             return promiseAggregator.doneAllocatingPromises();
-        }
-
-        private static void verifyStreamId(int streamId, String argumentName) {
-            if (streamId <= 0) {
-                throw new IllegalArgumentException(argumentName + " must be > 0");
-            }
-        }
-
-        private static int paddingBytes(int padding) {
-            // The padding parameter contains the 1 byte pad length field as well as the trailing padding bytes.
-            // Subtract 1, so to only get the number of padding bytes that need to be appended to the end of a frame.
-            return padding - 1;
-        }
-
-        private static void writePaddingLength(ByteBuf buf, int padding) {
-            if (padding > 0) {
-                // It is assumed that the padding length has been bounds checked before this
-                // Minus 1, as the pad length field is included in the padding parameter and is 1 byte wide.
-                buf.writeByte(padding - 1);
-            }
         }
 
         /**
@@ -205,16 +200,14 @@ public class Http2FrameWriterDataBenchmark extends AbstractMicrobenchmark {
             ByteBuf slice(int data, int padding, boolean endOfStream) {
                 // Since we're reusing the current frame header whenever possible, check if anything changed
                 // that requires a new header.
-                if (data != prevData || padding != prevPadding
-                        || endOfStream != flags.endOfStream() || frameHeader == null) {
+                if (data != prevData || padding != prevPadding || endOfStream != flags.endOfStream() || frameHeader == null) {
                     // Update the header state.
                     prevData = data;
                     prevPadding = padding;
                     flags.paddingPresent(padding > 0);
                     flags.endOfStream(endOfStream);
                     frameHeader = buffer.slice(buffer.readerIndex(), DATA_FRAME_HEADER_LENGTH).writerIndex(0);
-                    buffer.setIndex(buffer.readerIndex() + DATA_FRAME_HEADER_LENGTH,
-                            buffer.writerIndex() + DATA_FRAME_HEADER_LENGTH);
+                    buffer.setIndex(buffer.readerIndex() + DATA_FRAME_HEADER_LENGTH, buffer.writerIndex() + DATA_FRAME_HEADER_LENGTH);
 
                     int payloadLength = data + padding;
                     writeFrameHeaderInternal(frameHeader, payloadLength, DATA, flags, streamId);

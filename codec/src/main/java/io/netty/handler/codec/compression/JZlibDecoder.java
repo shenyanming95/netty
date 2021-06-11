@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.compression;
 
 import com.jcraft.jzlib.Inflater;
@@ -43,10 +28,8 @@ public class JZlibDecoder extends ZlibDecoder {
      * Creates a new instance with the default wrapper ({@link ZlibWrapper#ZLIB})
      * and specified maximum buffer allocation.
      *
-     * @param maxAllocation
-     *          Maximum size of the decompression buffer. Must be &gt;= 0.
-     *          If zero, maximum size is decided by the {@link ByteBufAllocator}.
-     *
+     * @param maxAllocation Maximum size of the decompression buffer. Must be &gt;= 0.
+     *                      If zero, maximum size is decided by the {@link ByteBufAllocator}.
      * @throws DecompressionException if failed to initialize zlib
      */
     public JZlibDecoder(int maxAllocation) {
@@ -65,10 +48,8 @@ public class JZlibDecoder extends ZlibDecoder {
     /**
      * Creates a new instance with the specified wrapper and maximum buffer allocation.
      *
-     * @param maxAllocation
-     *          Maximum size of the decompression buffer. Must be &gt;= 0.
-     *          If zero, maximum size is decided by the {@link ByteBufAllocator}.
-     *
+     * @param maxAllocation Maximum size of the decompression buffer. Must be &gt;= 0.
+     *                      If zero, maximum size is decided by the {@link ByteBufAllocator}.
      * @throws DecompressionException if failed to initialize zlib
      */
     public JZlibDecoder(ZlibWrapper wrapper, int maxAllocation) {
@@ -98,10 +79,8 @@ public class JZlibDecoder extends ZlibDecoder {
      * The wrapper is always {@link ZlibWrapper#ZLIB} because it is the only format that
      * supports the preset dictionary.
      *
-     * @param maxAllocation
-     *          Maximum size of the decompression buffer. Must be &gt;= 0.
-     *          If zero, maximum size is decided by the {@link ByteBufAllocator}.
-     *
+     * @param maxAllocation Maximum size of the decompression buffer. Must be &gt;= 0.
+     *                      If zero, maximum size is decided by the {@link ByteBufAllocator}.
      * @throws DecompressionException if failed to initialize zlib
      */
     public JZlibDecoder(byte[] dictionary, int maxAllocation) {
@@ -154,7 +133,8 @@ public class JZlibDecoder extends ZlibDecoder {
             ByteBuf decompressed = prepareDecompressBuffer(ctx, null, inputLength << 1);
 
             try {
-                loop: for (;;) {
+                loop:
+                for (; ; ) {
                     decompressed = prepareDecompressBuffer(ctx, decompressed, z.avail_in << 1);
                     z.avail_out = decompressed.writableBytes();
                     z.next_out = decompressed.array();
@@ -169,29 +149,29 @@ public class JZlibDecoder extends ZlibDecoder {
                     }
 
                     switch (resultCode) {
-                    case JZlib.Z_NEED_DICT:
-                        if (dictionary == null) {
-                            ZlibUtil.fail(z, "decompression failure", resultCode);
-                        } else {
-                            resultCode = z.inflateSetDictionary(dictionary, dictionary.length);
-                            if (resultCode != JZlib.Z_OK) {
-                                ZlibUtil.fail(z, "failed to set the dictionary", resultCode);
+                        case JZlib.Z_NEED_DICT:
+                            if (dictionary == null) {
+                                ZlibUtil.fail(z, "decompression failure", resultCode);
+                            } else {
+                                resultCode = z.inflateSetDictionary(dictionary, dictionary.length);
+                                if (resultCode != JZlib.Z_OK) {
+                                    ZlibUtil.fail(z, "failed to set the dictionary", resultCode);
+                                }
                             }
-                        }
-                        break;
-                    case JZlib.Z_STREAM_END:
-                        finished = true; // Do not decode anymore.
-                        z.inflateEnd();
-                        break loop;
-                    case JZlib.Z_OK:
-                        break;
-                    case JZlib.Z_BUF_ERROR:
-                        if (z.avail_in <= 0) {
+                            break;
+                        case JZlib.Z_STREAM_END:
+                            finished = true; // Do not decode anymore.
+                            z.inflateEnd();
                             break loop;
-                        }
-                        break;
-                    default:
-                        ZlibUtil.fail(z, "decompression failure", resultCode);
+                        case JZlib.Z_OK:
+                            break;
+                        case JZlib.Z_BUF_ERROR:
+                            if (z.avail_in <= 0) {
+                                break loop;
+                            }
+                            break;
+                        default:
+                            ZlibUtil.fail(z, "decompression failure", resultCode);
                     }
                 }
             } finally {

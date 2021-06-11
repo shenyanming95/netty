@@ -54,11 +54,10 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
      * the assumption that most streams will have a small number of children. This choice may be
      * sub-optimal if when children are present there are many children (i.e. a web page which has many
      * dependencies to load).
-     *
+     * <p>
      * Visible only for testing!
      */
-    static final int INITIAL_CHILDREN_MAP_SIZE =
-            max(1, SystemPropertyUtil.getInt("io.netty.http2.childrenMapSize", 2));
+    static final int INITIAL_CHILDREN_MAP_SIZE = max(1, SystemPropertyUtil.getInt("io.netty.http2.childrenMapSize", 2));
     /**
      * FireFox currently uses 5 streams to establish QoS classes.
      */
@@ -77,12 +76,12 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
     private final PriorityQueue<State> stateOnlyRemovalQueue;
     private final Http2Connection connection;
     private final State connectionState;
+    private final int maxStateOnlySize;
     /**
      * The minimum number of bytes that we will attempt to allocate to a stream. This is to
      * help improve goodput on a per-stream basis.
      */
     private int allocationQuantum = DEFAULT_MIN_ALLOCATION_CHUNK;
-    private final int maxStateOnlySize;
 
     public WeightedFairQueueByteDistributor(Http2Connection connection) {
         this(connection, DEFAULT_MAX_STATE_ONLY_SIZE);
@@ -182,8 +181,7 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
 
     @Override
     public void updateStreamableBytes(StreamState state) {
-        state(state.stream()).updateStreamableBytes(streamableBytes(state),
-                                                    state.hasFrame() && state.windowSize() >= 0);
+        state(state.stream()).updateStreamableBytes(streamableBytes(state), state.hasFrame() && state.windowSize() >= 0);
     }
 
     @Override
@@ -262,14 +260,14 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
             oldIsActiveCountForTree = connectionState.activeCountForTree;
             // connectionState will never be active, so go right to its children.
             maxBytes -= distributeToChildren(maxBytes, writer, connectionState);
-        } while (connectionState.activeCountForTree != 0 &&
-                (maxBytes > 0 || oldIsActiveCountForTree != connectionState.activeCountForTree));
+        } while (connectionState.activeCountForTree != 0 && (maxBytes > 0 || oldIsActiveCountForTree != connectionState.activeCountForTree));
 
         return connectionState.activeCountForTree != 0;
     }
 
     /**
      * Sets the amount of bytes that will be allocated to each stream. Defaults to 1KiB.
+     *
      * @param allocationQuantum the amount of bytes that will be allocated to each stream. Must be &gt; 0.
      */
     public void allocationQuantum(int allocationQuantum) {
@@ -310,15 +308,8 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
         State nextChildState = state.peekPseudoTimeQueue();
         childState.setDistributing();
         try {
-            assert nextChildState == null || nextChildState.pseudoTimeToWrite >= childState.pseudoTimeToWrite :
-                "nextChildState[" + nextChildState.streamId + "].pseudoTime(" + nextChildState.pseudoTimeToWrite +
-                ") < " + " childState[" + childState.streamId + "].pseudoTime(" + childState.pseudoTimeToWrite + ")";
-            int nsent = distribute(nextChildState == null ? maxBytes :
-                            min(maxBytes, (int) min((nextChildState.pseudoTimeToWrite - childState.pseudoTimeToWrite) *
-                                               childState.weight / oldTotalQueuedWeights + allocationQuantum, MAX_VALUE)
-                               ),
-                               writer,
-                               childState);
+            assert nextChildState == null || nextChildState.pseudoTimeToWrite >= childState.pseudoTimeToWrite : "nextChildState[" + nextChildState.streamId + "].pseudoTime(" + nextChildState.pseudoTimeToWrite + ") < " + " childState[" + childState.streamId + "].pseudoTime(" + childState.pseudoTimeToWrite + ")";
+            int nsent = distribute(nextChildState == null ? maxBytes : min(maxBytes, (int) min((nextChildState.pseudoTimeToWrite - childState.pseudoTimeToWrite) * childState.weight / oldTotalQueuedWeights + allocationQuantum, MAX_VALUE)), writer, childState);
             state.pseudoTime += nsent;
             childState.updatePseudoTime(state, nsent, oldTotalQueuedWeights);
             return nsent;
@@ -348,8 +339,7 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
     boolean isChild(int childId, int parentId, short weight) {
         State parent = state(parentId);
         State child;
-        return parent.children.containsKey(childId) &&
-                (child = state(childId)).parent == parent && child.weight == weight;
+        return parent.children.containsKey(childId) && (child = state(childId)).parent == parent && child.weight == weight;
     }
 
     /**
@@ -362,6 +352,7 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
 
     /**
      * Notify all listeners of the priority tree change events (in ascending order)
+     *
      * @param events The events (top down order) which have changed
      */
     void notifyParentChanged(List<ParentChangedEvent> events) {
@@ -384,9 +375,8 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
      * </ul>
      */
     private static final class StateOnlyComparator implements Comparator<State>, Serializable {
-        private static final long serialVersionUID = -4806936913002105966L;
-
         static final StateOnlyComparator INSTANCE = new StateOnlyComparator();
+        private static final long serialVersionUID = -4806936913002105966L;
 
         private StateOnlyComparator() {
         }
@@ -413,9 +403,8 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
     }
 
     private static final class StatePseudoTimeComparator implements Comparator<State>, Serializable {
-        private static final long serialVersionUID = -1437548640227161828L;
-
         static final StatePseudoTimeComparator INSTANCE = new StatePseudoTimeComparator();
+        private static final long serialVersionUID = -1437548640227161828L;
 
         private StatePseudoTimeComparator() {
         }
@@ -427,29 +416,45 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
     }
 
     /**
+     * Allows a correlation to be made between a stream and its old parent before a parent change occurs.
+     */
+    private static final class ParentChangedEvent {
+        final State state;
+        final State oldParent;
+
+        /**
+         * Create a new instance.
+         *
+         * @param state     The state who has had a parent change.
+         * @param oldParent The previous parent.
+         */
+        ParentChangedEvent(State state, State oldParent) {
+            this.state = state;
+            this.oldParent = oldParent;
+        }
+    }
+
+    /**
      * The remote flow control state for a single stream.
      */
     private final class State implements PriorityQueueNode {
         private static final byte STATE_IS_ACTIVE = 0x1;
         private static final byte STATE_IS_DISTRIBUTING = 0x2;
         private static final byte STATE_STREAM_ACTIVATED = 0x4;
-
+        final int streamId;
+        private final PriorityQueue<State> pseudoTimeQueue;
         /**
          * Maybe {@code null} if the stream if the stream is not active.
          */
         Http2Stream stream;
         State parent;
         IntObjectMap<State> children = IntCollections.emptyMap();
-        private final PriorityQueue<State> pseudoTimeQueue;
-        final int streamId;
         int streamableBytes;
         int dependencyTreeDepth;
         /**
          * Count of nodes rooted at this sub tree with {@link #isActive()} equal to {@code true}.
          */
         int activeCountForTree;
-        private int pseudoTimeQueueIndex = INDEX_NOT_IN_QUEUE;
-        private int stateOnlyQueueIndex = INDEX_NOT_IN_QUEUE;
         /**
          * An estimate of when this node should be given the opportunity to write data.
          */
@@ -459,8 +464,10 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
          */
         long pseudoTime;
         long totalQueuedWeights;
-        private byte flags;
         short weight = DEFAULT_PRIORITY_WEIGHT;
+        private int pseudoTimeQueueIndex = INDEX_NOT_IN_QUEUE;
+        private int stateOnlyQueueIndex = INDEX_NOT_IN_QUEUE;
+        private byte flags;
 
         State(int streamId) {
             this(streamId, null, 0);
@@ -499,8 +506,7 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
          * Adds a child to this priority. If exclusive is set, any children of this node are moved to being dependent on
          * the child.
          */
-        void takeChild(Iterator<IntObjectMap.PrimitiveEntry<State>> childItr, State child, boolean exclusive,
-                       List<ParentChangedEvent> events) {
+        void takeChild(Iterator<IntObjectMap.PrimitiveEntry<State>> childItr, State child, boolean exclusive, List<ParentChangedEvent> events) {
             State oldParent = child.parent;
 
             if (oldParent != this) {
@@ -554,6 +560,7 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
         /**
          * Remove all children with the exception of {@code streamToRetain}.
          * This method is intended to be used to support an exclusive priority dependency operation.
+         *
          * @return The map of children prior to this operation, excluding {@code streamToRetain} if present.
          */
         private IntObjectMap<State> removeAllChildrenExcept(State stateToRetain) {
@@ -602,11 +609,7 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
             assert activeCountForTree + increment >= 0;
             activeCountForTree += increment;
             if (parent != null) {
-                assert activeCountForTree != increment ||
-                       pseudoTimeQueueIndex == INDEX_NOT_IN_QUEUE ||
-                       parent.pseudoTimeQueue.containsTyped(this) :
-                     "State[" + streamId + "].activeCountForTree changed from 0 to " + increment + " is in a " +
-                     "pseudoTimeQueue, but not in parent[ " + parent.streamId + "]'s pseudoTimeQueue";
+                assert activeCountForTree != increment || pseudoTimeQueueIndex == INDEX_NOT_IN_QUEUE || parent.pseudoTimeQueue.containsTyped(this) : "State[" + streamId + "].activeCountForTree changed from 0 to " + increment + " is in a " + "pseudoTimeQueue, but not in parent[ " + parent.streamId + "]'s pseudoTimeQueue";
                 if (activeCountForTree == 0) {
                     parent.removePseudoTimeQueue(this);
                 } else if (activeCountForTree == increment && !isDistributing()) {
@@ -743,16 +746,7 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
         }
 
         private void toString(StringBuilder sb) {
-            sb.append("{streamId ").append(streamId)
-                    .append(" streamableBytes ").append(streamableBytes)
-                    .append(" activeCountForTree ").append(activeCountForTree)
-                    .append(" pseudoTimeQueueIndex ").append(pseudoTimeQueueIndex)
-                    .append(" pseudoTimeToWrite ").append(pseudoTimeToWrite)
-                    .append(" pseudoTime ").append(pseudoTime)
-                    .append(" flags ").append(flags)
-                    .append(" pseudoTimeQueue.size() ").append(pseudoTimeQueue.size())
-                    .append(" stateOnlyQueueIndex ").append(stateOnlyQueueIndex)
-                    .append(" parent.streamId ").append(parent == null ? -1 : parent.streamId).append("} [");
+            sb.append("{streamId ").append(streamId).append(" streamableBytes ").append(streamableBytes).append(" activeCountForTree ").append(activeCountForTree).append(" pseudoTimeQueueIndex ").append(pseudoTimeQueueIndex).append(" pseudoTimeToWrite ").append(pseudoTimeToWrite).append(" pseudoTime ").append(pseudoTime).append(" flags ").append(flags).append(" pseudoTimeQueue.size() ").append(pseudoTimeQueue.size()).append(" stateOnlyQueueIndex ").append(stateOnlyQueueIndex).append(" parent.streamId ").append(parent == null ? -1 : parent.streamId).append("} [");
 
             if (!pseudoTimeQueue.isEmpty()) {
                 for (State s : pseudoTimeQueue) {
@@ -763,24 +757,6 @@ public final class WeightedFairQueueByteDistributor implements StreamByteDistrib
                 sb.setLength(sb.length() - 2);
             }
             sb.append(']');
-        }
-    }
-
-    /**
-     * Allows a correlation to be made between a stream and its old parent before a parent change occurs.
-     */
-    private static final class ParentChangedEvent {
-        final State state;
-        final State oldParent;
-
-        /**
-         * Create a new instance.
-         * @param state The state who has had a parent change.
-         * @param oldParent The previous parent.
-         */
-        ParentChangedEvent(State state, State oldParent) {
-            this.state = state;
-            this.oldParent = oldParent;
         }
     }
 }

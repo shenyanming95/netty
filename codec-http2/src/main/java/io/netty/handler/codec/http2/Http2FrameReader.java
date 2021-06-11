@@ -28,6 +28,23 @@ import java.io.Closeable;
 @UnstableApi
 public interface Http2FrameReader extends Closeable {
     /**
+     * Attempts to read the next frame from the input buffer. If enough data is available to fully
+     * read the frame, notifies the listener of the read frame.
+     */
+    void readFrame(ChannelHandlerContext ctx, ByteBuf input, Http2FrameListener listener) throws Http2Exception;
+
+    /**
+     * Get the configuration related elements for this {@link Http2FrameReader}
+     */
+    Configuration configuration();
+
+    /**
+     * Closes this reader and frees any allocated resources.
+     */
+    @Override
+    void close();
+
+    /**
      * Configuration specific to {@link Http2FrameReader}
      */
     interface Configuration {
@@ -41,22 +58,4 @@ public interface Http2FrameReader extends Closeable {
          */
         Http2FrameSizePolicy frameSizePolicy();
     }
-
-    /**
-     * Attempts to read the next frame from the input buffer. If enough data is available to fully
-     * read the frame, notifies the listener of the read frame.
-     */
-    void readFrame(ChannelHandlerContext ctx, ByteBuf input, Http2FrameListener listener)
-            throws Http2Exception;
-
-    /**
-     * Get the configuration related elements for this {@link Http2FrameReader}
-     */
-    Configuration configuration();
-
-    /**
-     * Closes this reader and frees any allocated resources.
-     */
-    @Override
-    void close();
 }

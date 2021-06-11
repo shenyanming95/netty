@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbench.util;
 
 import io.netty.channel.EventLoop;
@@ -39,9 +24,7 @@ public class AbstractSharedExecutorMicrobenchmark extends AbstractMicrobenchmark
     protected static final String[] JVM_ARGS;
 
     static {
-        final String[] customArgs = {
-        "-Xms2g", "-Xmx2g", "-XX:MaxDirectMemorySize=2g", "-Djmh.executor=CUSTOM",
-        "-Djmh.executor.class=io.netty.microbench.util.AbstractSharedExecutorMicrobenchmark$DelegateHarnessExecutor" };
+        final String[] customArgs = {"-Xms2g", "-Xmx2g", "-XX:MaxDirectMemorySize=2g", "-Djmh.executor=CUSTOM", "-Djmh.executor.class=io.netty.microbench.util.AbstractSharedExecutorMicrobenchmark$DelegateHarnessExecutor"};
 
         JVM_ARGS = new String[BASE_JVM_ARGS.length + customArgs.length];
         System.arraycopy(BASE_JVM_ARGS, 0, JVM_ARGS, 0, BASE_JVM_ARGS.length);
@@ -52,10 +35,20 @@ public class AbstractSharedExecutorMicrobenchmark extends AbstractMicrobenchmark
      * Set the executor (in the form of an {@link EventLoop}) which JMH will use.
      * <p>
      * This must be called before JMH requires an executor to execute objects.
+     *
      * @param eventLoop Used as an executor by JMH to run benchmarks.
      */
     public static void executor(EventLoop eventLoop) {
         DelegateHarnessExecutor.executor(eventLoop);
+    }
+
+    public static void handleUnexpectedException(Throwable t) {
+        assertNull(t);
+    }
+
+    @Override
+    protected String[] jvmArgs() {
+        return JVM_ARGS;
     }
 
     /**
@@ -75,6 +68,7 @@ public class AbstractSharedExecutorMicrobenchmark extends AbstractMicrobenchmark
          * Set the executor (in the form of an {@link EventLoop}) which JMH will use.
          * <p>
          * This must be called before JMH requires an executor to execute objects.
+         *
          * @param service Used as an executor by JMH to run benchmarks.
          */
         public static void executor(EventLoop service) {
@@ -146,14 +140,5 @@ public class AbstractSharedExecutorMicrobenchmark extends AbstractMicrobenchmark
         public <V> ProgressivePromise<V> newProgressivePromise() {
             return executor.newProgressivePromise();
         }
-    }
-
-    @Override
-    protected String[] jvmArgs() {
-        return JVM_ARGS;
-    }
-
-    public static void handleUnexpectedException(Throwable t) {
-        assertNull(t);
     }
 }

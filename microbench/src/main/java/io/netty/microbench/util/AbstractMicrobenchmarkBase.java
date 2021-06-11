@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbench.util;
 
 import io.netty.util.ResourceLeakDetector;
@@ -42,20 +27,33 @@ import static org.junit.Assert.assertNull;
 public abstract class AbstractMicrobenchmarkBase {
     protected static final int DEFAULT_WARMUP_ITERATIONS = 10;
     protected static final int DEFAULT_MEASURE_ITERATIONS = 10;
-    protected static final String[] BASE_JVM_ARGS = {
-        "-server", "-dsa", "-da", "-ea:io.netty...",
-        "-XX:+HeapDumpOnOutOfMemoryError", "-Dio.netty.leakDetection.level=disabled"};
+    protected static final String[] BASE_JVM_ARGS = {"-server", "-dsa", "-da", "-ea:io.netty...", "-XX:+HeapDumpOnOutOfMemoryError", "-Dio.netty.leakDetection.level=disabled"};
 
     static {
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
     }
 
+    protected static String[] removeAssertions(String[] jvmArgs) {
+        List<String> customArgs = new ArrayList<String>(jvmArgs.length);
+        for (String arg : jvmArgs) {
+            if (!arg.startsWith("-ea")) {
+                customArgs.add(arg);
+            }
+        }
+        if (jvmArgs.length != customArgs.size()) {
+            jvmArgs = customArgs.toArray(new String[0]);
+        }
+        return jvmArgs;
+    }
+
+    public static void handleUnexpectedException(Throwable t) {
+        assertNull(t);
+    }
+
     protected ChainedOptionsBuilder newOptionsBuilder() throws Exception {
         String className = getClass().getSimpleName();
 
-        ChainedOptionsBuilder runnerOptions = new OptionsBuilder()
-            .include(".*" + className + ".*")
-            .jvmArgs(jvmArgs());
+        ChainedOptionsBuilder runnerOptions = new OptionsBuilder().include(".*" + className + ".*").jvmArgs(jvmArgs());
 
         if (getWarmupIterations() > 0) {
             runnerOptions.warmupIterations(getWarmupIterations());
@@ -84,19 +82,6 @@ public abstract class AbstractMicrobenchmarkBase {
 
     protected abstract String[] jvmArgs();
 
-    protected static String[] removeAssertions(String[] jvmArgs) {
-        List<String> customArgs = new ArrayList<String>(jvmArgs.length);
-        for (String arg : jvmArgs) {
-            if (!arg.startsWith("-ea")) {
-                customArgs.add(arg);
-            }
-        }
-        if (jvmArgs.length != customArgs.size()) {
-            jvmArgs = customArgs.toArray(new String[0]);
-        }
-        return jvmArgs;
-    }
-
     @Test
     public void run() throws Exception {
         new Runner(newOptionsBuilder().build()).run();
@@ -112,9 +97,5 @@ public abstract class AbstractMicrobenchmarkBase {
 
     protected String getReportDir() {
         return SystemPropertyUtil.get("perfReportDir");
-    }
-
-    public static void handleUnexpectedException(Throwable t) {
-        assertNull(t);
     }
 }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.spdy.client;
 
 import io.netty.bootstrap.Bootstrap;
@@ -52,17 +37,11 @@ public final class SpdyClient {
 
     public static void main(String[] args) throws Exception {
         // Configure SSL.
-        final SslContext sslCtx = SslContextBuilder.forClient()
-            .trustManager(InsecureTrustManagerFactory.INSTANCE)
-            .applicationProtocolConfig(new ApplicationProtocolConfig(
-                        Protocol.NPN,
-                        // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
-                        SelectorFailureBehavior.NO_ADVERTISE,
-                        // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
-                        SelectedListenerFailureBehavior.ACCEPT,
-                        ApplicationProtocolNames.SPDY_3_1,
-                        ApplicationProtocolNames.HTTP_1_1))
-            .build();
+        final SslContext sslCtx = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).applicationProtocolConfig(new ApplicationProtocolConfig(Protocol.NPN,
+                // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
+                SelectorFailureBehavior.NO_ADVERTISE,
+                // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
+                SelectedListenerFailureBehavior.ACCEPT, ApplicationProtocolNames.SPDY_3_1, ApplicationProtocolNames.HTTP_1_1)).build();
 
         HttpResponseClientHandler httpResponseHandler = new HttpResponseClientHandler();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -80,8 +59,7 @@ public final class SpdyClient {
             System.out.println("Connected to " + HOST + ':' + PORT);
 
             // Create a GET request.
-            HttpRequest request = new DefaultFullHttpRequest(
-                    HttpVersion.HTTP_1_1, HttpMethod.GET, "", Unpooled.EMPTY_BUFFER);
+            HttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "", Unpooled.EMPTY_BUFFER);
             request.headers().set(HttpHeaderNames.HOST, HOST);
             request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.GZIP);
 

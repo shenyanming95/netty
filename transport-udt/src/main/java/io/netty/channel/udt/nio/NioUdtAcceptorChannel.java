@@ -44,8 +44,7 @@ import static java.nio.channels.SelectionKey.OP_ACCEPT;
 @Deprecated
 public abstract class NioUdtAcceptorChannel extends AbstractNioMessageChannel implements UdtServerChannel {
 
-    protected static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(NioUdtAcceptorChannel.class);
+    protected static final InternalLogger logger = InternalLoggerFactory.getInstance(NioUdtAcceptorChannel.class);
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
 
@@ -88,8 +87,7 @@ public abstract class NioUdtAcceptorChannel extends AbstractNioMessageChannel im
     }
 
     @Override
-    protected boolean doConnect(final SocketAddress remoteAddress,
-            final SocketAddress localAddress) throws Exception {
+    protected boolean doConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) throws Exception {
         throw new UnsupportedOperationException();
     }
 

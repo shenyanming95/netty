@@ -26,9 +26,14 @@ package io.netty.util.internal;
  * caller's ClassLoader.
  */
 final class NativeLibraryUtil {
+    private NativeLibraryUtil() {
+        // Utility
+    }
+
     /**
      * Delegate the calling to {@link System#load(String)} or {@link System#loadLibrary(String)}.
-     * @param libName - The native library path or name
+     *
+     * @param libName  - The native library path or name
      * @param absolute - Whether the native library will be loaded by path or by name
      */
     public static void loadLibrary(String libName, boolean absolute) {
@@ -37,9 +42,5 @@ final class NativeLibraryUtil {
         } else {
             System.loadLibrary(libName);
         }
-    }
-
-    private NativeLibraryUtil() {
-        // Utility
     }
 }

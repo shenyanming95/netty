@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.cookie;
 
 import io.netty.handler.codec.DateFormatter;
@@ -24,7 +9,7 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A <a href="http://tools.ietf.org/html/rfc6265">RFC6265</a> compliant cookie decoder to be used client side.
- *
+ * <p>
  * It will store the way the raw value was wrapped in {@link Cookie#setWrap(boolean)} so it can be
  * eventually sent back to the Origin server as is.
  *
@@ -61,10 +46,11 @@ public final class ClientCookieDecoder extends CookieDecoder {
 
         CookieBuilder cookieBuilder = null;
 
-        loop: for (int i = 0;;) {
+        loop:
+        for (int i = 0; ; ) {
 
             // Skip spaces and separators.
-            for (;;) {
+            for (; ; ) {
                 if (i == headerLen) {
                     break loop;
                 }
@@ -74,8 +60,7 @@ public final class ClientCookieDecoder extends CookieDecoder {
                     // deprecated, modern browsers only parse the first one
                     break loop;
 
-                } else if (c == '\t' || c == '\n' || c == 0x0b || c == '\f'
-                        || c == '\r' || c == ' ' || c == ';') {
+                } else if (c == '\t' || c == '\n' || c == 0x0b || c == '\f' || c == '\r' || c == ' ' || c == ';') {
                     i++;
                     continue;
                 }
@@ -87,7 +72,7 @@ public final class ClientCookieDecoder extends CookieDecoder {
             int valueBegin;
             int valueEnd;
 
-            for (;;) {
+            for (; ; ) {
                 char curChar = header.charAt(i);
                 if (curChar == ';') {
                     // NAME; (no value till ';')
@@ -162,6 +147,10 @@ public final class ClientCookieDecoder extends CookieDecoder {
             this.header = header;
         }
 
+        private static boolean isValueDefined(int valueStart, int valueEnd) {
+            return valueStart != -1 && valueStart != valueEnd;
+        }
+
         private long mergeMaxAgeAndExpires() {
             // max age has precedence over expires
             if (maxAge != Long.MIN_VALUE) {
@@ -190,14 +179,10 @@ public final class ClientCookieDecoder extends CookieDecoder {
          * Parse and store a key-value pair. First one is considered to be the
          * cookie name/value. Unknown attribute names are silently discarded.
          *
-         * @param keyStart
-         *            where the key starts in the header
-         * @param keyEnd
-         *            where the key ends in the header
-         * @param valueStart
-         *            where the value starts in the header
-         * @param valueEnd
-         *            where the value ends in the header
+         * @param keyStart   where the key starts in the header
+         * @param keyEnd     where the key ends in the header
+         * @param valueStart where the value starts in the header
+         * @param valueEnd   where the value ends in the header
          */
         void appendAttribute(int keyStart, int keyEnd, int valueStart, int valueEnd) {
             int length = keyEnd - keyStart;
@@ -250,10 +235,6 @@ public final class ClientCookieDecoder extends CookieDecoder {
             } else if (header.regionMatches(true, nameStart, CookieHeaderNames.SAMESITE, 0, 8)) {
                 sameSite = SameSite.of(computeValue(valueStart, valueEnd));
             }
-        }
-
-        private static boolean isValueDefined(int valueStart, int valueEnd) {
-            return valueStart != -1 && valueStart != valueEnd;
         }
 
         private String computeValue(int valueStart, int valueEnd) {

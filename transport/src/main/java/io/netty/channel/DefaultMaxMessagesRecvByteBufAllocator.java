@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel;
 
 import io.netty.buffer.ByteBuf;
@@ -51,14 +36,14 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator implements MaxMessa
 
     /**
      * Determine if future instances of {@link #newHandle()} will stop reading if we think there is no more data.
-     * @param respectMaybeMoreData
-     * <ul>
-     *     <li>{@code true} to stop reading if we think there is no more data. This may save a system call to read from
-     *          the socket, but if data has arrived in a racy fashion we may give up our {@link #maxMessagesPerRead()}
-     *          quantum and have to wait for the selector to notify us of more data.</li>
-     *     <li>{@code false} to keep reading (up to {@link #maxMessagesPerRead()}) or until there is no data when we
-     *          attempt to read.</li>
-     * </ul>
+     *
+     * @param respectMaybeMoreData <ul>
+     *                             <li>{@code true} to stop reading if we think there is no more data. This may save a system call to read from
+     *                             the socket, but if data has arrived in a racy fashion we may give up our {@link #maxMessagesPerRead()}
+     *                             quantum and have to wait for the selector to notify us of more data.</li>
+     *                             <li>{@code false} to keep reading (up to {@link #maxMessagesPerRead()}) or until there is no data when we
+     *                             attempt to read.</li>
+     *                             </ul>
      * @return {@code this}.
      */
     public DefaultMaxMessagesRecvByteBufAllocator respectMaybeMoreData(boolean respectMaybeMoreData) {
@@ -68,13 +53,13 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator implements MaxMessa
 
     /**
      * Get if future instances of {@link #newHandle()} will stop reading if we think there is no more data.
-     * @return
-     * <ul>
-     *     <li>{@code true} to stop reading if we think there is no more data. This may save a system call to read from
-     *          the socket, but if data has arrived in a racy fashion we may give up our {@link #maxMessagesPerRead()}
-     *          quantum and have to wait for the selector to notify us of more data.</li>
-     *     <li>{@code false} to keep reading (up to {@link #maxMessagesPerRead()}) or until there is no data when we
-     *          attempt to read.</li>
+     *
+     * @return <ul>
+     * <li>{@code true} to stop reading if we think there is no more data. This may save a system call to read from
+     * the socket, but if data has arrived in a racy fashion we may give up our {@link #maxMessagesPerRead()}
+     * quantum and have to wait for the selector to notify us of more data.</li>
+     * <li>{@code false} to keep reading (up to {@link #maxMessagesPerRead()}) or until there is no data when we
+     * attempt to read.</li>
      * </ul>
      */
     public final boolean respectMaybeMoreData() {
@@ -85,13 +70,13 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator implements MaxMessa
      * Focuses on enforcing the maximum messages per read condition for {@link #continueReading()}.
      */
     public abstract class MaxMessageHandle implements ExtendedHandle {
+        private final boolean respectMaybeMoreData = DefaultMaxMessagesRecvByteBufAllocator.this.respectMaybeMoreData;
         private ChannelConfig config;
         private int maxMessagePerRead;
         private int totalMessages;
         private int totalBytesRead;
         private int attemptedBytesRead;
         private int lastBytesRead;
-        private final boolean respectMaybeMoreData = DefaultMaxMessagesRecvByteBufAllocator.this.respectMaybeMoreData;
         private final UncheckedBooleanSupplier defaultMaybeMoreSupplier = new UncheckedBooleanSupplier() {
             @Override
             public boolean get() {
@@ -139,10 +124,7 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator implements MaxMessa
 
         @Override
         public boolean continueReading(UncheckedBooleanSupplier maybeMoreDataSupplier) {
-            return config.isAutoRead() &&
-                   (!respectMaybeMoreData || maybeMoreDataSupplier.get()) &&
-                   totalMessages < maxMessagePerRead &&
-                   totalBytesRead > 0;
+            return config.isAutoRead() && (!respectMaybeMoreData || maybeMoreDataSupplier.get()) && totalMessages < maxMessagePerRead && totalBytesRead > 0;
         }
 
         @Override

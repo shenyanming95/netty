@@ -41,6 +41,24 @@ public final class SmtpResponseDecoder extends LineBasedFrameDecoder {
         super(maxLineLength);
     }
 
+    private static DecoderException newDecoderException(ByteBuf buffer, int readerIndex, int readable) {
+        return new DecoderException("Received invalid line: '" + buffer.toString(readerIndex, readable, CharsetUtil.US_ASCII) + '\'');
+    }
+
+    /**
+     * Parses the io.netty.handler.codec.smtp code without any allocation, which is three digits.
+     */
+    private static int parseCode(ByteBuf buffer) {
+        final int first = parseNumber(buffer.readByte()) * 100;
+        final int second = parseNumber(buffer.readByte()) * 10;
+        final int third = parseNumber(buffer.readByte());
+        return first + second + third;
+    }
+
+    private static int parseNumber(byte b) {
+        return Character.digit((char) b, 10);
+    }
+
     @Override
     protected SmtpResponse decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
         ByteBuf frame = (ByteBuf) super.decode(ctx, buffer);
@@ -61,57 +79,38 @@ public final class SmtpResponseDecoder extends LineBasedFrameDecoder {
             List<CharSequence> details = this.details;
 
             switch (separator) {
-            case ' ':
-                // Marks the end of a response.
-                this.details = null;
-                if (details != null) {
+                case ' ':
+                    // Marks the end of a response.
+                    this.details = null;
+                    if (details != null) {
+                        if (detail != null) {
+                            details.add(detail);
+                        }
+                    } else {
+                        if (detail == null) {
+                            details = Collections.emptyList();
+                        } else {
+                            details = Collections.singletonList(detail);
+                        }
+                    }
+                    return new DefaultSmtpResponse(code, details);
+                case '-':
+                    // Multi-line response.
                     if (detail != null) {
+                        if (details == null) {
+                            // Using initial capacity as it is very unlikely that we will receive a multi-line response
+                            // with more then 3 lines.
+                            this.details = details = new ArrayList<CharSequence>(4);
+                        }
                         details.add(detail);
                     }
-                } else {
-                    if (detail == null) {
-                        details = Collections.emptyList();
-                    } else {
-                        details = Collections.singletonList(detail);
-                    }
-                }
-                return new DefaultSmtpResponse(code, details);
-            case '-':
-                // Multi-line response.
-                if (detail != null) {
-                    if (details == null) {
-                        // Using initial capacity as it is very unlikely that we will receive a multi-line response
-                        // with more then 3 lines.
-                        this.details = details = new ArrayList<CharSequence>(4);
-                    }
-                    details.add(detail);
-                }
-                break;
-            default:
-                throw newDecoderException(buffer, readerIndex, readable);
+                    break;
+                default:
+                    throw newDecoderException(buffer, readerIndex, readable);
             }
         } finally {
             frame.release();
         }
         return null;
-    }
-
-    private static DecoderException newDecoderException(ByteBuf buffer, int readerIndex, int readable) {
-        return new DecoderException(
-                "Received invalid line: '" + buffer.toString(readerIndex, readable, CharsetUtil.US_ASCII) + '\'');
-    }
-
-    /**
-     * Parses the io.netty.handler.codec.smtp code without any allocation, which is three digits.
-     */
-    private static int parseCode(ByteBuf buffer) {
-        final int first = parseNumber(buffer.readByte()) * 100;
-        final int second = parseNumber(buffer.readByte()) * 10;
-        final int third = parseNumber(buffer.readByte());
-        return first + second + third;
-    }
-
-    private static int parseNumber(byte b) {
-        return Character.digit((char) b, 10);
     }
 }

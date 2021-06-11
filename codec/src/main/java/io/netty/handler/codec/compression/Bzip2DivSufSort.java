@@ -1,23 +1,8 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.compression;
 
 /**
  * DivSufSort suffix array generator.<br>
- *
+ * <p>
  * Based on <a href="https://code.google.com/p/libdivsufsort/">libdivsufsort</a> 1.2.3 patched to support Bzip2.<br>
  * This is a simple conversion of the original C with two minor bugfixes applied (see "BUGFIX"
  * comments within the class). Documentation within the class is largely absent.
@@ -30,24 +15,15 @@ final class Bzip2DivSufSort {
     private static final int SS_BLOCKSIZE = 1024;
     private static final int INSERTIONSORT_THRESHOLD = 8;
 
-    private static final int[] LOG_2_TABLE = {
-        -1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-         5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-         7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-         7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-         7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-         7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
-    };
+    private static final int[] LOG_2_TABLE = {-1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
 
     private final int[] SA;
     private final byte[] T;
     private final int n;
 
     /**
-     * @param block The input array
-     * @param bwtBlock The output array
+     * @param block       The input array
+     * @param bwtBlock    The output array
      * @param blockLength The length of the input data
      */
     Bzip2DivSufSort(final byte[] block, final int[] bwtBlock, final int blockLength) {
@@ -62,13 +38,41 @@ final class Bzip2DivSufSort {
         array2[idx2] = temp;
     }
 
+    private static int ssLog(final int n) {
+        return (n & 0xff00) != 0 ? 8 + LOG_2_TABLE[n >> 8 & 0xff] : LOG_2_TABLE[n & 0xff];
+    }
+
+    private static void ssBlockSwap(final int[] array1, final int first1, final int[] array2, final int first2, final int size) {
+        int a, b;
+        int i;
+        for (i = size, a = first1, b = first2; 0 < i; --i, ++a, ++b) {
+            swapElements(array1, a, array2, b);
+        }
+    }
+
+    private static int getIDX(final int a) {
+        return 0 <= a ? a : ~a;
+    }
+
+    private static int trLog(int n) {
+        return (n & 0xffff0000) != 0 ? (n & 0xff000000) != 0 ? 24 + LOG_2_TABLE[n >> 24 & 0xff] : LOG_2_TABLE[n >> 16 & 0xff + 16] : (n & 0x0000ff00) != 0 ? 8 + LOG_2_TABLE[n >> 8 & 0xff] : LOG_2_TABLE[n & 0xff];
+    }
+
+    private static int BUCKET_B(final int c0, final int c1) {
+        return (c1 << 8) | c0;
+    }
+
+    private static int BUCKET_BSTAR(final int c0, final int c1) {
+        return (c0 << 8) | c1;
+    }
+
     private int ssCompare(final int p1, final int p2, final int depth) {
         final int[] SA = this.SA;
         final byte[] T = this.T;
 
         // pointers within T
         final int U1n = SA[p1 + 1] + 2;
-        final int  U2n = SA[p2 + 1] + 2;
+        final int U2n = SA[p2 + 1] + 2;
 
         int U1 = depth + SA[p1];
         int U2 = depth + SA[p2];
@@ -78,9 +82,7 @@ final class Bzip2DivSufSort {
             ++U2;
         }
 
-        return U1 < U1n ?
-                   U2 < U2n ? (T[U1] & 0xff) - (T[U2] & 0xff) : 1
-                 : U2 < U2n ? -1 : 0;
+        return U1 < U1n ? U2 < U2n ? (T[U1] & 0xff) - (T[U2] & 0xff) : 1 : U2 < U2n ? -1 : 0;
     }
 
     private int ssCompareLast(int pa, int p1, int p2, int depth, int size) {
@@ -111,9 +113,7 @@ final class Bzip2DivSufSort {
             ++U2;
         }
 
-        return U1 < U1n ?
-                   U2 < U2n ? (T[U1] & 0xff) - (T[U2] & 0xff) : 1
-                 : U2 < U2n ? -1 : 0;
+        return U1 < U1n ? U2 < U2n ? (T[U1] & 0xff) - (T[U2] & 0xff) : 1 : U2 < U2n ? -1 : 0;
     }
 
     private void ssInsertionSort(int pa, int first, int last, int depth) {
@@ -124,7 +124,7 @@ final class Bzip2DivSufSort {
         int r;
 
         for (i = last - 2; first <= i; --i) {
-            for (t = SA[i], j = i + 1; 0 < (r = ssCompare(pa + t, pa + SA[j], depth));) {
+            for (t = SA[i], j = i + 1; 0 < (r = ssCompare(pa + t, pa + SA[j], depth)); ) {
                 do {
                     SA[j - 1] = SA[j];
                 } while (++j < last && SA[j] < 0);
@@ -294,18 +294,7 @@ final class Bzip2DivSufSort {
             return ssMedian5(td, pa, first, first + t, middle, last - 1 - t, last - 1);
         }
         t >>= 3;
-        return ssMedian3(
-                td, pa,
-                ssMedian3(td, pa, first, first + t, first + (t << 1)),
-                ssMedian3(td, pa, middle - t, middle, middle + t),
-                ssMedian3(td, pa, last - 1 - (t << 1), last - 1 - t, last - 1)
-        );
-    }
-
-    private static int ssLog(final int n) {
-        return (n & 0xff00) != 0 ?
-                  8 + LOG_2_TABLE[n >> 8 & 0xff]
-                : LOG_2_TABLE[n & 0xff];
+        return ssMedian3(td, pa, ssMedian3(td, pa, first, first + t, first + (t << 1)), ssMedian3(td, pa, middle - t, middle, middle + t), ssMedian3(td, pa, last - 1 - (t << 1), last - 1 - t, last - 1));
     }
 
     private int ssSubstringPartition(final int pa, final int first, final int last, final int depth) {
@@ -314,7 +303,7 @@ final class Bzip2DivSufSort {
         int a, b;
         int t;
 
-        for (a = first - 1, b = last;;) {
+        for (a = first - 1, b = last; ; ) {
             while (++a < b && (SA[pa + SA[a]] + depth >= SA[pa + SA[a] + 1] + 1)) {
                 SA[a] = ~SA[a];
             }
@@ -336,20 +325,6 @@ final class Bzip2DivSufSort {
         return a;
     }
 
-    private static class StackEntry {
-        final int a;
-        final int b;
-        final int c;
-        final int d;
-
-        StackEntry(final int a, final int b, final int c, final int d) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-        }
-    }
-
     private void ssMultiKeyIntroSort(final int pa, int first, int last, int depth) {
         final int[] SA = this.SA;
         final byte[] T = this.T;
@@ -363,7 +338,7 @@ final class Bzip2DivSufSort {
         int limit;
         int v, x = 0;
 
-        for (ssize = 0, limit = ssLog(last - first);;) {
+        for (ssize = 0, limit = ssLog(last - first); ; ) {
             if (last - first <= INSERTIONSORT_THRESHOLD) {
                 if (1 < last - first) {
                     ssInsertionSort(pa, first, last, depth);
@@ -531,17 +506,7 @@ final class Bzip2DivSufSort {
         }
     }
 
-    private static void ssBlockSwap(final int[] array1, final int first1,
-                                    final int[] array2, final int first2, final int size) {
-        int a, b;
-        int i;
-        for (i = size, a = first1, b = first2; 0 < i; --i, ++a, ++b) {
-            swapElements(array1, a, array2, b);
-        }
-    }
-
-    private void ssMergeForward(final int pa, int[] buf, final int bufoffset,
-                                final int first, final int middle, final int last, final int depth) {
+    private void ssMergeForward(final int pa, int[] buf, final int bufoffset, final int first, final int middle, final int last, final int depth) {
         final int[] SA = this.SA;
 
         int bufend;
@@ -552,7 +517,7 @@ final class Bzip2DivSufSort {
         bufend = bufoffset + (middle - first) - 1;
         ssBlockSwap(buf, bufoffset, SA, first, middle - first);
 
-        for (t = SA[first], i = first, j = bufoffset, k = middle;;) {
+        for (t = SA[first], i = first, j = bufoffset, k = middle; ; ) {
             r = ssCompare(pa + buf[j], pa + SA[k], depth);
             if (r < 0) {
                 do {
@@ -569,9 +534,11 @@ final class Bzip2DivSufSort {
                     SA[k++] = SA[i];
                     if (last <= k) {
                         while (j < bufend) {
-                            SA[i++] = buf[j]; buf[j++] = SA[i];
+                            SA[i++] = buf[j];
+                            buf[j++] = SA[i];
                         }
-                        SA[i] = buf[j]; buf[j] = t;
+                        SA[i] = buf[j];
+                        buf[j] = t;
                         return;
                     }
                 } while (SA[k] < 0);
@@ -594,7 +561,8 @@ final class Bzip2DivSufSort {
                             SA[i++] = buf[j];
                             buf[j++] = SA[i];
                         }
-                        SA[i] = buf[j]; buf[j] = t;
+                        SA[i] = buf[j];
+                        buf[j] = t;
                         return;
                     }
                 } while (SA[k] < 0);
@@ -602,8 +570,7 @@ final class Bzip2DivSufSort {
         }
     }
 
-    private void ssMergeBackward(final int pa, int[] buf, final int bufoffset,
-                                 final int first, final int middle, final int last, final int depth) {
+    private void ssMergeBackward(final int pa, int[] buf, final int bufoffset, final int first, final int middle, final int last, final int depth) {
         final int[] SA = this.SA;
 
         int p1, p2;
@@ -618,18 +585,18 @@ final class Bzip2DivSufSort {
 
         x = 0;
         if (buf[bufend - 1] < 0) {
-            x |=  1;
+            x |= 1;
             p1 = pa + ~buf[bufend - 1];
         } else {
-            p1 = pa +  buf[bufend - 1];
+            p1 = pa + buf[bufend - 1];
         }
         if (SA[middle - 1] < 0) {
-            x |=  2;
+            x |= 2;
             p2 = pa + ~SA[middle - 1];
         } else {
-            p2 = pa +  SA[middle - 1];
+            p2 = pa + SA[middle - 1];
         }
-        for (t = SA[last - 1], i = last - 1, j = bufend - 1, k = middle - 1;;) {
+        for (t = SA[last - 1], i = last - 1, j = bufend - 1, k = middle - 1; ; ) {
 
             r = ssCompare(p1, p2, depth);
             if (r > 0) {
@@ -648,10 +615,10 @@ final class Bzip2DivSufSort {
                 buf[j--] = SA[i];
 
                 if (buf[j] < 0) {
-                    x |=  1;
+                    x |= 1;
                     p1 = pa + ~buf[j];
                 } else {
-                    p1 = pa +  buf[j];
+                    p1 = pa + buf[j];
                 }
             } else if (r < 0) {
                 if ((x & 2) != 0) {
@@ -674,10 +641,10 @@ final class Bzip2DivSufSort {
                 }
 
                 if (SA[k] < 0) {
-                    x |=  2;
+                    x |= 2;
                     p2 = pa + ~SA[k];
                 } else {
-                    p2 = pa +  SA[k];
+                    p2 = pa + SA[k];
                 }
             } else {
                 if ((x & 1) != 0) {
@@ -714,23 +681,19 @@ final class Bzip2DivSufSort {
                 }
 
                 if (buf[j] < 0) {
-                    x |=  1;
+                    x |= 1;
                     p1 = pa + ~buf[j];
                 } else {
-                    p1 = pa +  buf[j];
+                    p1 = pa + buf[j];
                 }
                 if (SA[k] < 0) {
-                    x |=  2;
+                    x |= 2;
                     p2 = pa + ~SA[k];
                 } else {
-                    p2 = pa +  SA[k];
+                    p2 = pa + SA[k];
                 }
             }
         }
-    }
-
-    private static int getIDX(final int a) {
-        return 0 <= a ? a : ~a;
     }
 
     private void ssMergeCheckEqual(final int pa, final int depth, final int a) {
@@ -741,8 +704,9 @@ final class Bzip2DivSufSort {
         }
     }
 
-    private void ssMerge(final int pa, int first, int middle, int last, int[] buf,
-                         final int bufoffset, final int bufsize, final int depth) {
+    /*----------------------------------------------------------------------------*/
+
+    private void ssMerge(final int pa, int first, int middle, int last, int[] buf, final int bufoffset, final int bufsize, final int depth) {
         final int[] SA = this.SA;
 
         final StackEntry[] stack = new StackEntry[STACK_SIZE];
@@ -752,7 +716,7 @@ final class Bzip2DivSufSort {
         int ssize;
         int check, next;
 
-        for (check = 0, ssize = 0;;) {
+        for (check = 0, ssize = 0; ; ) {
 
             if (last - middle <= bufsize) {
                 if (first < middle && middle < last) {
@@ -797,12 +761,9 @@ final class Bzip2DivSufSort {
                 continue;
             }
 
-            for (m = 0, len = Math.min(middle - first, last - middle), half = len >> 1;
-                    0 < len;
-                    len = half, half >>= 1) {
+            for (m = 0, len = Math.min(middle - first, last - middle), half = len >> 1; 0 < len; len = half, half >>= 1) {
 
-                if (ssCompare(pa + getIDX(SA[middle + m + half]),
-                        pa + getIDX(SA[middle - m - half - 1]), depth) < 0) {
+                if (ssCompare(pa + getIDX(SA[middle + m + half]), pa + getIDX(SA[middle - m - half - 1]), depth) < 0) {
                     m += half + 1;
                     half -= (len & 1) ^ 1;
                 }
@@ -819,13 +780,13 @@ final class Bzip2DivSufSort {
                         }
                         SA[middle + m] = ~SA[middle + m];
                     }
-                    for (j = middle; SA[j] < 0;) {
+                    for (j = middle; SA[j] < 0; ) {
                         ++j;
                     }
                     next = 1;
                 }
                 if (i - first <= last - j) {
-                    stack[ssize++] = new StackEntry(j, middle + m, last, (check &  2) | (next & 1));
+                    stack[ssize++] = new StackEntry(j, middle + m, last, (check & 2) | (next & 1));
                     middle -= m;
                     last = i;
                     check &= 1;
@@ -858,9 +819,7 @@ final class Bzip2DivSufSort {
         }
     }
 
-    private void subStringSort(final int pa, int first, final int last,
-                               final int[] buf, final int bufoffset, final int bufsize,
-                               final int depth, final boolean lastsuffix, final int size) {
+    private void subStringSort(final int pa, int first, final int last, final int[] buf, final int bufoffset, final int bufsize, final int depth, final boolean lastsuffix, final int size) {
         final int[] SA = this.SA;
 
         int a, b;
@@ -898,9 +857,7 @@ final class Bzip2DivSufSort {
 
         if (lastsuffix) {
             int r;
-            for (a = first, i = SA[first - 1], r = 1;
-                    a < last && (SA[a] < 0 || 0 < (r = ssCompareLast(pa, pa + i, pa + SA[a], depth, size)));
-                    ++a) {
+            for (a = first, i = SA[first - 1], r = 1; a < last && (SA[a] < 0 || 0 < (r = ssCompareLast(pa, pa + i, pa + SA[a], depth, size))); ++a) {
                 SA[a - 1] = SA[a];
             }
             if (r == 0) {
@@ -910,12 +867,8 @@ final class Bzip2DivSufSort {
         }
     }
 
-    /*----------------------------------------------------------------------------*/
-
     private int trGetC(final int isa, final int isaD, final int isaN, final int p) {
-        return isaD + p < isaN ?
-                SA[isaD + p]
-              : SA[isa + ((isaD - isa + p) % (isaN - isa))];
+        return isaD + p < isaN ? SA[isaD + p] : SA[isa + ((isaD - isa + p) % (isaN - isa))];
     }
 
     private void trFixdown(final int isa, final int isaD, final int isaN, final int sa, int i, final int size) {
@@ -977,7 +930,7 @@ final class Bzip2DivSufSort {
         int t, r;
 
         for (a = first + 1; a < last; ++a) {
-            for (t = SA[a], b = a - 1; 0 > (r = trGetC(isa, isaD, isaN, t) - trGetC(isa, isaD, isaN, SA[b]));) {
+            for (t = SA[a], b = a - 1; 0 > (r = trGetC(isa, isaD, isaN, t) - trGetC(isa, isaD, isaN, SA[b])); ) {
                 do {
                     SA[b + 1] = SA[b];
                 } while (first <= --b && SA[b] < 0);
@@ -990,12 +943,6 @@ final class Bzip2DivSufSort {
             }
             SA[b + 1] = t;
         }
-    }
-
-    private static int trLog(int n) {
-        return (n & 0xffff0000) != 0 ?
-                  (n & 0xff000000) != 0 ? 24 + LOG_2_TABLE[n >> 24 & 0xff] : LOG_2_TABLE[n >> 16 & 0xff + 16]
-                : (n & 0x0000ff00) != 0 ?  8 + LOG_2_TABLE[n >>  8 & 0xff] : LOG_2_TABLE[n & 0xff];
     }
 
     private int trMedian3(final int isa, final int isaD, final int isaN, int v1, int v2, int v3) {
@@ -1084,6 +1031,8 @@ final class Bzip2DivSufSort {
         return v3;
     }
 
+    /*---------------------------------------------------------------------------*/
+
     private int trPivot(final int isa, final int isaD, final int isaN, final int first, final int last) {
         final int middle;
         int t;
@@ -1096,23 +1045,11 @@ final class Bzip2DivSufSort {
                 return trMedian3(isa, isaD, isaN, first, middle, last - 1);
             }
             t >>= 2;
-            return trMedian5(
-                    isa, isaD, isaN,
-                    first, first + t,
-                    middle,
-                    last - 1 - t, last - 1
-            );
+            return trMedian5(isa, isaD, isaN, first, first + t, middle, last - 1 - t, last - 1);
         }
         t >>= 3;
-        return trMedian3(
-                isa, isaD, isaN,
-                trMedian3(isa, isaD, isaN, first, first + t, first + (t << 1)),
-                trMedian3(isa, isaD, isaN, middle - t, middle, middle + t),
-                trMedian3(isa, isaD, isaN, last - 1 - (t << 1), last - 1 - t, last - 1)
-        );
+        return trMedian3(isa, isaD, isaN, trMedian3(isa, isaD, isaN, first, first + t, first + (t << 1)), trMedian3(isa, isaD, isaN, middle - t, middle, middle + t), trMedian3(isa, isaD, isaN, last - 1 - (t << 1), last - 1 - t, last - 1));
     }
-
-    /*---------------------------------------------------------------------------*/
 
     private void lsUpdateGroup(final int isa, final int first, final int last) {
         final int[] SA = this.SA;
@@ -1153,7 +1090,7 @@ final class Bzip2DivSufSort {
         int v, x = 0;
         int ssize;
 
-        for (ssize = 0, limit = trLog(last - first);;) {
+        for (ssize = 0, limit = trLog(last - first); ; ) {
             if (last - first <= INSERTIONSORT_THRESHOLD) {
                 if (1 < last - first) {
                     trInsertionSort(isa, isaD, isaN, first, last);
@@ -1174,9 +1111,7 @@ final class Bzip2DivSufSort {
             if (limit-- == 0) {
                 trHeapSort(isa, isaD, isaN, first, last - first);
                 for (a = last - 1; first < a; a = b) {
-                    for (x = trGetC(isa, isaD, isaN, SA[a]), b = a - 1;
-                            first <= b && trGetC(isa, isaD, isaN, SA[b]) == x;
-                            --b) {
+                    for (x = trGetC(isa, isaD, isaN, SA[a]), b = a - 1; first <= b && trGetC(isa, isaD, isaN, SA[b]) == x; --b) {
                         SA[b] = ~SA[b];
                     }
                 }
@@ -1264,7 +1199,7 @@ final class Bzip2DivSufSort {
                     }
                 }
                 if ((b - a) == 1) {
-                    SA[a] = - 1;
+                    SA[a] = -1;
                 }
 
                 if (a - first <= last - b) {
@@ -1293,6 +1228,8 @@ final class Bzip2DivSufSort {
             }
         }
     }
+
+    /*---------------------------------------------------------------------------*/
 
     private void lsSort(final int isa, final int n, final int depth) {
         final int[] SA = this.SA;
@@ -1339,20 +1276,7 @@ final class Bzip2DivSufSort {
         }
     }
 
-    /*---------------------------------------------------------------------------*/
-
-    private static class PartitionResult {
-        final int first;
-        final int last;
-
-        PartitionResult(final int first, final int last) {
-            this.first = first;
-            this.last = last;
-        }
-    }
-
-    private PartitionResult trPartition(final int isa, final int isaD, final int isaN,
-                                        int first, int last, final int v) {
+    private PartitionResult trPartition(final int isa, final int isaD, final int isaN, int first, int last, final int v) {
         final int[] SA = this.SA;
 
         int a, b, c, d, e, f;
@@ -1420,8 +1344,7 @@ final class Bzip2DivSufSort {
         return new PartitionResult(first, last);
     }
 
-    private void trCopy(final int isa, final int isaN, final int first,
-                        final int a, final int b, final int last, final int depth) {
+    private void trCopy(final int isa, final int isaN, final int first, final int a, final int b, final int last, final int depth) {
         final int[] SA = this.SA;
 
         int c, d, e;
@@ -1449,8 +1372,7 @@ final class Bzip2DivSufSort {
         }
     }
 
-    private void trIntroSort(final int isa, int isaD, int isaN, int first,
-                             int last, final TRBudget budget, final int size) {
+    private void trIntroSort(final int isa, int isaD, int isaN, int first, int last, final TRBudget budget, final int size) {
         final int[] SA = this.SA;
 
         final StackEntry[] stack = new StackEntry[STACK_SIZE];
@@ -1461,7 +1383,7 @@ final class Bzip2DivSufSort {
         int limit, next;
         int ssize;
 
-        for (ssize = 0, limit = trLog(last - first);;) {
+        for (ssize = 0, limit = trLog(last - first); ; ) {
             if (limit < 0) {
                 if (limit == -1) {
                     if (!budget.update(size, last - first)) {
@@ -1487,9 +1409,11 @@ final class Bzip2DivSufSort {
                         if (a - first <= last - b) {
                             if (1 < a - first) {
                                 stack[ssize++] = new StackEntry(isaD, b, last, trLog(last - b));
-                                last = a; limit = trLog(a - first);
+                                last = a;
+                                limit = trLog(a - first);
                             } else if (1 < last - b) {
-                                first = b; limit = trLog(last - b);
+                                first = b;
+                                limit = trLog(last - b);
                             } else {
                                 if (ssize == 0) {
                                     return;
@@ -1566,13 +1490,18 @@ final class Bzip2DivSufSort {
 
                         if (a - first <= last - a) {
                             stack[ssize++] = new StackEntry(isaD, a, last, -3);
-                            isaD += 1; last = a; limit = next;
+                            isaD += 1;
+                            last = a;
+                            limit = next;
                         } else {
                             if (1 < last - a) {
                                 stack[ssize++] = new StackEntry(isaD + 1, first, a, next);
-                                first = a; limit = -3;
+                                first = a;
+                                limit = -3;
                             } else {
-                                isaD += 1; last = a; limit = next;
+                                isaD += 1;
+                                last = a;
+                                limit = next;
                             }
                         }
                     } else {
@@ -1604,9 +1533,7 @@ final class Bzip2DivSufSort {
                 }
                 trHeapSort(isa, isaD, isaN, first, last - first);
                 for (a = last - 1; first < a; a = b) {
-                    for (x = trGetC(isa, isaD, isaN, SA[a]), b = a - 1;
-                            first <= b && trGetC(isa, isaD, isaN, SA[b]) == x;
-                            --b) {
+                    for (x = trGetC(isa, isaD, isaN, SA[a]), b = a - 1; first <= b && trGetC(isa, isaD, isaN, SA[b]) == x; --b) {
                         SA[b] = ~SA[b];
                     }
                 }
@@ -1685,7 +1612,8 @@ final class Bzip2DivSufSort {
                 }
                 if (b < last) {
                     for (c = a, v = b - 1; c < b; ++c) {
-                        SA[isa + SA[c]] = v; }
+                        SA[isa + SA[c]] = v;
+                    }
                 }
 
                 if (a - first <= last - b) {
@@ -1788,7 +1716,8 @@ final class Bzip2DivSufSort {
                 if (!budget.update(size, last - first)) {
                     break; // BUGFIX : Added to prevent an infinite loop in the original code
                 }
-                limit += 1; isaD += 1;
+                limit += 1;
+                isaD += 1;
             }
         }
 
@@ -1796,27 +1725,6 @@ final class Bzip2DivSufSort {
             if (stack[s].d == -3) {
                 lsUpdateGroup(isa, stack[s].b, stack[s].c);
             }
-        }
-    }
-
-    private static class TRBudget {
-        int budget;
-        int chance;
-
-        TRBudget(final int budget, final int chance) {
-            this.budget = budget;
-            this.chance = chance;
-        }
-
-        boolean update(final int size, final int n) {
-            budget -= n;
-            if (budget <= 0) {
-                if (--chance == 0) {
-                    return false;
-                }
-                budget += size;
-            }
-            return true;
         }
     }
 
@@ -1848,16 +1756,6 @@ final class Bzip2DivSufSort {
                 }
             } while (first < n);
         }
-    }
-
-    /*---------------------------------------------------------------------------*/
-
-    private static int BUCKET_B(final int c0, final int c1) {
-        return (c1 << 8) | c0;
-    }
-
-    private static int BUCKET_BSTAR(final int c0, final int c1) {
-        return (c0 << 8) | c1;
     }
 
     private int sortTypeBstar(final int[] bucketA, final int[] bucketB) {
@@ -1978,22 +1876,23 @@ final class Bzip2DivSufSort {
 
         trSort(ISAb, m, 1);
 
-        i = n - 1; j = m;
+        i = n - 1;
+        j = m;
         if ((T[i] & 0xff) < (T[0] & 0xff) || (T[i] == T[0] && flag != 0)) {
             if (flag == 0) {
                 SA[SA[ISAb + --j]] = i;
             }
-            for (--i; 0 <= i && (T[i] & 0xff) <= (T[i + 1] & 0xff);) {
+            for (--i; 0 <= i && (T[i] & 0xff) <= (T[i + 1] & 0xff); ) {
                 --i;
             }
         }
         while (0 <= i) {
-            for (--i; 0 <= i && (T[i] & 0xff) >= (T[i + 1] & 0xff);) {
+            for (--i; 0 <= i && (T[i] & 0xff) >= (T[i + 1] & 0xff); ) {
                 --i;
             }
             if (0 <= i) {
                 SA[SA[ISAb + --j]] = i;
-                for (--i; 0 <= i && (T[i] & 0xff) <= (T[i + 1] & 0xff);) {
+                for (--i; 0 <= i && (T[i] & 0xff) <= (T[i + 1] & 0xff); ) {
                     --i;
                 }
             }
@@ -2018,6 +1917,8 @@ final class Bzip2DivSufSort {
         return m;
     }
 
+    /*---------------------------------------------------------------------------*/
+
     private int constructBWT(final int[] bucketA, final int[] bucketB) {
         final byte[] T = this.T;
         final int[] SA = this.SA;
@@ -2029,9 +1930,7 @@ final class Bzip2DivSufSort {
         int orig = -1;
 
         for (c1 = 254; 0 <= c1; --c1) {
-            for (i = bucketB[BUCKET_BSTAR(c1, c1 + 1)], j = bucketA[c1 + 1], t = 0, c2 = -1;
-                    i <= j;
-                    --j) {
+            for (i = bucketB[BUCKET_BSTAR(c1, c1 + 1)], j = bucketA[c1 + 1], t = 0, c2 = -1; i <= j; --j) {
                 if (0 <= (s1 = s = SA[j])) {
                     if (--s < 0) {
                         s = n - 1;
@@ -2090,6 +1989,7 @@ final class Bzip2DivSufSort {
 
     /**
      * Performs a Burrows Wheeler Transform on the input array.
+     *
      * @return the index of the first character of the input array within the output array
      */
     public int bwt() {
@@ -2113,5 +2013,50 @@ final class Bzip2DivSufSort {
             return constructBWT(bucketA, bucketB);
         }
         return 0;
+    }
+
+    private static class StackEntry {
+        final int a;
+        final int b;
+        final int c;
+        final int d;
+
+        StackEntry(final int a, final int b, final int c, final int d) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.d = d;
+        }
+    }
+
+    private static class PartitionResult {
+        final int first;
+        final int last;
+
+        PartitionResult(final int first, final int last) {
+            this.first = first;
+            this.last = last;
+        }
+    }
+
+    private static class TRBudget {
+        int budget;
+        int chance;
+
+        TRBudget(final int budget, final int chance) {
+            this.budget = budget;
+            this.chance = chance;
+        }
+
+        boolean update(final int size, final int n) {
+            budget -= n;
+            if (budget <= 0) {
+                if (--chance == 0) {
+                    return false;
+                }
+                budget += size;
+            }
+            return true;
+        }
     }
 }

@@ -1,19 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.example.http2.tiles;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -46,6 +30,17 @@ public class Http2Server {
         group = eventLoopGroup;
     }
 
+    private static SslContext configureTLS() throws CertificateException, SSLException {
+        SelfSignedCertificate ssc = new SelfSignedCertificate();
+        ApplicationProtocolConfig apn = new ApplicationProtocolConfig(Protocol.ALPN,
+                // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
+                SelectorFailureBehavior.NO_ADVERTISE,
+                // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
+                SelectedListenerFailureBehavior.ACCEPT, ApplicationProtocolNames.HTTP_2, ApplicationProtocolNames.HTTP_1_1);
+
+        return SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey(), null).ciphers(CIPHERS, SupportedCipherSuiteFilter.INSTANCE).applicationProtocolConfig(apn).build();
+    }
+
     public ChannelFuture start() throws Exception {
         final SslContext sslCtx = configureTLS();
         ServerBootstrap b = new ServerBootstrap();
@@ -59,21 +54,5 @@ public class Http2Server {
 
         Channel ch = b.bind(PORT).sync().channel();
         return ch.closeFuture();
-    }
-
-    private static SslContext configureTLS() throws CertificateException, SSLException {
-        SelfSignedCertificate ssc = new SelfSignedCertificate();
-        ApplicationProtocolConfig apn = new ApplicationProtocolConfig(
-                Protocol.ALPN,
-                // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
-                SelectorFailureBehavior.NO_ADVERTISE,
-                // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
-                SelectedListenerFailureBehavior.ACCEPT,
-                ApplicationProtocolNames.HTTP_2,
-                ApplicationProtocolNames.HTTP_1_1);
-
-        return SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey(), null)
-                                .ciphers(CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
-                                .applicationProtocolConfig(apn).build();
     }
 }

@@ -23,8 +23,7 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  * A skeletal builder implementation of {@link InboundHttp2ToHttpAdapter} and its subtypes.
  */
 @UnstableApi
-public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<
-        T extends InboundHttp2ToHttpAdapter, B extends AbstractInboundHttp2ToHttpAdapterBuilder<T, B>> {
+public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<T extends InboundHttp2ToHttpAdapter, B extends AbstractInboundHttp2ToHttpAdapterBuilder<T, B>> {
 
     private final Http2Connection connection;
     private int maxContentLength;
@@ -64,7 +63,7 @@ public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<
      * Specifies the maximum length of the message content.
      *
      * @param maxContentLength the maximum length of the message content. If the length of the message content
-     *        exceeds this value, a {@link TooLongFrameException} will be raised
+     *                         exceeds this value, a {@link TooLongFrameException} will be raised
      * @return {@link AbstractInboundHttp2ToHttpAdapterBuilder} the builder for the {@link InboundHttp2ToHttpAdapter}
      */
     protected B maxContentLength(int maxContentLength) {
@@ -82,11 +81,10 @@ public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<
     /**
      * Specifies whether validation of HTTP headers should be performed.
      *
-     * @param validate
-     * <ul>
-     * <li>{@code true} to validate HTTP headers in the http-codec</li>
-     * <li>{@code false} not to validate HTTP headers in the http-codec</li>
-     * </ul>
+     * @param validate <ul>
+     *                 <li>{@code true} to validate HTTP headers in the http-codec</li>
+     *                 <li>{@code false} not to validate HTTP headers in the http-codec</li>
+     *                 </ul>
      * @return {@link AbstractInboundHttp2ToHttpAdapterBuilder} the builder for the {@link InboundHttp2ToHttpAdapter}
      */
     protected B validateHttpHeaders(boolean validate) {
@@ -105,7 +103,7 @@ public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<
      * Specifies whether a read settings frame should be propagated along the channel pipeline.
      *
      * @param propagate if {@code true} read settings will be passed along the pipeline. This can be useful
-     *                     to clients that need hold off sending data until they have received the settings.
+     *                  to clients that need hold off sending data until they have received the settings.
      * @return {@link AbstractInboundHttp2ToHttpAdapterBuilder} the builder for the {@link InboundHttp2ToHttpAdapter}
      */
     protected B propagateSettings(boolean propagate) {
@@ -119,8 +117,7 @@ public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<
     protected T build() {
         final T instance;
         try {
-            instance = build(connection(), maxContentLength(),
-                                     isValidateHttpHeaders(), isPropagateSettings());
+            instance = build(connection(), maxContentLength(), isValidateHttpHeaders(), isPropagateSettings());
         } catch (Throwable t) {
             throw new IllegalStateException("failed to create a new InboundHttp2ToHttpAdapter", t);
         }
@@ -131,6 +128,5 @@ public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<
     /**
      * Creates a new {@link InboundHttp2ToHttpAdapter} with the specified properties.
      */
-    protected abstract T build(Http2Connection connection, int maxContentLength,
-                               boolean validateHttpHeaders, boolean propagateSettings) throws Exception;
+    protected abstract T build(Http2Connection connection, int maxContentLength, boolean validateHttpHeaders, boolean propagateSettings) throws Exception;
 }

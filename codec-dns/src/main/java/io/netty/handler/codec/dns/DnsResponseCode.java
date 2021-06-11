@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.dns;
 
 import io.netty.util.internal.UnstableApi;
@@ -110,55 +95,6 @@ public class DnsResponseCode implements Comparable<DnsResponseCode> {
      * The 'BADALG' DNS RCODE (21), as defined in <a href="https://tools.ietf.org/html/rfc2930">RFC2930</a>.
      */
     public static final DnsResponseCode BADALG = new DnsResponseCode(21, "BADALG");
-
-    /**
-     * Returns the {@link DnsResponseCode} that corresponds with the given {@code responseCode}.
-     *
-     * @param responseCode the DNS RCODE
-     *
-     * @return the corresponding {@link DnsResponseCode}
-     */
-    public static DnsResponseCode valueOf(int responseCode) {
-        switch (responseCode) {
-        case 0:
-            return NOERROR;
-        case 1:
-            return FORMERR;
-        case 2:
-            return SERVFAIL;
-        case 3:
-            return NXDOMAIN;
-        case 4:
-            return NOTIMP;
-        case 5:
-            return REFUSED;
-        case 6:
-            return YXDOMAIN;
-        case 7:
-            return YXRRSET;
-        case 8:
-            return NXRRSET;
-        case 9:
-            return NOTAUTH;
-        case 10:
-            return NOTZONE;
-        case 16:
-            return BADVERS_OR_BADSIG;
-        case 17:
-            return BADKEY;
-        case 18:
-            return BADTIME;
-        case 19:
-            return BADMODE;
-        case 20:
-            return BADNAME;
-        case 21:
-            return BADALG;
-        default:
-            return new DnsResponseCode(responseCode);
-        }
-    }
-
     private final int code;
     private final String name;
     private String text;
@@ -174,6 +110,53 @@ public class DnsResponseCode implements Comparable<DnsResponseCode> {
 
         this.code = code;
         this.name = checkNotNull(name, "name");
+    }
+
+    /**
+     * Returns the {@link DnsResponseCode} that corresponds with the given {@code responseCode}.
+     *
+     * @param responseCode the DNS RCODE
+     * @return the corresponding {@link DnsResponseCode}
+     */
+    public static DnsResponseCode valueOf(int responseCode) {
+        switch (responseCode) {
+            case 0:
+                return NOERROR;
+            case 1:
+                return FORMERR;
+            case 2:
+                return SERVFAIL;
+            case 3:
+                return NXDOMAIN;
+            case 4:
+                return NOTIMP;
+            case 5:
+                return REFUSED;
+            case 6:
+                return YXDOMAIN;
+            case 7:
+                return YXRRSET;
+            case 8:
+                return NXRRSET;
+            case 9:
+                return NOTAUTH;
+            case 10:
+                return NOTZONE;
+            case 16:
+                return BADVERS_OR_BADSIG;
+            case 17:
+                return BADKEY;
+            case 18:
+                return BADTIME;
+            case 19:
+                return BADMODE;
+            case 20:
+                return BADNAME;
+            case 21:
+                return BADALG;
+            default:
+                return new DnsResponseCode(responseCode);
+        }
     }
 
     /**

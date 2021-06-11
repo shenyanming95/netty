@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.multipart;
 
 import io.netty.handler.codec.http.DefaultHttpRequest;
@@ -47,17 +32,6 @@ public class DefaultHttpDataFactory implements HttpDataFactory {
     private final boolean useDisk;
 
     private final boolean checkSize;
-
-    private long minSize;
-
-    private long maxSize = MAXSIZE;
-
-    private Charset charset = HttpConstants.DEFAULT_CHARSET;
-
-    private String baseDir;
-
-    private boolean deleteOnExit; // false is a good default cause true leaks
-
     /**
      * Keep all {@link HttpData}s until cleaning methods are called.
      * We need to use {@link IdentityHashMap} because different requests may be equal.
@@ -65,8 +39,12 @@ public class DefaultHttpDataFactory implements HttpDataFactory {
      * Similarly, when removing data items, we need to check their identities because
      * different data items may be equal.
      */
-    private final Map<HttpRequest, List<HttpData>> requestFileDeleteMap =
-            Collections.synchronizedMap(new IdentityHashMap<HttpRequest, List<HttpData>>());
+    private final Map<HttpRequest, List<HttpData>> requestFileDeleteMap = Collections.synchronizedMap(new IdentityHashMap<HttpRequest, List<HttpData>>());
+    private long minSize;
+    private long maxSize = MAXSIZE;
+    private Charset charset = HttpConstants.DEFAULT_CHARSET;
+    private String baseDir;
+    private boolean deleteOnExit; // false is a good default cause true leaks
 
     /**
      * HttpData will be in memory if less than default size (16KB).
@@ -95,6 +73,7 @@ public class DefaultHttpDataFactory implements HttpDataFactory {
         this(useDisk);
         this.charset = charset;
     }
+
     /**
      * HttpData will be on Disk if the size of the file is greater than minSize, else it
      * will be in memory. The type will be Mixed.
@@ -108,6 +87,17 @@ public class DefaultHttpDataFactory implements HttpDataFactory {
     public DefaultHttpDataFactory(long minSize, Charset charset) {
         this(minSize);
         this.charset = charset;
+    }
+
+    /**
+     * Utility method
+     */
+    private static void checkHttpDataSize(HttpData data) {
+        try {
+            data.checkSize(data.length());
+        } catch (IOException ignored) {
+            throw new IllegalArgumentException("Attribute bigger than maxSize allowed");
+        }
     }
 
     /**
@@ -188,17 +178,6 @@ public class DefaultHttpDataFactory implements HttpDataFactory {
         return attribute;
     }
 
-    /**
-     * Utility method
-     */
-    private static void checkHttpDataSize(HttpData data) {
-        try {
-            data.checkSize(data.length());
-        } catch (IOException ignored) {
-            throw new IllegalArgumentException("Attribute bigger than maxSize allowed");
-        }
-    }
-
     @Override
     public Attribute createAttribute(HttpRequest request, String name, String value) {
         if (useDisk) {
@@ -235,12 +214,9 @@ public class DefaultHttpDataFactory implements HttpDataFactory {
     }
 
     @Override
-    public FileUpload createFileUpload(HttpRequest request, String name, String filename,
-            String contentType, String contentTransferEncoding, Charset charset,
-            long size) {
+    public FileUpload createFileUpload(HttpRequest request, String name, String filename, String contentType, String contentTransferEncoding, Charset charset, long size) {
         if (useDisk) {
-            FileUpload fileUpload = new DiskFileUpload(name, filename, contentType,
-                    contentTransferEncoding, charset, size, baseDir, deleteOnExit);
+            FileUpload fileUpload = new DiskFileUpload(name, filename, contentType, contentTransferEncoding, charset, size, baseDir, deleteOnExit);
             fileUpload.setMaxSize(maxSize);
             checkHttpDataSize(fileUpload);
             List<HttpData> list = getList(request);
@@ -248,16 +224,14 @@ public class DefaultHttpDataFactory implements HttpDataFactory {
             return fileUpload;
         }
         if (checkSize) {
-            FileUpload fileUpload = new MixedFileUpload(name, filename, contentType,
-                    contentTransferEncoding, charset, size, minSize, baseDir, deleteOnExit);
+            FileUpload fileUpload = new MixedFileUpload(name, filename, contentType, contentTransferEncoding, charset, size, minSize, baseDir, deleteOnExit);
             fileUpload.setMaxSize(maxSize);
             checkHttpDataSize(fileUpload);
             List<HttpData> list = getList(request);
             list.add(fileUpload);
             return fileUpload;
         }
-        MemoryFileUpload fileUpload = new MemoryFileUpload(name, filename, contentType,
-                contentTransferEncoding, charset, size);
+        MemoryFileUpload fileUpload = new MemoryFileUpload(name, filename, contentType, contentTransferEncoding, charset, size);
         fileUpload.setMaxSize(maxSize);
         checkHttpDataSize(fileUpload);
         return fileUpload;

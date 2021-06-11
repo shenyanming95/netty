@@ -103,7 +103,8 @@ public final class ObjectUtil {
 
     /**
      * Resolves a possibly null Integer to a primitive int, using a default value.
-     * @param wrapper the wrapper
+     *
+     * @param wrapper      the wrapper
      * @param defaultValue the default value
      * @return the primitive value
      */
@@ -113,7 +114,8 @@ public final class ObjectUtil {
 
     /**
      * Resolves a possibly null Long to a primitive long, using a default value.
-     * @param wrapper the wrapper
+     *
+     * @param wrapper      the wrapper
      * @param defaultValue the default value
      * @return the primitive value
      */

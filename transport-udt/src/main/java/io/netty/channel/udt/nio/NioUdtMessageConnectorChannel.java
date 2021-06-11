@@ -52,8 +52,7 @@ import static java.nio.channels.SelectionKey.OP_READ;
 @Deprecated
 public class NioUdtMessageConnectorChannel extends AbstractNioMessageChannel implements UdtChannel {
 
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(NioUdtMessageConnectorChannel.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioUdtMessageConnectorChannel.class);
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(false);
 
@@ -68,13 +67,13 @@ public class NioUdtMessageConnectorChannel extends AbstractNioMessageChannel imp
         try {
             channelUDT.configureBlocking(false);
             switch (channelUDT.socketUDT().status()) {
-            case INIT:
-            case OPENED:
-                config = new DefaultUdtChannelConfig(this, channelUDT, true);
-                break;
-            default:
-                config = new DefaultUdtChannelConfig(this, channelUDT, false);
-                break;
+                case INIT:
+                case OPENED:
+                    config = new DefaultUdtChannelConfig(this, channelUDT, true);
+                    break;
+                default:
+                    config = new DefaultUdtChannelConfig(this, channelUDT, false);
+                    break;
             }
         } catch (final Exception e) {
             try {
@@ -94,6 +93,20 @@ public class NioUdtMessageConnectorChannel extends AbstractNioMessageChannel imp
         this(NioUdtProvider.newConnectorChannelUDT(type));
     }
 
+    private static void privilegedBind(final SocketChannelUDT socketChannel, final SocketAddress localAddress) throws IOException {
+        try {
+            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
+                @Override
+                public Void run() throws IOException {
+                    socketChannel.bind(localAddress);
+                    return null;
+                }
+            });
+        } catch (PrivilegedActionException e) {
+            throw (IOException) e.getCause();
+        }
+    }
+
     @Override
     public UdtChannelConfig config() {
         return config;
@@ -110,15 +123,13 @@ public class NioUdtMessageConnectorChannel extends AbstractNioMessageChannel imp
     }
 
     @Override
-    protected boolean doConnect(final SocketAddress remoteAddress,
-            final SocketAddress localAddress) throws Exception {
-        doBind(localAddress != null? localAddress : new InetSocketAddress(0));
+    protected boolean doConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) throws Exception {
+        doBind(localAddress != null ? localAddress : new InetSocketAddress(0));
         boolean success = false;
         try {
             final boolean connected = SocketUtils.connect(javaChannel(), remoteAddress);
             if (!connected) {
-                selectionKey().interestOps(
-                        selectionKey().interestOps() | OP_CONNECT);
+                selectionKey().interestOps(selectionKey().interestOps() | OP_CONNECT);
             }
             success = true;
             return connected;
@@ -137,11 +148,9 @@ public class NioUdtMessageConnectorChannel extends AbstractNioMessageChannel imp
     @Override
     protected void doFinishConnect() throws Exception {
         if (javaChannel().finishConnect()) {
-            selectionKey().interestOps(
-                    selectionKey().interestOps() & ~OP_CONNECT);
+            selectionKey().interestOps(selectionKey().interestOps() & ~OP_CONNECT);
         } else {
-            throw new Error(
-                    "Provider error: failed to finish connect. Provider library should be upgraded.");
+            throw new Error("Provider error: failed to finish connect. Provider library should be upgraded.");
         }
     }
 
@@ -150,11 +159,9 @@ public class NioUdtMessageConnectorChannel extends AbstractNioMessageChannel imp
 
         final int maximumMessageSize = config.getReceiveBufferSize();
 
-        final ByteBuf byteBuf = config.getAllocator().directBuffer(
-                maximumMessageSize);
+        final ByteBuf byteBuf = config.getAllocator().directBuffer(maximumMessageSize);
 
-        final int receivedMessageSize = byteBuf.writeBytes(javaChannel(),
-                maximumMessageSize);
+        final int receivedMessageSize = byteBuf.writeBytes(javaChannel(), maximumMessageSize);
 
         if (receivedMessageSize <= 0) {
             byteBuf.release();
@@ -163,8 +170,7 @@ public class NioUdtMessageConnectorChannel extends AbstractNioMessageChannel imp
 
         if (receivedMessageSize >= maximumMessageSize) {
             javaChannel().close();
-            throw new ChannelException(
-                    "Invalid config : increase receive buffer size to avoid message truncation");
+            throw new ChannelException("Invalid config : increase receive buffer size to avoid message truncation");
         }
 
         // delivers a message
@@ -194,8 +200,7 @@ public class NioUdtMessageConnectorChannel extends AbstractNioMessageChannel imp
 
         // wrote message completely
         if (writtenBytes > 0 && writtenBytes != messageSize) {
-            throw new Error(
-                    "Provider error: failed to write message. Provider library should be upgraded.");
+            throw new Error("Provider error: failed to write message. Provider library should be upgraded.");
         }
 
         return writtenBytes > 0;
@@ -235,20 +240,5 @@ public class NioUdtMessageConnectorChannel extends AbstractNioMessageChannel imp
     @Override
     public InetSocketAddress remoteAddress() {
         return (InetSocketAddress) super.remoteAddress();
-    }
-
-    private static void privilegedBind(final SocketChannelUDT socketChannel, final SocketAddress localAddress)
-            throws IOException {
-        try {
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
-                @Override
-                public Void run() throws IOException {
-                    socketChannel.bind(localAddress);
-                    return null;
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            throw (IOException) e.getCause();
-        }
     }
 }

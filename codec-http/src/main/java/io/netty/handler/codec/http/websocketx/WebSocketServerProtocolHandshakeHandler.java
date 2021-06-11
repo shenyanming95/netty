@@ -43,6 +43,23 @@ class WebSocketServerProtocolHandshakeHandler extends ChannelInboundHandlerAdapt
         this.serverConfig = checkNotNull(serverConfig, "serverConfig");
     }
 
+    private static void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req, HttpResponse res) {
+        ChannelFuture f = ctx.channel().writeAndFlush(res);
+        if (!isKeepAlive(req) || res.status().code() != 200) {
+            f.addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    private static String getWebSocketLocation(ChannelPipeline cp, HttpRequest req, String path) {
+        String protocol = "ws";
+        if (cp.get(SslHandler.class) != null) {
+            // SSL in use so use Secure WebSockets
+            protocol = "wss";
+        }
+        String host = req.headers().get(HttpHeaderNames.HOST);
+        return protocol + "://" + host + path;
+    }
+
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
         this.ctx = ctx;
@@ -63,9 +80,7 @@ class WebSocketServerProtocolHandshakeHandler extends ChannelInboundHandlerAdapt
                 return;
             }
 
-            final WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-                    getWebSocketLocation(ctx.pipeline(), req, serverConfig.websocketPath()),
-                    serverConfig.subprotocols(), serverConfig.decoderConfig());
+            final WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(ctx.pipeline(), req, serverConfig.websocketPath()), serverConfig.subprotocols(), serverConfig.decoderConfig());
             final WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(req);
             final ChannelPromise localHandshakePromise = handshakePromise;
             if (handshaker == null) {
@@ -89,11 +104,8 @@ class WebSocketServerProtocolHandshakeHandler extends ChannelInboundHandlerAdapt
                         } else {
                             localHandshakePromise.trySuccess();
                             // Kept for compatibility
-                            ctx.fireUserEventTriggered(
-                                    WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_COMPLETE);
-                            ctx.fireUserEventTriggered(
-                                    new WebSocketServerProtocolHandler.HandshakeComplete(
-                                            req.uri(), req.headers(), handshaker.selectedSubprotocol()));
+                            ctx.fireUserEventTriggered(WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_COMPLETE);
+                            ctx.fireUserEventTriggered(new WebSocketServerProtocolHandler.HandshakeComplete(req.uri(), req.headers(), handshaker.selectedSubprotocol()));
                         }
                     }
                 });
@@ -109,23 +121,6 @@ class WebSocketServerProtocolHandshakeHandler extends ChannelInboundHandlerAdapt
         return serverConfig.checkStartsWith() ? !req.uri().startsWith(websocketPath) : !req.uri().equals(websocketPath);
     }
 
-    private static void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req, HttpResponse res) {
-        ChannelFuture f = ctx.channel().writeAndFlush(res);
-        if (!isKeepAlive(req) || res.status().code() != 200) {
-            f.addListener(ChannelFutureListener.CLOSE);
-        }
-    }
-
-    private static String getWebSocketLocation(ChannelPipeline cp, HttpRequest req, String path) {
-        String protocol = "ws";
-        if (cp.get(SslHandler.class) != null) {
-            // SSL in use so use Secure WebSockets
-            protocol = "wss";
-        }
-        String host = req.headers().get(HttpHeaderNames.HOST);
-        return protocol + "://" + host + path;
-    }
-
     private void applyHandshakeTimeout() {
         final ChannelPromise localHandshakePromise = handshakePromise;
         final long handshakeTimeoutMillis = serverConfig.handshakeTimeoutMillis();
@@ -136,11 +131,8 @@ class WebSocketServerProtocolHandshakeHandler extends ChannelInboundHandlerAdapt
         final Future<?> timeoutFuture = ctx.executor().schedule(new Runnable() {
             @Override
             public void run() {
-                if (!localHandshakePromise.isDone() &&
-                        localHandshakePromise.tryFailure(new WebSocketHandshakeException("handshake timed out"))) {
-                    ctx.flush()
-                       .fireUserEventTriggered(ServerHandshakeStateEvent.HANDSHAKE_TIMEOUT)
-                       .close();
+                if (!localHandshakePromise.isDone() && localHandshakePromise.tryFailure(new WebSocketHandshakeException("handshake timed out"))) {
+                    ctx.flush().fireUserEventTriggered(ServerHandshakeStateEvent.HANDSHAKE_TIMEOUT).close();
                 }
             }
         }, handshakeTimeoutMillis, TimeUnit.MILLISECONDS);

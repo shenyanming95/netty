@@ -36,6 +36,100 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class BurstCostExecutorsBenchmark extends AbstractMicrobenchmark {
 
+    @Param({"1", "10"})
+    private int burstLength;
+    @Param({"spinning", "epollEventLoop", "nioEventLoop", "defaultEventExecutor", "juc", "kqueueEventLoop"})
+    private String executorType;
+    @Param({"0", "10"})
+    private int work;
+    private ExecutorService executor;
+    private ExecutorService executorToShutdown;
+
+    @Setup
+    public void setup() {
+        ExecutorType type = ExecutorType.valueOf(executorType);
+        switch (type) {
+            case spinning:
+                //The case with 3 producers can have a peak of 3*burstLength offers:
+                //4 is to leave some room between the offers and 1024 is to leave some room
+                //between producer/consumer when work is > 0 and 1 producer.
+                //If work = 0 then the task queue is supposed to be near empty most of the time.
+                executor = new SpinExecutorService(Math.min(1024, burstLength * 4));
+                executorToShutdown = executor;
+                break;
+            case defaultEventExecutor:
+                executor = new DefaultEventExecutor();
+                executorToShutdown = executor;
+                break;
+            case juc:
+                executor = Executors.newSingleThreadScheduledExecutor();
+                executorToShutdown = executor;
+                break;
+            case nioEventLoop:
+                NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(1);
+                nioEventLoopGroup.setIoRatio(1);
+                executor = nioEventLoopGroup.next();
+                executorToShutdown = nioEventLoopGroup;
+                break;
+            case epollEventLoop:
+                Epoll.ensureAvailability();
+                EpollEventLoopGroup epollEventLoopGroup = new EpollEventLoopGroup(1);
+                epollEventLoopGroup.setIoRatio(1);
+                executor = epollEventLoopGroup.next();
+                executorToShutdown = epollEventLoopGroup;
+                break;
+            case kqueueEventLoop:
+                KQueue.ensureAvailability();
+                KQueueEventLoopGroup kQueueEventLoopGroup = new KQueueEventLoopGroup(1);
+                kQueueEventLoopGroup.setIoRatio(1);
+                executor = kQueueEventLoopGroup.next();
+                executorToShutdown = kQueueEventLoopGroup;
+                break;
+        }
+    }
+
+    @TearDown
+    public void tearDown() {
+        executorToShutdown.shutdown();
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SampleTime)
+    @Threads(1)
+    public int test1Producer(final PerThreadState state) {
+        return executeBurst(state);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SampleTime)
+    @Threads(2)
+    public int test2Producers(final PerThreadState state) {
+        return executeBurst(state);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.SampleTime)
+    @Threads(3)
+    public int test3Producers(final PerThreadState state) {
+        return executeBurst(state);
+    }
+
+    private int executeBurst(final PerThreadState state) {
+        final ExecutorService executor = this.executor;
+        final int burstLength = this.burstLength;
+        final Runnable completeTask = state.completeTask;
+        for (int i = 0; i < burstLength; i++) {
+            executor.execute(completeTask);
+        }
+        final int value = state.spinWaitCompletionOf(burstLength);
+        state.resetCompleted();
+        return value;
+    }
+
+    private enum ExecutorType {
+        spinning, defaultEventExecutor, juc, nioEventLoop, epollEventLoop, kqueueEventLoop
+    }
+
     /**
      * This executor is useful as the best burst latency performer because it won't go to sleep and won't be hit by the
      * cost of being awaken on both offer/consumer side.
@@ -123,97 +217,26 @@ public class BurstCostExecutorsBenchmark extends AbstractMicrobenchmark {
         }
 
         @Override
-        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
-                throws InterruptedException {
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
-                throws InterruptedException, ExecutionException {
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
-                throws InterruptedException, ExecutionException, TimeoutException {
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public void execute(Runnable command) {
             if (!tasks.offer(command)) {
-                throw new RejectedExecutionException(
-                        "If that happens, there is something wrong with the available capacity/burst size");
+                throw new RejectedExecutionException("If that happens, there is something wrong with the available capacity/burst size");
             }
         }
-    }
-
-    private enum ExecutorType {
-        spinning,
-        defaultEventExecutor,
-        juc,
-        nioEventLoop,
-        epollEventLoop,
-        kqueueEventLoop
-    }
-
-    @Param({ "1", "10" })
-    private int burstLength;
-    @Param({ "spinning", "epollEventLoop", "nioEventLoop", "defaultEventExecutor", "juc", "kqueueEventLoop" })
-    private String executorType;
-    @Param({ "0", "10" })
-    private int work;
-
-    private ExecutorService executor;
-    private ExecutorService executorToShutdown;
-
-    @Setup
-    public void setup() {
-        ExecutorType type = ExecutorType.valueOf(executorType);
-        switch (type) {
-        case spinning:
-            //The case with 3 producers can have a peak of 3*burstLength offers:
-            //4 is to leave some room between the offers and 1024 is to leave some room
-            //between producer/consumer when work is > 0 and 1 producer.
-            //If work = 0 then the task queue is supposed to be near empty most of the time.
-            executor = new SpinExecutorService(Math.min(1024, burstLength * 4));
-            executorToShutdown = executor;
-            break;
-        case defaultEventExecutor:
-            executor = new DefaultEventExecutor();
-            executorToShutdown = executor;
-            break;
-        case juc:
-            executor = Executors.newSingleThreadScheduledExecutor();
-            executorToShutdown = executor;
-            break;
-        case nioEventLoop:
-            NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(1);
-            nioEventLoopGroup.setIoRatio(1);
-            executor = nioEventLoopGroup.next();
-            executorToShutdown = nioEventLoopGroup;
-            break;
-        case epollEventLoop:
-            Epoll.ensureAvailability();
-            EpollEventLoopGroup epollEventLoopGroup = new EpollEventLoopGroup(1);
-            epollEventLoopGroup.setIoRatio(1);
-            executor = epollEventLoopGroup.next();
-            executorToShutdown = epollEventLoopGroup;
-            break;
-        case kqueueEventLoop:
-            KQueue.ensureAvailability();
-            KQueueEventLoopGroup kQueueEventLoopGroup = new KQueueEventLoopGroup(1);
-            kQueueEventLoopGroup.setIoRatio(1);
-            executor = kQueueEventLoopGroup.next();
-            executorToShutdown = kQueueEventLoopGroup;
-            break;
-        }
-    }
-
-    @TearDown
-    public void tearDown() {
-        executorToShutdown.shutdown();
     }
 
     @State(Scope.Thread)
@@ -222,8 +245,7 @@ public class BurstCostExecutorsBenchmark extends AbstractMicrobenchmark {
         //suffer of false sharing while reading/writing the counter due to the surrounding
         //instances on heap: thanks to JMH the "completed" field will be padded
         //avoiding false-sharing for free
-        private static final AtomicIntegerFieldUpdater<PerThreadState> DONE_UPDATER =
-                AtomicIntegerFieldUpdater.newUpdater(PerThreadState.class, "completed");
+        private static final AtomicIntegerFieldUpdater<PerThreadState> DONE_UPDATER = AtomicIntegerFieldUpdater.newUpdater(PerThreadState.class, "completed");
         private volatile int completed;
 
         private Runnable completeTask;
@@ -278,38 +300,5 @@ public class BurstCostExecutorsBenchmark extends AbstractMicrobenchmark {
                 }
             }
         }
-    }
-
-    @Benchmark
-    @BenchmarkMode(Mode.SampleTime)
-    @Threads(1)
-    public int test1Producer(final PerThreadState state) {
-        return executeBurst(state);
-    }
-
-    @Benchmark
-    @BenchmarkMode(Mode.SampleTime)
-    @Threads(2)
-    public int test2Producers(final PerThreadState state) {
-        return executeBurst(state);
-    }
-
-    @Benchmark
-    @BenchmarkMode(Mode.SampleTime)
-    @Threads(3)
-    public int test3Producers(final PerThreadState state) {
-        return executeBurst(state);
-    }
-
-    private int executeBurst(final PerThreadState state) {
-        final ExecutorService executor = this.executor;
-        final int burstLength = this.burstLength;
-        final Runnable completeTask = state.completeTask;
-        for (int i = 0; i < burstLength; i++) {
-            executor.execute(completeTask);
-        }
-        final int value = state.spinWaitCompletionOf(burstLength);
-        state.resetCompleted();
-        return value;
     }
 }

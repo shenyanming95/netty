@@ -1,22 +1,7 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 /**
  * Copyright (c) 2004-2011 QOS.ch
  * All rights reserved.
- *
+ * <p>
  * Permission is hereby granted, free  of charge, to any person obtaining
  * a  copy  of this  software  and  associated  documentation files  (the
  * "Software"), to  deal in  the Software without  restriction, including
@@ -24,10 +9,10 @@
  * distribute,  sublicense, and/or sell  copies of  the Software,  and to
  * permit persons to whom the Software  is furnished to do so, subject to
  * the following conditions:
- *
+ * <p>
  * The  above  copyright  notice  and  this permission  notice  shall  be
  * included in all copies or substantial portions of the Software.
- *
+ * <p>
  * THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
  * EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
  * MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
@@ -35,7 +20,6 @@
  * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 package io.netty.util.internal.logging;
 
@@ -56,7 +40,7 @@ public interface InternalLogger {
      * Is the logger instance enabled for the TRACE level?
      *
      * @return True if this Logger is enabled for the TRACE level,
-     *         false otherwise.
+     * false otherwise.
      */
     boolean isTraceEnabled();
 
@@ -119,7 +103,7 @@ public interface InternalLogger {
     /**
      * Log an exception (throwable) at the TRACE level.
      *
-     * @param t   the exception (throwable) to log
+     * @param t the exception (throwable) to log
      */
     void trace(Throwable t);
 
@@ -127,7 +111,7 @@ public interface InternalLogger {
      * Is the logger instance enabled for the DEBUG level?
      *
      * @return True if this Logger is enabled for the DEBUG level,
-     *         false otherwise.
+     * false otherwise.
      */
     boolean isDebugEnabled();
 
@@ -191,7 +175,7 @@ public interface InternalLogger {
     /**
      * Log an exception (throwable) at the DEBUG level.
      *
-     * @param t   the exception (throwable) to log
+     * @param t the exception (throwable) to log
      */
     void debug(Throwable t);
 
@@ -199,7 +183,7 @@ public interface InternalLogger {
      * Is the logger instance enabled for the INFO level?
      *
      * @return True if this Logger is enabled for the INFO level,
-     *         false otherwise.
+     * false otherwise.
      */
     boolean isInfoEnabled();
 
@@ -263,7 +247,7 @@ public interface InternalLogger {
     /**
      * Log an exception (throwable) at the INFO level.
      *
-     * @param t   the exception (throwable) to log
+     * @param t the exception (throwable) to log
      */
     void info(Throwable t);
 
@@ -271,7 +255,7 @@ public interface InternalLogger {
      * Is the logger instance enabled for the WARN level?
      *
      * @return True if this Logger is enabled for the WARN level,
-     *         false otherwise.
+     * false otherwise.
      */
     boolean isWarnEnabled();
 
@@ -335,7 +319,7 @@ public interface InternalLogger {
     /**
      * Log an exception (throwable) at the WARN level.
      *
-     * @param t   the exception (throwable) to log
+     * @param t the exception (throwable) to log
      */
     void warn(Throwable t);
 
@@ -343,7 +327,7 @@ public interface InternalLogger {
      * Is the logger instance enabled for the ERROR level?
      *
      * @return True if this Logger is enabled for the ERROR level,
-     *         false otherwise.
+     * false otherwise.
      */
     boolean isErrorEnabled();
 
@@ -407,7 +391,7 @@ public interface InternalLogger {
     /**
      * Log an exception (throwable) at the ERROR level.
      *
-     * @param t   the exception (throwable) to log
+     * @param t the exception (throwable) to log
      */
     void error(Throwable t);
 
@@ -415,7 +399,7 @@ public interface InternalLogger {
      * Is the logger instance enabled for the specified {@code level}?
      *
      * @return True if this Logger is enabled for the specified {@code level},
-     *         false otherwise.
+     * false otherwise.
      */
     boolean isEnabled(InternalLogLevel level);
 
@@ -480,7 +464,7 @@ public interface InternalLogger {
     /**
      * Log an exception (throwable) at the specified {@code level}.
      *
-     * @param t   the exception (throwable) to log
+     * @param t the exception (throwable) to log
      */
     void log(InternalLogLevel level, Throwable t);
 }

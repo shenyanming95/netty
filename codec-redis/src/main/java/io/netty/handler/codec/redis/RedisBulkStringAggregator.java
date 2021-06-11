@@ -40,8 +40,7 @@ import io.netty.util.internal.UnstableApi;
  * in the {@link ChannelPipeline}.
  */
 @UnstableApi
-public final class RedisBulkStringAggregator extends MessageAggregator<RedisMessage, BulkStringHeaderRedisMessage,
-                                                                 BulkStringRedisContent, FullBulkStringRedisMessage> {
+public final class RedisBulkStringAggregator extends MessageAggregator<RedisMessage, BulkStringHeaderRedisMessage, BulkStringRedisContent, FullBulkStringRedisMessage> {
 
     /**
      * Creates a new instance.
@@ -71,14 +70,12 @@ public final class RedisBulkStringAggregator extends MessageAggregator<RedisMess
     }
 
     @Override
-    protected boolean isContentLengthInvalid(BulkStringHeaderRedisMessage start, int maxContentLength)
-            throws Exception {
+    protected boolean isContentLengthInvalid(BulkStringHeaderRedisMessage start, int maxContentLength) throws Exception {
         return start.bulkStringLength() > maxContentLength;
     }
 
     @Override
-    protected Object newContinueResponse(BulkStringHeaderRedisMessage start, int maxContentLength,
-                                         ChannelPipeline pipeline) throws Exception {
+    protected Object newContinueResponse(BulkStringHeaderRedisMessage start, int maxContentLength, ChannelPipeline pipeline) throws Exception {
         return null;
     }
 
@@ -93,8 +90,7 @@ public final class RedisBulkStringAggregator extends MessageAggregator<RedisMess
     }
 
     @Override
-    protected FullBulkStringRedisMessage beginAggregation(BulkStringHeaderRedisMessage start, ByteBuf content)
-            throws Exception {
+    protected FullBulkStringRedisMessage beginAggregation(BulkStringHeaderRedisMessage start, ByteBuf content) throws Exception {
         return new FullBulkStringRedisMessage(content);
     }
 }

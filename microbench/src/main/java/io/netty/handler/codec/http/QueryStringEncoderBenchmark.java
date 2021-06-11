@@ -33,6 +33,20 @@ public class QueryStringEncoderBenchmark extends AbstractMicrobenchmark {
     private String longUtf8;
     private String longAsciiFirst;
 
+    private static String encode(String s) {
+        QueryStringEncoder encoder = new QueryStringEncoder("");
+        encoder.addParam(s, s);
+        return encoder.toString();
+    }
+
+    private static String repeat(String s, int num) {
+        StringBuilder sb = new StringBuilder(num * s.length());
+        for (int i = 0; i < num; i++) {
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
     @Setup
     public void setUp() {
         // Avoid constant pool for strings since it's common for at least values to not be constant.
@@ -72,19 +86,5 @@ public class QueryStringEncoderBenchmark extends AbstractMicrobenchmark {
     @Benchmark
     public String longAsciiFirst() {
         return encode(longAsciiFirst);
-    }
-
-    private static String encode(String s) {
-        QueryStringEncoder encoder = new QueryStringEncoder("");
-        encoder.addParam(s, s);
-        return encoder.toString();
-    }
-
-    private static String repeat(String s, int num) {
-        StringBuilder sb = new StringBuilder(num * s.length());
-        for (int i = 0; i < num; i++) {
-            sb.append(s);
-        }
-        return sb.toString();
     }
 }

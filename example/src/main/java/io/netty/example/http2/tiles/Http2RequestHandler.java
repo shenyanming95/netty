@@ -1,19 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.example.http2.tiles;
 
 import io.netty.buffer.ByteBuf;
@@ -52,6 +36,20 @@ public class Http2RequestHandler extends SimpleChannelInboundHandler<FullHttpReq
     private static final String IMAGE_COORDINATE_Y = "y";
     private static final String IMAGE_COORDINATE_X = "x";
 
+    private static void sendBadRequest(ChannelHandlerContext ctx, String streamId) {
+        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST, EMPTY_BUFFER);
+        streamId(response, streamId);
+        ctx.writeAndFlush(response);
+    }
+
+    private static String streamId(FullHttpRequest request) {
+        return request.headers().get(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text());
+    }
+
+    private static void streamId(FullHttpResponse response, String streamId) {
+        response.headers().set(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), streamId);
+    }
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
         QueryStringDecoder queryString = new QueryStringDecoder(request.uri());
@@ -70,14 +68,7 @@ public class Http2RequestHandler extends SimpleChannelInboundHandler<FullHttpReq
         }
     }
 
-    private static void sendBadRequest(ChannelHandlerContext ctx, String streamId) {
-        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST, EMPTY_BUFFER);
-        streamId(response, streamId);
-        ctx.writeAndFlush(response);
-    }
-
-    private void handleImage(String x, String y, ChannelHandlerContext ctx, String streamId, int latency,
-            FullHttpRequest request) {
+    private void handleImage(String x, String y, ChannelHandlerContext ctx, String streamId, int latency, FullHttpRequest request) {
         ByteBuf image = ImageCache.INSTANCE.image(parseInt(x), parseInt(y));
         FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, image.duplicate());
         response.headers().set(CONTENT_TYPE, "image/jpeg");
@@ -95,8 +86,7 @@ public class Http2RequestHandler extends SimpleChannelInboundHandler<FullHttpReq
         sendResponse(ctx, streamId, latency, response, request);
     }
 
-    protected void sendResponse(final ChannelHandlerContext ctx, String streamId, int latency,
-            final FullHttpResponse response, final FullHttpRequest request) {
+    protected void sendResponse(final ChannelHandlerContext ctx, String streamId, int latency, final FullHttpResponse response, final FullHttpRequest request) {
         setContentLength(response, response.content().readableBytes());
         streamId(response, streamId);
         ctx.executor().schedule(new Runnable() {
@@ -105,14 +95,6 @@ public class Http2RequestHandler extends SimpleChannelInboundHandler<FullHttpReq
                 ctx.writeAndFlush(response);
             }
         }, latency, TimeUnit.MILLISECONDS);
-    }
-
-    private static String streamId(FullHttpRequest request) {
-        return request.headers().get(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text());
-    }
-
-    private static void streamId(FullHttpResponse response, String streamId) {
-        response.headers().set(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), streamId);
     }
 
     @Override

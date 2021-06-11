@@ -38,115 +38,42 @@ import static java.lang.Math.min;
 
 abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements Http2StreamChannel {
 
-    static final Http2FrameStreamVisitor WRITABLE_VISITOR = new Http2FrameStreamVisitor() {
-        @Override
-        public boolean visit(Http2FrameStream stream) {
-            final AbstractHttp2StreamChannel childChannel = (AbstractHttp2StreamChannel)
-                    ((DefaultHttp2FrameStream) stream).attachment;
-            childChannel.trySetWritable();
-            return true;
-        }
-    };
-
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractHttp2StreamChannel.class);
-
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
-
     /**
      * Number of bytes to consider non-payload messages. 9 is arbitrary, but also the minimum size of an HTTP/2 frame.
      * Primarily is non-zero.
      */
     private static final int MIN_HTTP2_FRAME_SIZE = 9;
-
-    /**
-     * Returns the flow-control size for DATA frames, and {@value MIN_HTTP2_FRAME_SIZE} for all other frames.
-     */
-    private static final class FlowControlledFrameSizeEstimator implements MessageSizeEstimator {
-
-        static final FlowControlledFrameSizeEstimator INSTANCE = new FlowControlledFrameSizeEstimator();
-
-        private static final Handle HANDLE_INSTANCE = new Handle() {
-            @Override
-            public int size(Object msg) {
-                return msg instanceof Http2DataFrame ?
-                        // Guard against overflow.
-                        (int) min(Integer.MAX_VALUE, ((Http2DataFrame) msg).initialFlowControlledBytes() +
-                                (long) MIN_HTTP2_FRAME_SIZE) : MIN_HTTP2_FRAME_SIZE;
-            }
-        };
-
+    private static final AtomicLongFieldUpdater<AbstractHttp2StreamChannel> TOTAL_PENDING_SIZE_UPDATER = AtomicLongFieldUpdater.newUpdater(AbstractHttp2StreamChannel.class, "totalPendingSize");
+    private static final AtomicIntegerFieldUpdater<AbstractHttp2StreamChannel> UNWRITABLE_UPDATER = AtomicIntegerFieldUpdater.newUpdater(AbstractHttp2StreamChannel.class, "unwritable");
+    static final Http2FrameStreamVisitor WRITABLE_VISITOR = new Http2FrameStreamVisitor() {
         @Override
-        public Handle newHandle() {
-            return HANDLE_INSTANCE;
+        public boolean visit(Http2FrameStream stream) {
+            final AbstractHttp2StreamChannel childChannel = (AbstractHttp2StreamChannel) ((DefaultHttp2FrameStream) stream).attachment;
+            childChannel.trySetWritable();
+            return true;
         }
-    }
-
-    private static final AtomicLongFieldUpdater<AbstractHttp2StreamChannel> TOTAL_PENDING_SIZE_UPDATER =
-            AtomicLongFieldUpdater.newUpdater(AbstractHttp2StreamChannel.class, "totalPendingSize");
-
-    private static final AtomicIntegerFieldUpdater<AbstractHttp2StreamChannel> UNWRITABLE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(AbstractHttp2StreamChannel.class, "unwritable");
-
-    private static void windowUpdateFrameWriteComplete(ChannelFuture future, Channel streamChannel) {
-        Throwable cause = future.cause();
-        if (cause != null) {
-            Throwable unwrappedCause;
-            // Unwrap if needed
-            if (cause instanceof Http2FrameStreamException && ((unwrappedCause = cause.getCause()) != null)) {
-                cause = unwrappedCause;
-            }
-
-            // Notify the child-channel and close it.
-            streamChannel.pipeline().fireExceptionCaught(cause);
-            streamChannel.unsafe().close(streamChannel.unsafe().voidPromise());
-        }
-    }
-
+    };
     private final ChannelFutureListener windowUpdateFrameWriteListener = new ChannelFutureListener() {
         @Override
         public void operationComplete(ChannelFuture future) {
             windowUpdateFrameWriteComplete(future, AbstractHttp2StreamChannel.this);
         }
     };
-
-    /**
-     * The current status of the read-processing for a {@link AbstractHttp2StreamChannel}.
-     */
-    private enum ReadStatus {
-        /**
-         * No read in progress and no read was requested (yet)
-         */
-        IDLE,
-
-        /**
-         * Reading in progress
-         */
-        IN_PROGRESS,
-
-        /**
-         * A read operation was requested.
-         */
-        REQUESTED
-    }
-
     private final AbstractHttp2StreamChannel.Http2StreamChannelConfig config = new Http2StreamChannelConfig(this);
     private final AbstractHttp2StreamChannel.Http2ChannelUnsafe unsafe = new Http2ChannelUnsafe();
     private final ChannelId channelId;
     private final ChannelPipeline pipeline;
     private final DefaultHttp2FrameStream stream;
     private final ChannelPromise closePromise;
-
     private volatile boolean registered;
-
     private volatile long totalPendingSize;
     private volatile int unwritable;
-
     // Cached to reduce GC
     private Runnable fireChannelWritabilityChangedTask;
-
     private boolean outboundClosed;
     private int flowControlledBytes;
-
     /**
      * This variable represents if a read is in progress for the current channel or was requested.
      * Note that depending upon the {@link RecvByteBufAllocator} behavior a read may extend beyond the
@@ -154,10 +81,10 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
      * drain all pending data, and then if the parent channel is reading this channel may still accept frames.
      */
     private ReadStatus readStatus = ReadStatus.IDLE;
-
     private Queue<Object> inboundBuffer;
-
-    /** {@code true} after the first HEADERS frame has been written **/
+    /**
+     * {@code true} after the first HEADERS frame has been written
+     **/
     private boolean firstFrameWritten;
     private boolean readCompletePending;
 
@@ -182,6 +109,21 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
         if (inboundHandler != null) {
             // Add the handler to the pipeline now that we are registered.
             pipeline.addLast(inboundHandler);
+        }
+    }
+
+    private static void windowUpdateFrameWriteComplete(ChannelFuture future, Channel streamChannel) {
+        Throwable cause = future.cause();
+        if (cause != null) {
+            Throwable unwrappedCause;
+            // Unwrap if needed
+            if (cause instanceof Http2FrameStreamException && ((unwrappedCause = cause.getCause()) != null)) {
+                cause = unwrappedCause;
+            }
+
+            // Notify the child-channel and close it.
+            streamChannel.pipeline().fireExceptionCaught(cause);
+            streamChannel.unsafe().close(streamChannel.unsafe().voidPromise());
         }
     }
 
@@ -222,21 +164,8 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
         }
     }
 
-    private void setWritable(boolean invokeLater) {
-        for (;;) {
-            final int oldValue = unwritable;
-            final int newValue = oldValue & ~1;
-            if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
-                if (oldValue != 0 && newValue == 0) {
-                    fireChannelWritabilityChanged(invokeLater);
-                }
-                break;
-            }
-        }
-    }
-
     private void setUnwritable(boolean invokeLater) {
-        for (;;) {
+        for (; ; ) {
             final int oldValue = unwritable;
             final int newValue = oldValue | 1;
             if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
@@ -265,6 +194,7 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
             pipeline.fireChannelWritabilityChanged();
         }
     }
+
     @Override
     public Http2FrameStream stream() {
         return stream;
@@ -304,6 +234,19 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
     @Override
     public boolean isWritable() {
         return unwritable == 0;
+    }
+
+    private void setWritable(boolean invokeLater) {
+        for (; ; ) {
+            final int oldValue = unwritable;
+            final int newValue = oldValue & ~1;
+            if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
+                if (oldValue != 0 && newValue == 0) {
+                    fireChannelWritabilityChanged(invokeLater);
+                }
+                break;
+            }
+        }
     }
 
     @Override
@@ -558,9 +501,103 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
         unsafe.notifyReadComplete(unsafe.recvBufAllocHandle(), false);
     }
 
+    private void maybeAddChannelToReadCompletePendingQueue() {
+        if (!readCompletePending) {
+            readCompletePending = true;
+            addChannelToReadCompletePendingQueue();
+        }
+    }
+
+    protected void flush0(ChannelHandlerContext ctx) {
+        ctx.flush();
+    }
+
+    protected ChannelFuture write0(ChannelHandlerContext ctx, Object msg) {
+        ChannelPromise promise = ctx.newPromise();
+        ctx.write(msg, promise);
+        return promise;
+    }
+
+    protected abstract boolean isParentReadInProgress();
+
+    protected abstract void addChannelToReadCompletePendingQueue();
+
+    protected abstract ChannelHandlerContext parentContext();
+
+    /**
+     * The current status of the read-processing for a {@link AbstractHttp2StreamChannel}.
+     */
+    private enum ReadStatus {
+        /**
+         * No read in progress and no read was requested (yet)
+         */
+        IDLE,
+
+        /**
+         * Reading in progress
+         */
+        IN_PROGRESS,
+
+        /**
+         * A read operation was requested.
+         */
+        REQUESTED
+    }
+
+    /**
+     * Returns the flow-control size for DATA frames, and {@value MIN_HTTP2_FRAME_SIZE} for all other frames.
+     */
+    private static final class FlowControlledFrameSizeEstimator implements MessageSizeEstimator {
+
+        static final FlowControlledFrameSizeEstimator INSTANCE = new FlowControlledFrameSizeEstimator();
+
+        private static final Handle HANDLE_INSTANCE = new Handle() {
+            @Override
+            public int size(Object msg) {
+                return msg instanceof Http2DataFrame ?
+                        // Guard against overflow.
+                        (int) min(Integer.MAX_VALUE, ((Http2DataFrame) msg).initialFlowControlledBytes() + (long) MIN_HTTP2_FRAME_SIZE) : MIN_HTTP2_FRAME_SIZE;
+            }
+        };
+
+        @Override
+        public Handle newHandle() {
+            return HANDLE_INSTANCE;
+        }
+    }
+
+    /**
+     * {@link ChannelConfig} so that the high and low writebuffer watermarks can reflect the outbound flow control
+     * window, without having to create a new {@link WriteBufferWaterMark} object whenever the flow control window
+     * changes.
+     */
+    private static final class Http2StreamChannelConfig extends DefaultChannelConfig {
+        Http2StreamChannelConfig(Channel channel) {
+            super(channel);
+        }
+
+        @Override
+        public MessageSizeEstimator getMessageSizeEstimator() {
+            return FlowControlledFrameSizeEstimator.INSTANCE;
+        }
+
+        @Override
+        public ChannelConfig setMessageSizeEstimator(MessageSizeEstimator estimator) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ChannelConfig setRecvByteBufAllocator(RecvByteBufAllocator allocator) {
+            if (!(allocator.newHandle() instanceof RecvByteBufAllocator.ExtendedHandle)) {
+                throw new IllegalArgumentException("allocator.newHandle() must return an object of type: " + RecvByteBufAllocator.ExtendedHandle.class);
+            }
+            super.setRecvByteBufAllocator(allocator);
+            return this;
+        }
+    }
+
     private final class Http2ChannelUnsafe implements Unsafe {
-        private final VoidChannelPromise unsafeVoidPromise =
-                new VoidChannelPromise(AbstractHttp2StreamChannel.this, false);
+        private final VoidChannelPromise unsafeVoidPromise = new VoidChannelPromise(AbstractHttp2StreamChannel.this, false);
         @SuppressWarnings("deprecation")
         private RecvByteBufAllocator.Handle recvHandle;
         private boolean writeDoneAndNoFlush;
@@ -568,8 +605,7 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
         private boolean readEOS;
 
         @Override
-        public void connect(final SocketAddress remoteAddress,
-                            SocketAddress localAddress, final ChannelPromise promise) {
+        public void connect(final SocketAddress remoteAddress, SocketAddress localAddress, final ChannelPromise promise) {
             if (!promise.setUncancellable()) {
                 return;
             }
@@ -666,7 +702,7 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
             }
 
             if (inboundBuffer != null) {
-                for (;;) {
+                for (; ; ) {
                     Object msg = inboundBuffer.poll();
                     if (msg == null) {
                         break;
@@ -694,8 +730,7 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
             fireChannelInactiveAndDeregister(promise, false);
         }
 
-        private void fireChannelInactiveAndDeregister(final ChannelPromise promise,
-                                                      final boolean fireChannelInactive) {
+        private void fireChannelInactiveAndDeregister(final ChannelPromise promise, final boolean fireChannelInactive) {
             if (!promise.setUncancellable()) {
                 return;
             }
@@ -796,8 +831,7 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
                 boolean continueReading = false;
                 do {
                     doRead0((Http2Frame) message, allocHandle);
-                } while ((readEOS || (continueReading = allocHandle.continueReading()))
-                        && (message = pollQueuedMessage()) != null);
+                } while ((readEOS || (continueReading = allocHandle.continueReading())) && (message = pollQueuedMessage()) != null);
 
                 if (continueReading && isParentReadInProgress() && !readEOS) {
                     // Currently the parent and child channel are on the same EventLoop thread. If the parent is
@@ -906,9 +940,7 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
                 } else {
                     String msgStr = msg.toString();
                     ReferenceCountUtil.release(msg);
-                    promise.setFailure(new IllegalArgumentException(
-                            "Message must be an " + StringUtil.simpleClassName(Http2StreamFrame.class) +
-                                    ": " + msgStr));
+                    promise.setFailure(new IllegalArgumentException("Message must be an " + StringUtil.simpleClassName(Http2StreamFrame.class) + ": " + msgStr));
                 }
             } catch (Throwable t) {
                 promise.tryFailure(t);
@@ -918,9 +950,7 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
         private void writeHttp2StreamFrame(Http2StreamFrame frame, final ChannelPromise promise) {
             if (!firstFrameWritten && !isStreamIdValid(stream().id()) && !(frame instanceof Http2HeadersFrame)) {
                 ReferenceCountUtil.release(frame);
-                promise.setFailure(
-                    new IllegalArgumentException("The first frame must be a headers frame. Was: "
-                        + frame.name()));
+                promise.setFailure(new IllegalArgumentException("The first frame must be a headers frame. Was: " + frame.name()));
                 return;
             }
 
@@ -1000,8 +1030,7 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
             if (frame.stream() != null && frame.stream() != stream) {
                 String msgString = frame.toString();
                 ReferenceCountUtil.release(frame);
-                throw new IllegalArgumentException(
-                        "Stream " + frame.stream() + " must not be set on the frame: " + msgString);
+                throw new IllegalArgumentException("Stream " + frame.stream() + " must not be set on the frame: " + msgString);
             }
             return frame;
         }
@@ -1033,56 +1062,4 @@ abstract class AbstractHttp2StreamChannel extends DefaultAttributeMap implements
             return null;
         }
     }
-
-    /**
-     * {@link ChannelConfig} so that the high and low writebuffer watermarks can reflect the outbound flow control
-     * window, without having to create a new {@link WriteBufferWaterMark} object whenever the flow control window
-     * changes.
-     */
-    private static final class Http2StreamChannelConfig extends DefaultChannelConfig {
-        Http2StreamChannelConfig(Channel channel) {
-            super(channel);
-        }
-
-        @Override
-        public MessageSizeEstimator getMessageSizeEstimator() {
-            return FlowControlledFrameSizeEstimator.INSTANCE;
-        }
-
-        @Override
-        public ChannelConfig setMessageSizeEstimator(MessageSizeEstimator estimator) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ChannelConfig setRecvByteBufAllocator(RecvByteBufAllocator allocator) {
-            if (!(allocator.newHandle() instanceof RecvByteBufAllocator.ExtendedHandle)) {
-                throw new IllegalArgumentException("allocator.newHandle() must return an object of type: " +
-                        RecvByteBufAllocator.ExtendedHandle.class);
-            }
-            super.setRecvByteBufAllocator(allocator);
-            return this;
-        }
-    }
-
-    private void maybeAddChannelToReadCompletePendingQueue() {
-        if (!readCompletePending) {
-            readCompletePending = true;
-            addChannelToReadCompletePendingQueue();
-        }
-    }
-
-    protected void flush0(ChannelHandlerContext ctx) {
-        ctx.flush();
-    }
-
-    protected ChannelFuture write0(ChannelHandlerContext ctx, Object msg) {
-        ChannelPromise promise = ctx.newPromise();
-        ctx.write(msg, promise);
-        return promise;
-    }
-
-    protected abstract boolean isParentReadInProgress();
-    protected abstract void addChannelToReadCompletePendingQueue();
-    protected abstract ChannelHandlerContext parentContext();
 }

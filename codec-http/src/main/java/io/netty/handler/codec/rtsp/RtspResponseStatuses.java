@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.rtsp;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -40,8 +25,7 @@ public final class RtspResponseStatuses {
     /**
      * 250 Low on Storage Space
      */
-    public static final HttpResponseStatus LOW_STORAGE_SPACE = new HttpResponseStatus(
-            250, "Low on Storage Space");
+    public static final HttpResponseStatus LOW_STORAGE_SPACE = new HttpResponseStatus(250, "Low on Storage Space");
 
     /**
      * 300 Multiple Choices
@@ -56,8 +40,7 @@ public final class RtspResponseStatuses {
     /**
      * 302 Moved Temporarily
      */
-    public static final HttpResponseStatus MOVED_TEMPORARILY = new HttpResponseStatus(
-            302, "Moved Temporarily");
+    public static final HttpResponseStatus MOVED_TEMPORARILY = new HttpResponseStatus(302, "Moved Temporarily");
     /**
      * 304 Not Modified
      */
@@ -106,8 +89,7 @@ public final class RtspResponseStatuses {
     /**
      * 407 Proxy Authentication Required
      */
-    public static final HttpResponseStatus PROXY_AUTHENTICATION_REQUIRED =
-            HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
+    public static final HttpResponseStatus PROXY_AUTHENTICATION_REQUIRED = HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
 
     /**
      * 408 Request Timeout
@@ -147,80 +129,67 @@ public final class RtspResponseStatuses {
     /**
      * 451 Parameter Not Understood
      */
-    public static final HttpResponseStatus PARAMETER_NOT_UNDERSTOOD = new HttpResponseStatus(
-            451, "Parameter Not Understood");
+    public static final HttpResponseStatus PARAMETER_NOT_UNDERSTOOD = new HttpResponseStatus(451, "Parameter Not Understood");
 
     /**
      * 452 Conference Not Found
      */
-    public static final HttpResponseStatus CONFERENCE_NOT_FOUND = new HttpResponseStatus(
-            452, "Conference Not Found");
+    public static final HttpResponseStatus CONFERENCE_NOT_FOUND = new HttpResponseStatus(452, "Conference Not Found");
 
     /**
      * 453 Not Enough Bandwidth
      */
-    public static final HttpResponseStatus NOT_ENOUGH_BANDWIDTH = new HttpResponseStatus(
-            453, "Not Enough Bandwidth");
+    public static final HttpResponseStatus NOT_ENOUGH_BANDWIDTH = new HttpResponseStatus(453, "Not Enough Bandwidth");
 
     /**
      * 454 Session Not Found
      */
-    public static final HttpResponseStatus SESSION_NOT_FOUND = new HttpResponseStatus(
-            454, "Session Not Found");
+    public static final HttpResponseStatus SESSION_NOT_FOUND = new HttpResponseStatus(454, "Session Not Found");
 
     /**
      * 455 Method Not Valid in This State
      */
-    public static final HttpResponseStatus METHOD_NOT_VALID = new HttpResponseStatus(
-            455, "Method Not Valid in This State");
+    public static final HttpResponseStatus METHOD_NOT_VALID = new HttpResponseStatus(455, "Method Not Valid in This State");
 
     /**
      * 456 Header Field Not Valid for Resource
      */
-    public static final HttpResponseStatus HEADER_FIELD_NOT_VALID = new HttpResponseStatus(
-            456, "Header Field Not Valid for Resource");
+    public static final HttpResponseStatus HEADER_FIELD_NOT_VALID = new HttpResponseStatus(456, "Header Field Not Valid for Resource");
 
     /**
      * 457 Invalid Range
      */
-    public static final HttpResponseStatus INVALID_RANGE = new HttpResponseStatus(
-            457, "Invalid Range");
+    public static final HttpResponseStatus INVALID_RANGE = new HttpResponseStatus(457, "Invalid Range");
 
     /**
      * 458 Parameter Is Read-Only
      */
-    public static final HttpResponseStatus PARAMETER_IS_READONLY = new HttpResponseStatus(
-            458, "Parameter Is Read-Only");
+    public static final HttpResponseStatus PARAMETER_IS_READONLY = new HttpResponseStatus(458, "Parameter Is Read-Only");
 
     /**
      * 459 Aggregate operation not allowed
      */
-    public static final HttpResponseStatus AGGREGATE_OPERATION_NOT_ALLOWED = new HttpResponseStatus(
-            459, "Aggregate operation not allowed");
+    public static final HttpResponseStatus AGGREGATE_OPERATION_NOT_ALLOWED = new HttpResponseStatus(459, "Aggregate operation not allowed");
 
     /**
      * 460 Only Aggregate operation allowed
      */
-    public static final HttpResponseStatus ONLY_AGGREGATE_OPERATION_ALLOWED = new HttpResponseStatus(
-            460, "Only Aggregate operation allowed");
+    public static final HttpResponseStatus ONLY_AGGREGATE_OPERATION_ALLOWED = new HttpResponseStatus(460, "Only Aggregate operation allowed");
 
     /**
      * 461 Unsupported transport
      */
-    public static final HttpResponseStatus UNSUPPORTED_TRANSPORT = new HttpResponseStatus(
-            461, "Unsupported transport");
+    public static final HttpResponseStatus UNSUPPORTED_TRANSPORT = new HttpResponseStatus(461, "Unsupported transport");
 
     /**
      * 462 Destination unreachable
      */
-    public static final HttpResponseStatus DESTINATION_UNREACHABLE = new HttpResponseStatus(
-            462, "Destination unreachable");
+    public static final HttpResponseStatus DESTINATION_UNREACHABLE = new HttpResponseStatus(462, "Destination unreachable");
 
     /**
      * 463 Key management failure
      */
-    public static final HttpResponseStatus KEY_MANAGEMENT_FAILURE = new HttpResponseStatus(
-            463, "Key management failure");
+    public static final HttpResponseStatus KEY_MANAGEMENT_FAILURE = new HttpResponseStatus(463, "Key management failure");
 
     /**
      * 500 Internal Server Error
@@ -250,14 +219,15 @@ public final class RtspResponseStatuses {
     /**
      * 505 RTSP Version not supported
      */
-    public static final HttpResponseStatus RTSP_VERSION_NOT_SUPPORTED = new HttpResponseStatus(
-            505, "RTSP Version not supported");
+    public static final HttpResponseStatus RTSP_VERSION_NOT_SUPPORTED = new HttpResponseStatus(505, "RTSP Version not supported");
 
     /**
      * 551 Option not supported
      */
-    public static final HttpResponseStatus OPTION_NOT_SUPPORTED = new HttpResponseStatus(
-            551, "Option not supported");
+    public static final HttpResponseStatus OPTION_NOT_SUPPORTED = new HttpResponseStatus(551, "Option not supported");
+
+    private RtspResponseStatuses() {
+    }
 
     /**
      * Returns the {@link HttpResponseStatus} represented by the specified code.
@@ -266,27 +236,42 @@ public final class RtspResponseStatuses {
      */
     public static HttpResponseStatus valueOf(int code) {
         switch (code) {
-        case 250: return LOW_STORAGE_SPACE;
-        case 302: return MOVED_TEMPORARILY;
-        case 451: return PARAMETER_NOT_UNDERSTOOD;
-        case 452: return CONFERENCE_NOT_FOUND;
-        case 453: return NOT_ENOUGH_BANDWIDTH;
-        case 454: return SESSION_NOT_FOUND;
-        case 455: return METHOD_NOT_VALID;
-        case 456: return HEADER_FIELD_NOT_VALID;
-        case 457: return INVALID_RANGE;
-        case 458: return PARAMETER_IS_READONLY;
-        case 459: return AGGREGATE_OPERATION_NOT_ALLOWED;
-        case 460: return ONLY_AGGREGATE_OPERATION_ALLOWED;
-        case 461: return UNSUPPORTED_TRANSPORT;
-        case 462: return DESTINATION_UNREACHABLE;
-        case 463: return KEY_MANAGEMENT_FAILURE;
-        case 505: return RTSP_VERSION_NOT_SUPPORTED;
-        case 551: return OPTION_NOT_SUPPORTED;
-        default:  return HttpResponseStatus.valueOf(code);
+            case 250:
+                return LOW_STORAGE_SPACE;
+            case 302:
+                return MOVED_TEMPORARILY;
+            case 451:
+                return PARAMETER_NOT_UNDERSTOOD;
+            case 452:
+                return CONFERENCE_NOT_FOUND;
+            case 453:
+                return NOT_ENOUGH_BANDWIDTH;
+            case 454:
+                return SESSION_NOT_FOUND;
+            case 455:
+                return METHOD_NOT_VALID;
+            case 456:
+                return HEADER_FIELD_NOT_VALID;
+            case 457:
+                return INVALID_RANGE;
+            case 458:
+                return PARAMETER_IS_READONLY;
+            case 459:
+                return AGGREGATE_OPERATION_NOT_ALLOWED;
+            case 460:
+                return ONLY_AGGREGATE_OPERATION_ALLOWED;
+            case 461:
+                return UNSUPPORTED_TRANSPORT;
+            case 462:
+                return DESTINATION_UNREACHABLE;
+            case 463:
+                return KEY_MANAGEMENT_FAILURE;
+            case 505:
+                return RTSP_VERSION_NOT_SUPPORTED;
+            case 551:
+                return OPTION_NOT_SUPPORTED;
+            default:
+                return HttpResponseStatus.valueOf(code);
         }
-    }
-
-    private RtspResponseStatuses() {
     }
 }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.buffer.ByteBuf;
@@ -37,7 +22,7 @@ import static io.netty.handler.codec.http.HttpUtil.getContentLength;
  * responses, or after {@link HttpRequestDecoder} and {@link HttpResponseEncoder} in the
  * {@link ChannelPipeline} if being used to handle requests.
  * <blockquote>
- *  <pre>
+ * <pre>
  *  {@link ChannelPipeline} p = ...;
  *  ...
  *  p.addLast("decoder", <b>new {@link HttpRequestDecoder}()</b>);
@@ -53,24 +38,24 @@ import static io.netty.handler.codec.http.HttpUtil.getContentLength;
  * </p>
  * Be aware that {@link HttpObjectAggregator} may end up sending a {@link HttpResponse}:
  * <table border summary="Possible Responses">
- *   <tbody>
- *     <tr>
- *       <th>Response Status</th>
- *       <th>Condition When Sent</th>
- *     </tr>
- *     <tr>
- *       <td>100 Continue</td>
- *       <td>A '100-continue' expectation is received and the 'content-length' doesn't exceed maxContentLength</td>
- *     </tr>
- *     <tr>
- *       <td>417 Expectation Failed</td>
- *       <td>A '100-continue' expectation is received and the 'content-length' exceeds maxContentLength</td>
- *     </tr>
- *     <tr>
- *       <td>413 Request Entity Too Large</td>
- *       <td>Either the 'content-length' or the bytes received so far exceed maxContentLength</td>
- *     </tr>
- *   </tbody>
+ * <tbody>
+ * <tr>
+ * <th>Response Status</th>
+ * <th>Condition When Sent</th>
+ * </tr>
+ * <tr>
+ * <td>100 Continue</td>
+ * <td>A '100-continue' expectation is received and the 'content-length' doesn't exceed maxContentLength</td>
+ * </tr>
+ * <tr>
+ * <td>417 Expectation Failed</td>
+ * <td>A '100-continue' expectation is received and the 'content-length' exceeds maxContentLength</td>
+ * </tr>
+ * <tr>
+ * <td>413 Request Entity Too Large</td>
+ * <td>Either the 'content-length' or the bytes received so far exceed maxContentLength</td>
+ * </tr>
+ * </tbody>
  * </table>
  *
  * @see FullHttpRequest
@@ -78,17 +63,12 @@ import static io.netty.handler.codec.http.HttpUtil.getContentLength;
  * @see HttpResponseDecoder
  * @see HttpServerCodec
  */
-public class HttpObjectAggregator
-        extends MessageAggregator<HttpObject, HttpMessage, HttpContent, FullHttpMessage> {
+public class HttpObjectAggregator extends MessageAggregator<HttpObject, HttpMessage, HttpContent, FullHttpMessage> {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpObjectAggregator.class);
-    private static final FullHttpResponse CONTINUE =
-            new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE, Unpooled.EMPTY_BUFFER);
-    private static final FullHttpResponse EXPECTATION_FAILED = new DefaultFullHttpResponse(
-            HttpVersion.HTTP_1_1, HttpResponseStatus.EXPECTATION_FAILED, Unpooled.EMPTY_BUFFER);
-    private static final FullHttpResponse TOO_LARGE_CLOSE = new DefaultFullHttpResponse(
-            HttpVersion.HTTP_1_1, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE, Unpooled.EMPTY_BUFFER);
-    private static final FullHttpResponse TOO_LARGE = new DefaultFullHttpResponse(
-        HttpVersion.HTTP_1_1, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE, Unpooled.EMPTY_BUFFER);
+    private static final FullHttpResponse CONTINUE = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE, Unpooled.EMPTY_BUFFER);
+    private static final FullHttpResponse EXPECTATION_FAILED = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.EXPECTATION_FAILED, Unpooled.EMPTY_BUFFER);
+    private static final FullHttpResponse TOO_LARGE_CLOSE = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE, Unpooled.EMPTY_BUFFER);
+    private static final FullHttpResponse TOO_LARGE = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE, Unpooled.EMPTY_BUFFER);
 
     static {
         EXPECTATION_FAILED.headers().set(CONTENT_LENGTH, 0);
@@ -102,9 +82,10 @@ public class HttpObjectAggregator
 
     /**
      * Creates a new instance.
+     *
      * @param maxContentLength the maximum length of the aggregated content in bytes.
-     * If the length of the aggregated content exceeds this value,
-     * {@link #handleOversizedMessage(ChannelHandlerContext, HttpMessage)} will be called.
+     *                         If the length of the aggregated content exceeds this value,
+     *                         {@link #handleOversizedMessage(ChannelHandlerContext, HttpMessage)} will be called.
      */
     public HttpObjectAggregator(int maxContentLength) {
         this(maxContentLength, false);
@@ -112,16 +93,34 @@ public class HttpObjectAggregator
 
     /**
      * Creates a new instance.
-     * @param maxContentLength the maximum length of the aggregated content in bytes.
-     * If the length of the aggregated content exceeds this value,
-     * {@link #handleOversizedMessage(ChannelHandlerContext, HttpMessage)} will be called.
+     *
+     * @param maxContentLength         the maximum length of the aggregated content in bytes.
+     *                                 If the length of the aggregated content exceeds this value,
+     *                                 {@link #handleOversizedMessage(ChannelHandlerContext, HttpMessage)} will be called.
      * @param closeOnExpectationFailed If a 100-continue response is detected but the content length is too large
-     * then {@code true} means close the connection. otherwise the connection will remain open and data will be
-     * consumed and discarded until the next request is received.
+     *                                 then {@code true} means close the connection. otherwise the connection will remain open and data will be
+     *                                 consumed and discarded until the next request is received.
      */
     public HttpObjectAggregator(int maxContentLength, boolean closeOnExpectationFailed) {
         super(maxContentLength);
         this.closeOnExpectationFailed = closeOnExpectationFailed;
+    }
+
+    private static Object continueResponse(HttpMessage start, int maxContentLength, ChannelPipeline pipeline) {
+        if (HttpUtil.isUnsupportedExpectation(start)) {
+            // if the request contains an unsupported expectation, we return 417
+            pipeline.fireUserEventTriggered(HttpExpectationFailedEvent.INSTANCE);
+            return EXPECTATION_FAILED.retainedDuplicate();
+        } else if (HttpUtil.is100ContinueExpected(start)) {
+            // if the request contains 100-continue but the content-length is too large, we return 413
+            if (getContentLength(start, -1L) <= maxContentLength) {
+                return CONTINUE.retainedDuplicate();
+            }
+            pipeline.fireUserEventTriggered(HttpExpectationFailedEvent.INSTANCE);
+            return TOO_LARGE.retainedDuplicate();
+        }
+
+        return null;
     }
 
     @Override
@@ -151,23 +150,6 @@ public class HttpObjectAggregator
         } catch (final NumberFormatException e) {
             return false;
         }
-    }
-
-    private static Object continueResponse(HttpMessage start, int maxContentLength, ChannelPipeline pipeline) {
-        if (HttpUtil.isUnsupportedExpectation(start)) {
-            // if the request contains an unsupported expectation, we return 417
-            pipeline.fireUserEventTriggered(HttpExpectationFailedEvent.INSTANCE);
-            return EXPECTATION_FAILED.retainedDuplicate();
-        } else if (HttpUtil.is100ContinueExpected(start)) {
-            // if the request contains 100-continue but the content-length is too large, we return 413
-            if (getContentLength(start, -1L) <= maxContentLength) {
-                return CONTINUE.retainedDuplicate();
-            }
-            pipeline.fireUserEventTriggered(HttpExpectationFailedEvent.INSTANCE);
-            return TOO_LARGE.retainedDuplicate();
-        }
-
-        return null;
     }
 
     @Override
@@ -229,9 +211,7 @@ public class HttpObjectAggregator
         //
         // See rfc2616 14.13 Content-Length
         if (!HttpUtil.isContentLengthSet(aggregated)) {
-            aggregated.headers().set(
-                    CONTENT_LENGTH,
-                    String.valueOf(aggregated.content().readableBytes()));
+            aggregated.headers().set(CONTENT_LENGTH, String.valueOf(aggregated.content().readableBytes()));
         }
     }
 
@@ -242,8 +222,7 @@ public class HttpObjectAggregator
 
             // If the client started to send data already, close because it's impossible to recover.
             // If keep-alive is off and 'Expect: 100-continue' is missing, no need to leave the connection open.
-            if (oversized instanceof FullHttpMessage ||
-                !HttpUtil.is100ContinueExpected(oversized) && !HttpUtil.isKeepAlive(oversized)) {
+            if (oversized instanceof FullHttpMessage || !HttpUtil.is100ContinueExpected(oversized) && !HttpUtil.isKeepAlive(oversized)) {
                 ChannelFuture future = ctx.writeAndFlush(TOO_LARGE_CLOSE.retainedDuplicate());
                 future.addListener(new ChannelFutureListener() {
                     @Override
@@ -411,8 +390,7 @@ public class HttpObjectAggregator
 
         @Override
         public FullHttpRequest replace(ByteBuf content) {
-            DefaultFullHttpRequest dup = new DefaultFullHttpRequest(protocolVersion(), method(), uri(), content,
-                    headers().copy(), trailingHeaders().copy());
+            DefaultFullHttpRequest dup = new DefaultFullHttpRequest(protocolVersion(), method(), uri(), content, headers().copy(), trailingHeaders().copy());
             dup.setDecoderResult(decoderResult());
             return dup;
         }
@@ -485,8 +463,7 @@ public class HttpObjectAggregator
         }
     }
 
-    private static final class AggregatedFullHttpResponse extends AggregatedFullHttpMessage
-            implements FullHttpResponse {
+    private static final class AggregatedFullHttpResponse extends AggregatedFullHttpMessage implements FullHttpResponse {
 
         AggregatedFullHttpResponse(HttpResponse message, ByteBuf content, HttpHeaders trailingHeaders) {
             super(message, content, trailingHeaders);
@@ -509,8 +486,7 @@ public class HttpObjectAggregator
 
         @Override
         public FullHttpResponse replace(ByteBuf content) {
-            DefaultFullHttpResponse dup = new DefaultFullHttpResponse(getProtocolVersion(), getStatus(), content,
-                    headers().copy(), trailingHeaders().copy());
+            DefaultFullHttpResponse dup = new DefaultFullHttpResponse(getProtocolVersion(), getStatus(), content, headers().copy(), trailingHeaders().copy());
             dup.setDecoderResult(decoderResult());
             return dup;
         }

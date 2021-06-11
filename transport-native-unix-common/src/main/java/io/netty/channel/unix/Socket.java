@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.unix;
 
 import io.netty.channel.ChannelException;
@@ -37,13 +22,149 @@ import static io.netty.channel.unix.NativeInetAddress.ipv4MappedIpv6Address;
 public class Socket extends FileDescriptor {
 
     public static final int UDS_SUN_PATH_SIZE = udsSunPathSize();
-
+    private static final AtomicBoolean INITIALIZED = new AtomicBoolean();
     protected final boolean ipv6;
 
     public Socket(int fd) {
         super(fd);
         this.ipv6 = isIPv6(fd);
     }
+
+    public static native boolean isIPv6Preferred();
+
+    private static native boolean isIPv6(int fd);
+
+    public static Socket newSocketStream() {
+        return new Socket(newSocketStream0());
+    }
+
+    public static Socket newSocketDgram() {
+        return new Socket(newSocketDgram0());
+    }
+
+    public static Socket newSocketDomain() {
+        return new Socket(newSocketDomain0());
+    }
+
+    public static void initialize() {
+        if (INITIALIZED.compareAndSet(false, true)) {
+            initialize(NetUtil.isIpV4StackPreferred());
+        }
+    }
+
+    protected static int newSocketStream0() {
+        return newSocketStream0(isIPv6Preferred());
+    }
+
+    protected static int newSocketStream0(boolean ipv6) {
+        int res = newSocketStreamFd(ipv6);
+        if (res < 0) {
+            throw new ChannelException(newIOException("newSocketStream", res));
+        }
+        return res;
+    }
+
+    protected static int newSocketDgram0() {
+        return newSocketDgram0(isIPv6Preferred());
+    }
+
+    protected static int newSocketDgram0(boolean ipv6) {
+        int res = newSocketDgramFd(ipv6);
+        if (res < 0) {
+            throw new ChannelException(newIOException("newSocketDgram", res));
+        }
+        return res;
+    }
+
+    protected static int newSocketDomain0() {
+        int res = newSocketDomainFd();
+        if (res < 0) {
+            throw new ChannelException(newIOException("newSocketDomain", res));
+        }
+        return res;
+    }
+
+    private static native int shutdown(int fd, boolean read, boolean write);
+
+    private static native int connect(int fd, boolean ipv6, byte[] address, int scopeId, int port);
+
+    private static native int connectDomainSocket(int fd, byte[] path);
+
+    private static native int finishConnect(int fd);
+
+    private static native int disconnect(int fd, boolean ipv6);
+
+    private static native int bind(int fd, boolean ipv6, byte[] address, int scopeId, int port);
+
+    private static native int bindDomainSocket(int fd, byte[] path);
+
+    private static native int listen(int fd, int backlog);
+
+    private static native int accept(int fd, byte[] addr);
+
+    private static native byte[] remoteAddress(int fd);
+
+    private static native byte[] localAddress(int fd);
+
+    private static native int sendTo(int fd, boolean ipv6, ByteBuffer buf, int pos, int limit, byte[] address, int scopeId, int port);
+
+    private static native int sendToAddress(int fd, boolean ipv6, long memoryAddress, int pos, int limit, byte[] address, int scopeId, int port);
+
+    private static native int sendToAddresses(int fd, boolean ipv6, long memoryAddress, int length, byte[] address, int scopeId, int port);
+
+    private static native DatagramSocketAddress recvFrom(int fd, ByteBuffer buf, int pos, int limit) throws IOException;
+
+    private static native DatagramSocketAddress recvFromAddress(int fd, long memoryAddress, int pos, int limit) throws IOException;
+
+    private static native int recvFd(int fd);
+
+    private static native int sendFd(int socketFd, int fd);
+
+    private static native int newSocketStreamFd(boolean ipv6);
+
+    private static native int newSocketDgramFd(boolean ipv6);
+
+    private static native int newSocketDomainFd();
+
+    private static native int isReuseAddress(int fd) throws IOException;
+
+    private static native int isReusePort(int fd) throws IOException;
+
+    private static native int getReceiveBufferSize(int fd) throws IOException;
+
+    private static native int getSendBufferSize(int fd) throws IOException;
+
+    private static native int isKeepAlive(int fd) throws IOException;
+
+    private static native int isTcpNoDelay(int fd) throws IOException;
+
+    private static native int isBroadcast(int fd) throws IOException;
+
+    private static native int getSoLinger(int fd) throws IOException;
+
+    private static native int getSoError(int fd) throws IOException;
+
+    private static native int getTrafficClass(int fd, boolean ipv6) throws IOException;
+
+    private static native void setReuseAddress(int fd, int reuseAddress) throws IOException;
+
+    private static native void setReusePort(int fd, int reuseAddress) throws IOException;
+
+    private static native void setKeepAlive(int fd, int keepAlive) throws IOException;
+
+    private static native void setReceiveBufferSize(int fd, int receiveBufferSize) throws IOException;
+
+    private static native void setSendBufferSize(int fd, int sendBufferSize) throws IOException;
+
+    private static native void setTcpNoDelay(int fd, int tcpNoDelay) throws IOException;
+
+    private static native void setSoLinger(int fd, int soLinger) throws IOException;
+
+    private static native void setBroadcast(int fd, int broadcast) throws IOException;
+
+    private static native void setTrafficClass(int fd, boolean ipv6, int trafficClass) throws IOException;
+
+    private static native void initialize(boolean ipv4Preferred);
 
     /**
      * Returns {@code true} if we should use IPv6 internally, {@code false} otherwise.
@@ -57,7 +178,7 @@ public class Socket extends FileDescriptor {
     }
 
     public final void shutdown(boolean read, boolean write) throws IOException {
-        for (;;) {
+        for (; ; ) {
             // We need to only shutdown what has not been shutdown yet, and if there is no change we should not
             // shutdown anything. This is because if the underlying FD is reused and we still have an object which
             // represents the previous incarnation of the FD we need to be sure we don't inadvertently shutdown the
@@ -124,8 +245,7 @@ public class Socket extends FileDescriptor {
         return ioResult("sendTo", res);
     }
 
-    public final int sendToAddress(long memoryAddress, int pos, int limit, InetAddress addr, int port)
-            throws IOException {
+    public final int sendToAddress(long memoryAddress, int pos, int limit, InetAddress addr, int port) throws IOException {
         // just duplicate the toNativeInetAddress code here to minimize object creation as this method is expected
         // to be called frequently
         byte[] address;
@@ -307,32 +427,64 @@ public class Socket extends FileDescriptor {
         return getReceiveBufferSize(fd);
     }
 
+    public final void setReceiveBufferSize(int receiveBufferSize) throws IOException {
+        setReceiveBufferSize(fd, receiveBufferSize);
+    }
+
     public final int getSendBufferSize() throws IOException {
         return getSendBufferSize(fd);
+    }
+
+    public final void setSendBufferSize(int sendBufferSize) throws IOException {
+        setSendBufferSize(fd, sendBufferSize);
     }
 
     public final boolean isKeepAlive() throws IOException {
         return isKeepAlive(fd) != 0;
     }
 
+    public final void setKeepAlive(boolean keepAlive) throws IOException {
+        setKeepAlive(fd, keepAlive ? 1 : 0);
+    }
+
     public final boolean isTcpNoDelay() throws IOException {
         return isTcpNoDelay(fd) != 0;
+    }
+
+    public final void setTcpNoDelay(boolean tcpNoDelay) throws IOException {
+        setTcpNoDelay(fd, tcpNoDelay ? 1 : 0);
     }
 
     public final boolean isReuseAddress() throws IOException {
         return isReuseAddress(fd) != 0;
     }
 
+    public final void setReuseAddress(boolean reuseAddress) throws IOException {
+        setReuseAddress(fd, reuseAddress ? 1 : 0);
+    }
+
     public final boolean isReusePort() throws IOException {
         return isReusePort(fd) != 0;
+    }
+
+    public final void setReusePort(boolean reusePort) throws IOException {
+        setReusePort(fd, reusePort ? 1 : 0);
     }
 
     public final boolean isBroadcast() throws IOException {
         return isBroadcast(fd) != 0;
     }
 
+    public final void setBroadcast(boolean broadcast) throws IOException {
+        setBroadcast(fd, broadcast ? 1 : 0);
+    }
+
     public final int getSoLinger() throws IOException {
         return getSoLinger(fd);
+    }
+
+    public final void setSoLinger(int soLinger) throws IOException {
+        setSoLinger(fd, soLinger);
     }
 
     public final int getSoError() throws IOException {
@@ -343,155 +495,12 @@ public class Socket extends FileDescriptor {
         return getTrafficClass(fd, ipv6);
     }
 
-    public final void setKeepAlive(boolean keepAlive) throws IOException {
-        setKeepAlive(fd, keepAlive ? 1 : 0);
-    }
-
-    public final void setReceiveBufferSize(int receiveBufferSize) throws IOException  {
-        setReceiveBufferSize(fd, receiveBufferSize);
-    }
-
-    public final void setSendBufferSize(int sendBufferSize) throws IOException {
-        setSendBufferSize(fd, sendBufferSize);
-    }
-
-    public final void setTcpNoDelay(boolean tcpNoDelay) throws IOException  {
-        setTcpNoDelay(fd, tcpNoDelay ? 1 : 0);
-    }
-
-    public final void setSoLinger(int soLinger) throws IOException {
-        setSoLinger(fd, soLinger);
-    }
-
-    public final void setReuseAddress(boolean reuseAddress) throws IOException {
-        setReuseAddress(fd, reuseAddress ? 1 : 0);
-    }
-
-    public final void setReusePort(boolean reusePort) throws IOException {
-        setReusePort(fd, reusePort ? 1 : 0);
-    }
-
-    public final void setBroadcast(boolean broadcast) throws IOException {
-        setBroadcast(fd, broadcast ? 1 : 0);
-    }
-
     public final void setTrafficClass(int trafficClass) throws IOException {
         setTrafficClass(fd, ipv6, trafficClass);
     }
 
-    public static native boolean isIPv6Preferred();
-
-    private static native boolean isIPv6(int fd);
-
     @Override
     public String toString() {
-        return "Socket{" +
-                "fd=" + fd +
-                '}';
+        return "Socket{" + "fd=" + fd + '}';
     }
-
-    private static final AtomicBoolean INITIALIZED = new AtomicBoolean();
-
-    public static Socket newSocketStream() {
-        return new Socket(newSocketStream0());
-    }
-
-    public static Socket newSocketDgram() {
-        return new Socket(newSocketDgram0());
-    }
-
-    public static Socket newSocketDomain() {
-        return new Socket(newSocketDomain0());
-    }
-
-    public static void initialize() {
-        if (INITIALIZED.compareAndSet(false, true)) {
-            initialize(NetUtil.isIpV4StackPreferred());
-        }
-    }
-
-    protected static int newSocketStream0() {
-        return newSocketStream0(isIPv6Preferred());
-    }
-
-    protected static int newSocketStream0(boolean ipv6) {
-        int res = newSocketStreamFd(ipv6);
-        if (res < 0) {
-            throw new ChannelException(newIOException("newSocketStream", res));
-        }
-        return res;
-    }
-
-    protected static int newSocketDgram0() {
-        return newSocketDgram0(isIPv6Preferred());
-    }
-
-    protected static int newSocketDgram0(boolean ipv6) {
-        int res = newSocketDgramFd(ipv6);
-        if (res < 0) {
-            throw new ChannelException(newIOException("newSocketDgram", res));
-        }
-        return res;
-    }
-
-    protected static int newSocketDomain0() {
-        int res = newSocketDomainFd();
-        if (res < 0) {
-            throw new ChannelException(newIOException("newSocketDomain", res));
-        }
-        return res;
-    }
-
-    private static native int shutdown(int fd, boolean read, boolean write);
-    private static native int connect(int fd, boolean ipv6, byte[] address, int scopeId, int port);
-    private static native int connectDomainSocket(int fd, byte[] path);
-    private static native int finishConnect(int fd);
-    private static native int disconnect(int fd, boolean ipv6);
-    private static native int bind(int fd, boolean ipv6, byte[] address, int scopeId, int port);
-    private static native int bindDomainSocket(int fd, byte[] path);
-    private static native int listen(int fd, int backlog);
-    private static native int accept(int fd, byte[] addr);
-
-    private static native byte[] remoteAddress(int fd);
-    private static native byte[] localAddress(int fd);
-
-    private static native int sendTo(
-            int fd, boolean ipv6, ByteBuffer buf, int pos, int limit, byte[] address, int scopeId, int port);
-    private static native int sendToAddress(
-            int fd, boolean ipv6, long memoryAddress, int pos, int limit, byte[] address, int scopeId, int port);
-    private static native int sendToAddresses(
-            int fd, boolean ipv6, long memoryAddress, int length, byte[] address, int scopeId, int port);
-
-    private static native DatagramSocketAddress recvFrom(
-            int fd, ByteBuffer buf, int pos, int limit) throws IOException;
-    private static native DatagramSocketAddress recvFromAddress(
-            int fd, long memoryAddress, int pos, int limit) throws IOException;
-    private static native int recvFd(int fd);
-    private static native int sendFd(int socketFd, int fd);
-
-    private static native int newSocketStreamFd(boolean ipv6);
-    private static native int newSocketDgramFd(boolean ipv6);
-    private static native int newSocketDomainFd();
-
-    private static native int isReuseAddress(int fd) throws IOException;
-    private static native int isReusePort(int fd) throws IOException;
-    private static native int getReceiveBufferSize(int fd) throws IOException;
-    private static native int getSendBufferSize(int fd) throws IOException;
-    private static native int isKeepAlive(int fd) throws IOException;
-    private static native int isTcpNoDelay(int fd) throws IOException;
-    private static native int isBroadcast(int fd) throws IOException;
-    private static native int getSoLinger(int fd) throws IOException;
-    private static native int getSoError(int fd) throws IOException;
-    private static native int getTrafficClass(int fd, boolean ipv6) throws IOException;
-
-    private static native void setReuseAddress(int fd, int reuseAddress) throws IOException;
-    private static native void setReusePort(int fd, int reuseAddress) throws IOException;
-    private static native void setKeepAlive(int fd, int keepAlive) throws IOException;
-    private static native void setReceiveBufferSize(int fd, int receiveBufferSize) throws IOException;
-    private static native void setSendBufferSize(int fd, int sendBufferSize) throws IOException;
-    private static native void setTcpNoDelay(int fd, int tcpNoDelay) throws IOException;
-    private static native void setSoLinger(int fd, int soLinger) throws IOException;
-    private static native void setBroadcast(int fd, int broadcast) throws IOException;
-    private static native void setTrafficClass(int fd, boolean ipv6, int trafficClass) throws IOException;
-    private static native void initialize(boolean ipv4Preferred);
 }

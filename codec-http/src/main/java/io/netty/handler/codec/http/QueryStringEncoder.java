@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.buffer.ByteBufUtil;
@@ -39,11 +24,11 @@ import java.nio.charset.Charset;
  */
 public class QueryStringEncoder {
 
+    private static final byte WRITE_UTF_UNKNOWN = (byte) '?';
+    private static final char[] CHAR_MAP = "0123456789ABCDEF".toCharArray();
     private final Charset charset;
     private final StringBuilder uriBuilder;
     private boolean hasParams;
-    private static final byte WRITE_UTF_UNKNOWN = (byte) '?';
-    private static final char[] CHAR_MAP = "0123456789ABCDEF".toCharArray();
 
     /**
      * Creates a new encoder that encodes a URI that starts with the specified
@@ -61,6 +46,32 @@ public class QueryStringEncoder {
         ObjectUtil.checkNotNull(charset, "charset");
         uriBuilder = new StringBuilder(uri);
         this.charset = CharsetUtil.UTF_8.equals(charset) ? null : charset;
+    }
+
+    /**
+     * Convert the given digit to a upper hexadecimal char.
+     *
+     * @param digit the number to convert to a character.
+     * @return the {@code char} representation of the specified digit
+     * in hexadecimal.
+     */
+    private static char forDigit(int digit) {
+        return CHAR_MAP[digit & 0xF];
+    }
+
+    /**
+     * Determines whether the given character is a unreserved character.
+     * <p>
+     * unreserved characters do not need to be encoded, and include uppercase and lowercase
+     * letters, decimal digits, hyphen, period, underscore, and tilde.
+     * <p>
+     * unreserved  = ALPHA / DIGIT / "-" / "_" / "." / "*"
+     *
+     * @param ch the char to be judged whether it need to be encode
+     * @return true or false
+     */
+    private static boolean dontNeedEncoding(char ch) {
+        return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9' || ch == '-' || ch == '_' || ch == '.' || ch == '*';
     }
 
     /**
@@ -123,7 +134,7 @@ public class QueryStringEncoder {
         //Don't allocate memory until needed
         char[] buf = null;
 
-        for (int i = 0, len = s.length(); i < len;) {
+        for (int i = 0, len = s.length(); i < len; ) {
             char c = s.charAt(i);
             if (dontNeedEncoding(c)) {
                 uriBuilder.append(c);
@@ -219,32 +230,5 @@ public class QueryStringEncoder {
 
     private void appendEncoded(int b) {
         uriBuilder.append('%').append(forDigit(b >> 4)).append(forDigit(b));
-    }
-
-    /**
-     * Convert the given digit to a upper hexadecimal char.
-     *
-     * @param digit the number to convert to a character.
-     * @return the {@code char} representation of the specified digit
-     * in hexadecimal.
-     */
-    private static char forDigit(int digit) {
-        return CHAR_MAP[digit & 0xF];
-    }
-
-    /**
-     * Determines whether the given character is a unreserved character.
-     * <p>
-     * unreserved characters do not need to be encoded, and include uppercase and lowercase
-     * letters, decimal digits, hyphen, period, underscore, and tilde.
-     * <p>
-     * unreserved  = ALPHA / DIGIT / "-" / "_" / "." / "*"
-     *
-     * @param ch the char to be judged whether it need to be encode
-     * @return true or false
-     */
-    private static boolean dontNeedEncoding(char ch) {
-        return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9'
-                || ch == '-' || ch == '_' || ch == '.' || ch == '*';
     }
 }

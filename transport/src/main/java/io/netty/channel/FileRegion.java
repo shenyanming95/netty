@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel;
 
 import io.netty.util.ReferenceCounted;
@@ -26,7 +11,7 @@ import java.nio.channels.WritableByteChannel;
  * <a href="http://en.wikipedia.org/wiki/Zero-copy">zero-copy file transfer</a>.
  *
  * <h3>Upgrade your JDK / JRE</h3>
- *
+ * <p>
  * {@link FileChannel#transferTo(long, long, WritableByteChannel)} has at least
  * four known bugs in the old versions of Sun JDK and perhaps its derived ones.
  * Please upgrade your JDK to 1.6.0_18 or later version if you are going to use
@@ -43,7 +28,7 @@ import java.nio.channels.WritableByteChannel;
  * </ul>
  *
  * <h3>Check your operating system and JDK / JRE</h3>
- *
+ * <p>
  * If your operating system (or JDK / JRE) does not support zero-copy file
  * transfer, sending a file with {@link FileRegion} might fail or yield worse
  * performance.  For example, sending a large file doesn't work well in Windows.
@@ -78,12 +63,12 @@ public interface FileRegion extends ReferenceCounted {
     /**
      * Transfers the content of this file region to the specified channel.
      *
-     * @param target    the destination of the transfer
-     * @param position  the relative offset of the file where the transfer
-     *                  begins from.  For example, <tt>0</tt> will make the
-     *                  transfer start from {@link #position()}th byte and
-     *                  <tt>{@link #count()} - 1</tt> will make the last
-     *                  byte of the region transferred.
+     * @param target   the destination of the transfer
+     * @param position the relative offset of the file where the transfer
+     *                 begins from.  For example, <tt>0</tt> will make the
+     *                 transfer start from {@link #position()}th byte and
+     *                 <tt>{@link #count()} - 1</tt> will make the last
+     *                 byte of the region transferred.
      */
     long transferTo(WritableByteChannel target, long position) throws IOException;
 

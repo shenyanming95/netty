@@ -28,56 +28,19 @@ import java.util.Queue;
  * to create an instance of this factory.
  * Use {@link AhoCorasicSearchProcessorFactory#newSearchProcessor} to get an instance of
  * {@link io.netty.util.ByteProcessor} implementation for performing the actual search.
+ *
  * @see AbstractMultiSearchProcessorFactory
  */
 public class AhoCorasicSearchProcessorFactory extends AbstractMultiSearchProcessorFactory {
 
+    static final int BITS_PER_SYMBOL = 8;
+    static final int ALPHABET_SIZE = 1 << BITS_PER_SYMBOL;
     private final int[] jumpTable;
     private final int[] matchForNeedleId;
 
-    static final int BITS_PER_SYMBOL = 8;
-    static final int ALPHABET_SIZE = 1 << BITS_PER_SYMBOL;
+    AhoCorasicSearchProcessorFactory(byte[]... needles) {
 
-    private static class Context {
-        int[] jumpTable;
-        int[] matchForNeedleId;
-    }
-
-    public static class Processor implements MultiSearchProcessor {
-
-        private final int[] jumpTable;
-        private final int[] matchForNeedleId;
-        private long currentPosition;
-
-        Processor(int[] jumpTable, int[] matchForNeedleId) {
-            this.jumpTable = jumpTable;
-            this.matchForNeedleId = matchForNeedleId;
-        }
-
-        @Override
-        public boolean process(byte value) {
-            currentPosition = PlatformDependent.getInt(jumpTable, currentPosition | (value & 0xffL));
-            if (currentPosition < 0) {
-                currentPosition = -currentPosition;
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int getFoundNeedleId() {
-            return matchForNeedleId[(int) currentPosition >> AhoCorasicSearchProcessorFactory.BITS_PER_SYMBOL];
-        }
-
-        @Override
-        public void reset() {
-            currentPosition = 0;
-        }
-    }
-
-    AhoCorasicSearchProcessorFactory(byte[] ...needles) {
-
-        for (byte[] needle: needles) {
+        for (byte[] needle : needles) {
             if (needle.length == 0) {
                 throw new IllegalArgumentException("Needle must be non empty");
             }
@@ -110,7 +73,7 @@ public class AhoCorasicSearchProcessorFactory extends AbstractMultiSearchProcess
             byte[] needle = needles[needleId];
             int currentPosition = 0;
 
-            for (byte ch0: needle) {
+            for (byte ch0 : needle) {
 
                 final int ch = ch0 & 0xff;
                 final int next = currentPosition + ch;
@@ -186,6 +149,43 @@ public class AhoCorasicSearchProcessorFactory extends AbstractMultiSearchProcess
     @Override
     public Processor newSearchProcessor() {
         return new Processor(jumpTable, matchForNeedleId);
+    }
+
+    private static class Context {
+        int[] jumpTable;
+        int[] matchForNeedleId;
+    }
+
+    public static class Processor implements MultiSearchProcessor {
+
+        private final int[] jumpTable;
+        private final int[] matchForNeedleId;
+        private long currentPosition;
+
+        Processor(int[] jumpTable, int[] matchForNeedleId) {
+            this.jumpTable = jumpTable;
+            this.matchForNeedleId = matchForNeedleId;
+        }
+
+        @Override
+        public boolean process(byte value) {
+            currentPosition = PlatformDependent.getInt(jumpTable, currentPosition | (value & 0xffL));
+            if (currentPosition < 0) {
+                currentPosition = -currentPosition;
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public int getFoundNeedleId() {
+            return matchForNeedleId[(int) currentPosition >> AhoCorasicSearchProcessorFactory.BITS_PER_SYMBOL];
+        }
+
+        @Override
+        public void reset() {
+            currentPosition = 0;
+        }
     }
 
 }

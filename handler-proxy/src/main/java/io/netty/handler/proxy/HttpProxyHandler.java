@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.handler.proxy;
 
 import io.netty.buffer.ByteBuf;
@@ -56,9 +40,7 @@ public final class HttpProxyHandler extends ProxyHandler {
         this(proxyAddress, headers, false);
     }
 
-    public HttpProxyHandler(SocketAddress proxyAddress,
-                            HttpHeaders headers,
-                            boolean ignoreDefaultPortsInConnectHostHeader) {
+    public HttpProxyHandler(SocketAddress proxyAddress, HttpHeaders headers, boolean ignoreDefaultPortsInConnectHostHeader) {
         super(proxyAddress);
         username = null;
         password = null;
@@ -71,16 +53,11 @@ public final class HttpProxyHandler extends ProxyHandler {
         this(proxyAddress, username, password, null);
     }
 
-    public HttpProxyHandler(SocketAddress proxyAddress, String username, String password,
-                            HttpHeaders headers) {
+    public HttpProxyHandler(SocketAddress proxyAddress, String username, String password, HttpHeaders headers) {
         this(proxyAddress, username, password, headers, false);
     }
 
-    public HttpProxyHandler(SocketAddress proxyAddress,
-                            String username,
-                            String password,
-                            HttpHeaders headers,
-                            boolean ignoreDefaultPortsInConnectHostHeader) {
+    public HttpProxyHandler(SocketAddress proxyAddress, String username, String password, HttpHeaders headers, boolean ignoreDefaultPortsInConnectHostHeader) {
         super(proxyAddress);
         this.username = ObjectUtil.checkNotNull(username, "username");
         this.password = ObjectUtil.checkNotNull(password, "password");
@@ -109,7 +86,7 @@ public final class HttpProxyHandler extends ProxyHandler {
 
     @Override
     public String authScheme() {
-        return authorization != null? AUTH_BASIC : AUTH_NONE;
+        return authorization != null ? AUTH_BASIC : AUTH_NONE;
     }
 
     public String username() {
@@ -144,14 +121,9 @@ public final class HttpProxyHandler extends ProxyHandler {
         String hostString = HttpUtil.formatHostnameForHttp(raddr);
         int port = raddr.getPort();
         String url = hostString + ":" + port;
-        String hostHeader = (ignoreDefaultPortsInConnectHostHeader && (port == 80 || port == 443)) ?
-                hostString :
-                url;
+        String hostHeader = (ignoreDefaultPortsInConnectHostHeader && (port == 80 || port == 443)) ? hostString : url;
 
-        FullHttpRequest req = new DefaultFullHttpRequest(
-                HttpVersion.HTTP_1_1, HttpMethod.CONNECT,
-                url,
-                Unpooled.EMPTY_BUFFER, false);
+        FullHttpRequest req = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.CONNECT, url, Unpooled.EMPTY_BUFFER, false);
 
         req.headers().set(HttpHeaderNames.HOST, hostHeader);
 
@@ -274,14 +246,12 @@ public final class HttpProxyHandler extends ProxyHandler {
         }
 
         @Override
-        public void bind(ChannelHandlerContext ctx, SocketAddress localAddress,
-                         ChannelPromise promise) throws Exception {
+        public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
             codec.bind(ctx, localAddress, promise);
         }
 
         @Override
-        public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress,
-                            ChannelPromise promise) throws Exception {
+        public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
             codec.connect(ctx, remoteAddress, localAddress, promise);
         }
 

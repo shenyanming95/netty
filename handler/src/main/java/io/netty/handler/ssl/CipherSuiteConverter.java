@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.handler.ssl;
 
 import io.netty.util.internal.PlatformDependent;
@@ -40,44 +24,35 @@ final class CipherSuiteConverter {
 
     /**
      * A_B_WITH_C_D, where:
-     *
+     * <p>
      * A - TLS or SSL (protocol)
      * B - handshake algorithm (key exchange and authentication algorithms to be precise)
      * C - bulk cipher
      * D - HMAC algorithm
-     *
+     * <p>
      * This regular expression assumes that:
-     *
+     * <p>
      * 1) A is always TLS or SSL, and
      * 2) D is always a single word.
      */
-    private static final Pattern JAVA_CIPHERSUITE_PATTERN =
-            Pattern.compile("^(?:TLS|SSL)_((?:(?!_WITH_).)+)_WITH_(.*)_(.*)$");
+    private static final Pattern JAVA_CIPHERSUITE_PATTERN = Pattern.compile("^(?:TLS|SSL)_((?:(?!_WITH_).)+)_WITH_(.*)_(.*)$");
 
     /**
      * A-B-C, where:
-     *
+     * <p>
      * A - handshake algorithm (key exchange and authentication algorithms to be precise)
      * B - bulk cipher
      * C - HMAC algorithm
-     *
+     * <p>
      * This regular expression assumes that:
-     *
+     * <p>
      * 1) A has some deterministic pattern as shown below, and
      * 2) C is always a single word
      */
     private static final Pattern OPENSSL_CIPHERSUITE_PATTERN =
             // Be very careful not to break the indentation while editing.
-            Pattern.compile(
-                    "^(?:(" + // BEGIN handshake algorithm
-                        "(?:(?:EXP-)?" +
-                            "(?:" +
-                                "(?:DHE|EDH|ECDH|ECDHE|SRP|RSA)-(?:DSS|RSA|ECDSA|PSK)|" +
-                                "(?:ADH|AECDH|KRB5|PSK|SRP)" +
-                            ')' +
-                        ")|" +
-                        "EXP" +
-                    ")-)?" +  // END handshake algorithm
+            Pattern.compile("^(?:(" + // BEGIN handshake algorithm
+                    "(?:(?:EXP-)?" + "(?:" + "(?:DHE|EDH|ECDH|ECDHE|SRP|RSA)-(?:DSS|RSA|ECDSA|PSK)|" + "(?:ADH|AECDH|KRB5|PSK|SRP)" + ')' + ")|" + "EXP" + ")-)?" +  // END handshake algorithm
                     "(.*)-(.*)$");
 
     private static final Pattern JAVA_AES_CBC_PATTERN = Pattern.compile("^(AES)_([0-9]+)_CBC$");
@@ -116,6 +91,9 @@ final class CipherSuiteConverter {
         o2jTls13Map.put("AEAD-AES256-GCM-SHA384", singletonMap("TLS", "TLS_AES_256_GCM_SHA384"));
         o2jTls13Map.put("AEAD-CHACHA20-POLY1305-SHA256", singletonMap("TLS", "TLS_CHACHA20_POLY1305_SHA256"));
         o2jTls13 = Collections.unmodifiableMap(o2jTls13Map);
+    }
+
+    private CipherSuiteConverter() {
     }
 
     /**
@@ -275,8 +253,9 @@ final class CipherSuiteConverter {
 
     /**
      * Convert from OpenSSL cipher suite name convention to java cipher suite name convention.
+     *
      * @param openSslCipherSuite An OpenSSL cipher suite name.
-     * @param protocol The cryptographic protocol (i.e. SSL, TLS, ...).
+     * @param protocol           The cryptographic protocol (i.e. SSL, TLS, ...).
      * @return The translated cipher suite name according to java conventions. This will not be {@code null}.
      */
     static String toJava(String openSslCipherSuite, String protocol) {
@@ -454,9 +433,8 @@ final class CipherSuiteConverter {
      * guaranteed that at least one of the {@link StringBuilder}s contain some ciphers that can be used to configure
      * OpenSSL.
      */
-    static void convertToCipherStrings(Iterable<String> cipherSuites, StringBuilder cipherBuilder,
-                                       StringBuilder cipherTLSv13Builder, boolean boringSSL) {
-        for (String c: cipherSuites) {
+    static void convertToCipherStrings(Iterable<String> cipherSuites, StringBuilder cipherBuilder, StringBuilder cipherTLSv13Builder, boolean boringSSL) {
+        for (String c : cipherSuites) {
             if (c == null) {
                 break;
             }
@@ -489,6 +467,4 @@ final class CipherSuiteConverter {
             cipherTLSv13Builder.setLength(cipherTLSv13Builder.length() - 1);
         }
     }
-
-    private CipherSuiteConverter() { }
 }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2020 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbench.search;
 
 import io.netty.buffer.ByteBuf;
@@ -35,28 +20,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(1)
 public class SearchRealDataBenchmark extends AbstractMicrobenchmark {
 
-    public enum Algorithm {
-        AHO_CORASIC {
-            @Override
-            SearchProcessorFactory newFactory(byte[] needle) {
-                return AbstractMultiSearchProcessorFactory.newAhoCorasicSearchProcessorFactory(needle);
-            }
-        },
-        KMP {
-            @Override
-            SearchProcessorFactory newFactory(byte[] needle) {
-                return AbstractSearchProcessorFactory.newKmpSearchProcessorFactory(needle);
-            }
-        },
-        BITAP {
-            @Override
-            SearchProcessorFactory newFactory(byte[] needle) {
-                return AbstractSearchProcessorFactory.newBitapSearchProcessorFactory(needle);
-            }
-        };
-        abstract SearchProcessorFactory newFactory(byte[] needle);
-    }
-
+    private static final byte[][] NEEDLES = {"Thank You".getBytes(), "* Does not exist *".getBytes(), "<li>".getBytes(), "<body>".getBytes(), "</li>".getBytes(), "github.com".getBytes(), " Does not exist 2 ".getBytes(), "</html>".getBytes(), "\"https://".getBytes(), "Netty 4.1.45.Final released".getBytes()};
     @Param
     public Algorithm algorithm;
 
@@ -66,21 +30,43 @@ public class SearchRealDataBenchmark extends AbstractMicrobenchmark {
     private ByteBuf haystack;
     private SearchProcessorFactory[] searchProcessorFactories;
     private SearchProcessorFactory searchProcessorFactory;
-
-    private static final byte[][] NEEDLES = {
-            "Thank You".getBytes(),
-            "* Does not exist *".getBytes(),
-            "<li>".getBytes(),
-            "<body>".getBytes(),
-            "</li>".getBytes(),
-            "github.com".getBytes(),
-            " Does not exist 2 ".getBytes(),
-            "</html>".getBytes(),
-            "\"https://".getBytes(),
-            "Netty 4.1.45.Final released".getBytes()
-    };
-
     private int needleId, searchFrom, haystackLength;
+
+    private static byte[] readBytes(File file) throws IOException {
+        InputStream in = new FileInputStream(file);
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try {
+                byte[] buf = new byte[8192];
+                for (; ; ) {
+                    int ret = in.read(buf);
+                    if (ret < 0) {
+                        break;
+                    }
+                    out.write(buf, 0, ret);
+                }
+                return out.toByteArray();
+            } finally {
+                safeClose(out);
+            }
+        } finally {
+            safeClose(in);
+        }
+    }
+
+    private static void safeClose(InputStream in) {
+        try {
+            in.close();
+        } catch (IOException ignored) {
+        }
+    }
+
+    private static void safeClose(OutputStream out) {
+        try {
+            out.close();
+        } catch (IOException ignored) {
+        }
+    }
 
     @Setup
     public void setup() throws IOException {
@@ -119,8 +105,7 @@ public class SearchRealDataBenchmark extends AbstractMicrobenchmark {
     @CompilerControl(Mode.DONT_INLINE)
     public int findFirstFromIndex() {
         searchFrom = (searchFrom + 100) % haystackLength;
-        return haystack.forEachByte(
-                searchFrom, haystackLength - searchFrom, searchProcessorFactory.newSearchProcessor());
+        return haystack.forEachByte(searchFrom, haystackLength - searchFrom, searchProcessorFactory.newSearchProcessor());
     }
 
     @Benchmark
@@ -134,38 +119,25 @@ public class SearchRealDataBenchmark extends AbstractMicrobenchmark {
         } while (pos > 0);
     }
 
-    private static byte[] readBytes(File file) throws IOException {
-        InputStream in = new FileInputStream(file);
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            try {
-                byte[] buf = new byte[8192];
-                for (;;) {
-                    int ret = in.read(buf);
-                    if (ret < 0) {
-                        break;
-                    }
-                    out.write(buf, 0, ret);
-                }
-                return out.toByteArray();
-            } finally {
-                safeClose(out);
+    public enum Algorithm {
+        AHO_CORASIC {
+            @Override
+            SearchProcessorFactory newFactory(byte[] needle) {
+                return AbstractMultiSearchProcessorFactory.newAhoCorasicSearchProcessorFactory(needle);
             }
-        } finally {
-            safeClose(in);
-        }
-    }
+        }, KMP {
+            @Override
+            SearchProcessorFactory newFactory(byte[] needle) {
+                return AbstractSearchProcessorFactory.newKmpSearchProcessorFactory(needle);
+            }
+        }, BITAP {
+            @Override
+            SearchProcessorFactory newFactory(byte[] needle) {
+                return AbstractSearchProcessorFactory.newBitapSearchProcessorFactory(needle);
+            }
+        };
 
-    private static void safeClose(InputStream in) {
-        try {
-            in.close();
-        } catch (IOException ignored) { }
-    }
-
-    private static void safeClose(OutputStream out) {
-        try {
-            out.close();
-        } catch (IOException ignored) { }
+        abstract SearchProcessorFactory newFactory(byte[] needle);
     }
 
 }

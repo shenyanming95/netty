@@ -55,15 +55,12 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * {@link Http2LocalFlowController}
  */
 @UnstableApi
-public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http2LifecycleManager,
-                                                                            ChannelOutboundHandler {
+public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http2LifecycleManager, ChannelOutboundHandler {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(Http2ConnectionHandler.class);
 
-    private static final Http2Headers HEADERS_TOO_LARGE_HEADERS = ReadOnlyHttp2Headers.serverHeaders(false,
-            HttpResponseStatus.REQUEST_HEADER_FIELDS_TOO_LARGE.codeAsText());
-    private static final ByteBuf HTTP_1_X_BUF = Unpooled.unreleasableBuffer(
-        Unpooled.wrappedBuffer(new byte[] {'H', 'T', 'T', 'P', '/', '1', '.'})).asReadOnly();
+    private static final Http2Headers HEADERS_TOO_LARGE_HEADERS = ReadOnlyHttp2Headers.serverHeaders(false, HttpResponseStatus.REQUEST_HEADER_FIELDS_TOO_LARGE.codeAsText());
+    private static final ByteBuf HTTP_1_X_BUF = Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer(new byte[]{'H', 'T', 'T', 'P', '/', '1', '.'})).asReadOnly();
 
     private final Http2ConnectionDecoder decoder;
     private final Http2ConnectionEncoder encoder;
@@ -73,19 +70,45 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
     private BaseDecoder byteDecoder;
     private long gracefulShutdownTimeoutMillis;
 
-    protected Http2ConnectionHandler(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder,
-                                     Http2Settings initialSettings) {
+    protected Http2ConnectionHandler(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder, Http2Settings initialSettings) {
         this(decoder, encoder, initialSettings, false);
     }
 
-    protected Http2ConnectionHandler(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder,
-                                     Http2Settings initialSettings, boolean decoupleCloseAndGoAway) {
+    protected Http2ConnectionHandler(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder, Http2Settings initialSettings, boolean decoupleCloseAndGoAway) {
         this.initialSettings = checkNotNull(initialSettings, "initialSettings");
         this.decoder = checkNotNull(decoder, "decoder");
         this.encoder = checkNotNull(encoder, "encoder");
         this.decoupleCloseAndGoAway = decoupleCloseAndGoAway;
         if (encoder.connection() != decoder.connection()) {
             throw new IllegalArgumentException("Encoder and Decoder do not share the same connection object");
+        }
+    }
+
+    /**
+     * Returns the client preface string if this is a client connection, otherwise returns {@code null}.
+     */
+    private static ByteBuf clientPrefaceString(Http2Connection connection) {
+        return connection.isServer() ? connectionPrefaceBuf() : null;
+    }
+
+    private static void processGoAwayWriteResult(final ChannelHandlerContext ctx, final int lastStreamId, final long errorCode, final ByteBuf debugData, ChannelFuture future) {
+        try {
+            if (future.isSuccess()) {
+                if (errorCode != NO_ERROR.code()) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("{} Sent GOAWAY: lastStreamId '{}', errorCode '{}', " + "debugData '{}'. Forcing shutdown of the connection.", ctx.channel(), lastStreamId, errorCode, debugData.toString(UTF_8), future.cause());
+                    }
+                    ctx.close();
+                }
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("{} Sending GOAWAY failed: lastStreamId '{}', errorCode '{}', " + "debugData '{}'. Forcing shutdown of the connection.", ctx.channel(), lastStreamId, errorCode, debugData.toString(UTF_8), future.cause());
+                }
+                ctx.close();
+            }
+        } finally {
+            // We're done with the debug data now.
+            debugData.release();
         }
     }
 
@@ -101,13 +124,13 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
     /**
      * Set the amount of time (in milliseconds) this endpoint will wait for all streams to be closed before closing
      * the connection during the graceful shutdown process.
+     *
      * @param gracefulShutdownTimeoutMillis the amount of time (in milliseconds) this endpoint will wait for all
-     * streams to be closed before closing the connection during the graceful shutdown process.
+     *                                      streams to be closed before closing the connection during the graceful shutdown process.
      */
     public void gracefulShutdownTimeoutMillis(long gracefulShutdownTimeoutMillis) {
         if (gracefulShutdownTimeoutMillis < -1) {
-            throw new IllegalArgumentException("gracefulShutdownTimeoutMillis: " + gracefulShutdownTimeoutMillis +
-                                               " (expected: -1 for indefinite or >= 0)");
+            throw new IllegalArgumentException("gracefulShutdownTimeoutMillis: " + gracefulShutdownTimeoutMillis + " (expected: -1 for indefinite or >= 0)");
         }
         this.gracefulShutdownTimeoutMillis = gracefulShutdownTimeoutMillis;
     }
@@ -151,6 +174,7 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
 
     /**
      * Handles the server-side (cleartext) upgrade from HTTP to HTTP/2.
+     *
      * @param settings the settings for the remote endpoint.
      */
     public void onHttpServerUpgrade(Http2Settings settings) throws Http2Exception {
@@ -183,194 +207,6 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
             onError(ctx, true, e);
         } catch (Throwable cause) {
             onError(ctx, true, connectionError(INTERNAL_ERROR, cause, "Error flushing"));
-        }
-    }
-
-    private abstract class BaseDecoder {
-        public abstract void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception;
-        public void handlerRemoved(ChannelHandlerContext ctx) throws Exception { }
-        public void channelActive(ChannelHandlerContext ctx) throws Exception { }
-
-        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-            // Connection has terminated, close the encoder and decoder.
-            encoder().close();
-            decoder().close();
-
-            // We need to remove all streams (not just the active ones).
-            // See https://github.com/netty/netty/issues/4838.
-            connection().close(ctx.voidPromise());
-        }
-
-        /**
-         * Determine if the HTTP/2 connection preface been sent.
-         */
-        public boolean prefaceSent() {
-            return true;
-        }
-    }
-
-    private final class PrefaceDecoder extends BaseDecoder {
-        private ByteBuf clientPrefaceString;
-        private boolean prefaceSent;
-
-        PrefaceDecoder(ChannelHandlerContext ctx) throws Exception {
-            clientPrefaceString = clientPrefaceString(encoder.connection());
-            // This handler was just added to the context. In case it was handled after
-            // the connection became active, send the connection preface now.
-            sendPreface(ctx);
-        }
-
-        @Override
-        public boolean prefaceSent() {
-            return prefaceSent;
-        }
-
-        @Override
-        public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-            try {
-                if (ctx.channel().isActive() && readClientPrefaceString(in) && verifyFirstFrameIsSettings(in)) {
-                    // After the preface is read, it is time to hand over control to the post initialized decoder.
-                    byteDecoder = new FrameDecoder();
-                    byteDecoder.decode(ctx, in, out);
-                }
-            } catch (Throwable e) {
-                onError(ctx, false, e);
-            }
-        }
-
-        @Override
-        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            // The channel just became active - send the connection preface to the remote endpoint.
-            sendPreface(ctx);
-        }
-
-        @Override
-        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-            cleanup();
-            super.channelInactive(ctx);
-        }
-
-        /**
-         * Releases the {@code clientPrefaceString}. Any active streams will be left in the open.
-         */
-        @Override
-        public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-            cleanup();
-        }
-
-        /**
-         * Releases the {@code clientPrefaceString}. Any active streams will be left in the open.
-         */
-        private void cleanup() {
-            if (clientPrefaceString != null) {
-                clientPrefaceString.release();
-                clientPrefaceString = null;
-            }
-        }
-
-        /**
-         * Decodes the client connection preface string from the input buffer.
-         *
-         * @return {@code true} if processing of the client preface string is complete. Since client preface strings can
-         *         only be received by servers, returns true immediately for client endpoints.
-         */
-        private boolean readClientPrefaceString(ByteBuf in) throws Http2Exception {
-            if (clientPrefaceString == null) {
-                return true;
-            }
-
-            int prefaceRemaining = clientPrefaceString.readableBytes();
-            int bytesRead = min(in.readableBytes(), prefaceRemaining);
-
-            // If the input so far doesn't match the preface, break the connection.
-            if (bytesRead == 0 || !ByteBufUtil.equals(in, in.readerIndex(),
-                                                      clientPrefaceString, clientPrefaceString.readerIndex(),
-                                                      bytesRead)) {
-                int maxSearch = 1024; // picked because 512 is too little, and 2048 too much
-                int http1Index =
-                    ByteBufUtil.indexOf(HTTP_1_X_BUF, in.slice(in.readerIndex(), min(in.readableBytes(), maxSearch)));
-                if (http1Index != -1) {
-                    String chunk = in.toString(in.readerIndex(), http1Index - in.readerIndex(), CharsetUtil.US_ASCII);
-                    throw connectionError(PROTOCOL_ERROR, "Unexpected HTTP/1.x request: %s", chunk);
-                }
-                String receivedBytes = hexDump(in, in.readerIndex(),
-                                               min(in.readableBytes(), clientPrefaceString.readableBytes()));
-                throw connectionError(PROTOCOL_ERROR, "HTTP/2 client preface string missing or corrupt. " +
-                                                      "Hex dump for received bytes: %s", receivedBytes);
-            }
-            in.skipBytes(bytesRead);
-            clientPrefaceString.skipBytes(bytesRead);
-
-            if (!clientPrefaceString.isReadable()) {
-                // Entire preface has been read.
-                clientPrefaceString.release();
-                clientPrefaceString = null;
-                return true;
-            }
-            return false;
-        }
-
-        /**
-         * Peeks at that the next frame in the buffer and verifies that it is a non-ack {@code SETTINGS} frame.
-         *
-         * @param in the inbound buffer.
-         * @return {@code true} if the next frame is a non-ack {@code SETTINGS} frame, {@code false} if more
-         * data is required before we can determine the next frame type.
-         * @throws Http2Exception thrown if the next frame is NOT a non-ack {@code SETTINGS} frame.
-         */
-        private boolean verifyFirstFrameIsSettings(ByteBuf in) throws Http2Exception {
-            if (in.readableBytes() < 5) {
-                // Need more data before we can see the frame type for the first frame.
-                return false;
-            }
-
-            short frameType = in.getUnsignedByte(in.readerIndex() + 3);
-            short flags = in.getUnsignedByte(in.readerIndex() + 4);
-            if (frameType != SETTINGS || (flags & Http2Flags.ACK) != 0) {
-                throw connectionError(PROTOCOL_ERROR, "First received frame was not SETTINGS. " +
-                                                      "Hex dump for first 5 bytes: %s",
-                                      hexDump(in, in.readerIndex(), 5));
-            }
-            return true;
-        }
-
-        /**
-         * Sends the HTTP/2 connection preface upon establishment of the connection, if not already sent.
-         */
-        private void sendPreface(ChannelHandlerContext ctx) throws Exception {
-            if (prefaceSent || !ctx.channel().isActive()) {
-                return;
-            }
-
-            prefaceSent = true;
-
-            final boolean isClient = !connection().isServer();
-            if (isClient) {
-                // Clients must send the preface string as the first bytes on the connection.
-                ctx.write(connectionPrefaceBuf()).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-            }
-
-            // Both client and server must send their initial settings.
-            encoder.writeSettings(ctx, initialSettings, ctx.newPromise()).addListener(
-                    ChannelFutureListener.CLOSE_ON_FAILURE);
-
-            if (isClient) {
-                // If this handler is extended by the user and we directly fire the userEvent from this context then
-                // the user will not see the event. We should fire the event starting with this handler so this class
-                // (and extending classes) have a chance to process the event.
-                userEventTriggered(ctx, Http2ConnectionPrefaceAndSettingsFrameWrittenEvent.INSTANCE);
-            }
-        }
-    }
-
-    private final class FrameDecoder extends BaseDecoder {
-        @Override
-        public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-            try {
-                decoder.decodeFrame(ctx, in, out);
-            } catch (Throwable e) {
-                onError(ctx, false, e);
-            }
         }
     }
 
@@ -436,8 +272,7 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
     }
 
     @Override
-    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress,
-                        ChannelPromise promise) throws Exception {
+    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         ctx.connect(remoteAddress, localAddress, promise);
     }
 
@@ -469,12 +304,9 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
         doGracefulShutdown(ctx, f, promise);
     }
 
-    private ChannelFutureListener newClosingChannelFutureListener(
-            ChannelHandlerContext ctx, ChannelPromise promise) {
+    private ChannelFutureListener newClosingChannelFutureListener(ChannelHandlerContext ctx, ChannelPromise promise) {
         long gracefulShutdownTimeoutMillis = this.gracefulShutdownTimeoutMillis;
-        return gracefulShutdownTimeoutMillis < 0 ?
-                new ClosingChannelFutureListener(ctx, promise) :
-                new ClosingChannelFutureListener(ctx, promise, gracefulShutdownTimeoutMillis, MILLISECONDS);
+        return gracefulShutdownTimeoutMillis < 0 ? new ClosingChannelFutureListener(ctx, promise) : new ClosingChannelFutureListener(ctx, promise, gracefulShutdownTimeoutMillis, MILLISECONDS);
     }
 
     private void doGracefulShutdown(ChannelHandlerContext ctx, ChannelFuture future, final ChannelPromise promise) {
@@ -648,14 +480,13 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
      * Handler for a connection error. Sends a GO_AWAY frame to the remote endpoint. Once all
      * streams are closed, the connection is shut down.
      *
-     * @param ctx the channel context
+     * @param ctx      the channel context
      * @param outbound {@code true} if the error was caused by an outbound operation.
-     * @param cause the exception that was caught
-     * @param http2Ex the {@link Http2Exception} that is embedded in the causality chain. This may
-     *            be {@code null} if it's an unknown exception.
+     * @param cause    the exception that was caught
+     * @param http2Ex  the {@link Http2Exception} that is embedded in the causality chain. This may
+     *                 be {@code null} if it's an unknown exception.
      */
-    protected void onConnectionError(ChannelHandlerContext ctx, boolean outbound,
-                                     Throwable cause, Http2Exception http2Ex) {
+    protected void onConnectionError(ChannelHandlerContext ctx, boolean outbound, Throwable cause, Http2Exception http2Ex) {
         if (http2Ex == null) {
             http2Ex = new Http2Exception(INTERNAL_ERROR, cause.getMessage(), cause);
         }
@@ -673,20 +504,17 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
      * Handler for a stream error. Sends a {@code RST_STREAM} frame to the remote endpoint and closes the
      * stream.
      *
-     * @param ctx the channel context
+     * @param ctx      the channel context
      * @param outbound {@code true} if the error was caused by an outbound operation.
-     * @param cause the exception that was caught
-     * @param http2Ex the {@link StreamException} that is embedded in the causality chain.
+     * @param cause    the exception that was caught
+     * @param http2Ex  the {@link StreamException} that is embedded in the causality chain.
      */
-    protected void onStreamError(ChannelHandlerContext ctx, boolean outbound,
-                                 @SuppressWarnings("unused") Throwable cause, StreamException http2Ex) {
+    protected void onStreamError(ChannelHandlerContext ctx, boolean outbound, @SuppressWarnings("unused") Throwable cause, StreamException http2Ex) {
         final int streamId = http2Ex.streamId();
         Http2Stream stream = connection().stream(streamId);
 
         //if this is caused by reading headers that are too large, send a header with status 431
-        if (http2Ex instanceof Http2Exception.HeaderListSizeException &&
-            ((Http2Exception.HeaderListSizeException) http2Ex).duringDecode() &&
-            connection().isServer()) {
+        if (http2Ex instanceof Http2Exception.HeaderListSizeException && ((Http2Exception.HeaderListSizeException) http2Ex).duringDecode() && connection().isServer()) {
 
             // NOTE We have to check to make sure that a stream exists before we send our reply.
             // We likely always create the stream below as the stream isn't created until the
@@ -726,7 +554,7 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
      * Notifies client that this server has received headers that are larger than what it is
      * willing to accept. Override to change behavior.
      *
-     * @param ctx the channel context
+     * @param ctx    the channel context
      * @param stream the Http2Stream on which the header was received
      */
     protected void handleServerHeaderDecodeSizeError(ChannelHandlerContext ctx, Http2Stream stream) {
@@ -742,8 +570,7 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
      * triggered by the first frame of a stream being invalid. That is, there was an error reading the frame before
      * we could create a new stream.
      */
-    private ChannelFuture resetUnknownStream(final ChannelHandlerContext ctx, int streamId, long errorCode,
-                                             ChannelPromise promise) {
+    private ChannelFuture resetUnknownStream(final ChannelHandlerContext ctx, int streamId, long errorCode, ChannelPromise promise) {
         ChannelFuture future = frameWriter().writeRstStream(ctx, streamId, errorCode, promise);
         if (future.isDone()) {
             closeConnectionOnError(ctx, future);
@@ -759,18 +586,16 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
     }
 
     @Override
-    public ChannelFuture resetStream(final ChannelHandlerContext ctx, int streamId, long errorCode,
-                                     ChannelPromise promise) {
+    public ChannelFuture resetStream(final ChannelHandlerContext ctx, int streamId, long errorCode, ChannelPromise promise) {
         final Http2Stream stream = connection().stream(streamId);
         if (stream == null) {
             return resetUnknownStream(ctx, streamId, errorCode, promise.unvoid());
         }
 
-       return resetStream(ctx, stream, errorCode, promise);
+        return resetStream(ctx, stream, errorCode, promise);
     }
 
-    private ChannelFuture resetStream(final ChannelHandlerContext ctx, final Http2Stream stream,
-                                      long errorCode, ChannelPromise promise) {
+    private ChannelFuture resetStream(final ChannelHandlerContext ctx, final Http2Stream stream, long errorCode, ChannelPromise promise) {
         promise = promise.unvoid();
         if (stream.isResetSent()) {
             // Don't write a RST_STREAM frame if we have already written one.
@@ -786,8 +611,7 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
         final ChannelFuture future;
         // If the remote peer is not aware of the steam, then we are not allowed to send a RST_STREAM
         // https://tools.ietf.org/html/rfc7540#section-6.4.
-        if (stream.state() == IDLE ||
-            connection().local().created(stream) && !stream.isHeadersSent() && !stream.isPushPromiseSent()) {
+        if (stream.state() == IDLE || connection().local().created(stream) && !stream.isHeadersSent() && !stream.isPushPromiseSent()) {
             future = promise.setSuccess();
         } else {
             future = frameWriter().writeRstStream(ctx, stream.id(), errorCode, promise);
@@ -807,8 +631,7 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
     }
 
     @Override
-    public ChannelFuture goAway(final ChannelHandlerContext ctx, final int lastStreamId, final long errorCode,
-                                final ByteBuf debugData, ChannelPromise promise) {
+    public ChannelFuture goAway(final ChannelHandlerContext ctx, final int lastStreamId, final long errorCode, final ByteBuf debugData, ChannelPromise promise) {
         promise = promise.unvoid();
         final Http2Connection connection = connection();
         try {
@@ -844,6 +667,7 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
 
     /**
      * Closes the connection if the graceful shutdown process has completed.
+     *
      * @param future Represents the status that will be passed to the {@link #closeListener}.
      */
     private void checkCloseConnection(ChannelFuture future) {
@@ -888,39 +712,6 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
     }
 
     /**
-     * Returns the client preface string if this is a client connection, otherwise returns {@code null}.
-     */
-    private static ByteBuf clientPrefaceString(Http2Connection connection) {
-        return connection.isServer() ? connectionPrefaceBuf() : null;
-    }
-
-    private static void processGoAwayWriteResult(final ChannelHandlerContext ctx, final int lastStreamId,
-                                                 final long errorCode, final ByteBuf debugData, ChannelFuture future) {
-        try {
-            if (future.isSuccess()) {
-                if (errorCode != NO_ERROR.code()) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("{} Sent GOAWAY: lastStreamId '{}', errorCode '{}', " +
-                                     "debugData '{}'. Forcing shutdown of the connection.",
-                                     ctx.channel(), lastStreamId, errorCode, debugData.toString(UTF_8), future.cause());
-                    }
-                    ctx.close();
-                }
-            } else {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("{} Sending GOAWAY failed: lastStreamId '{}', errorCode '{}', " +
-                                 "debugData '{}'. Forcing shutdown of the connection.",
-                                 ctx.channel(), lastStreamId, errorCode, debugData.toString(UTF_8), future.cause());
-                }
-                ctx.close();
-            }
-        } finally {
-            // We're done with the debug data now.
-            debugData.release();
-        }
-    }
-
-    /**
      * Closes the channel when the future completes.
      */
     private static final class ClosingChannelFutureListener implements ChannelFutureListener {
@@ -935,8 +726,7 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
             timeoutTask = null;
         }
 
-        ClosingChannelFutureListener(final ChannelHandlerContext ctx, final ChannelPromise promise,
-                                     long timeout, TimeUnit unit) {
+        ClosingChannelFutureListener(final ChannelHandlerContext ctx, final ChannelPromise promise, long timeout, TimeUnit unit) {
             this.ctx = ctx;
             this.promise = promise;
             timeoutTask = ctx.executor().schedule(new Runnable() {
@@ -968,6 +758,190 @@ public class Http2ConnectionHandler extends ByteToMessageDecoder implements Http
                 ctx.close();
             } else {
                 ctx.close(promise);
+            }
+        }
+    }
+
+    private abstract class BaseDecoder {
+        public abstract void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception;
+
+        public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        }
+
+        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        }
+
+        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+            // Connection has terminated, close the encoder and decoder.
+            encoder().close();
+            decoder().close();
+
+            // We need to remove all streams (not just the active ones).
+            // See https://github.com/netty/netty/issues/4838.
+            connection().close(ctx.voidPromise());
+        }
+
+        /**
+         * Determine if the HTTP/2 connection preface been sent.
+         */
+        public boolean prefaceSent() {
+            return true;
+        }
+    }
+
+    private final class PrefaceDecoder extends BaseDecoder {
+        private ByteBuf clientPrefaceString;
+        private boolean prefaceSent;
+
+        PrefaceDecoder(ChannelHandlerContext ctx) throws Exception {
+            clientPrefaceString = clientPrefaceString(encoder.connection());
+            // This handler was just added to the context. In case it was handled after
+            // the connection became active, send the connection preface now.
+            sendPreface(ctx);
+        }
+
+        @Override
+        public boolean prefaceSent() {
+            return prefaceSent;
+        }
+
+        @Override
+        public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+            try {
+                if (ctx.channel().isActive() && readClientPrefaceString(in) && verifyFirstFrameIsSettings(in)) {
+                    // After the preface is read, it is time to hand over control to the post initialized decoder.
+                    byteDecoder = new FrameDecoder();
+                    byteDecoder.decode(ctx, in, out);
+                }
+            } catch (Throwable e) {
+                onError(ctx, false, e);
+            }
+        }
+
+        @Override
+        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+            // The channel just became active - send the connection preface to the remote endpoint.
+            sendPreface(ctx);
+        }
+
+        @Override
+        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+            cleanup();
+            super.channelInactive(ctx);
+        }
+
+        /**
+         * Releases the {@code clientPrefaceString}. Any active streams will be left in the open.
+         */
+        @Override
+        public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+            cleanup();
+        }
+
+        /**
+         * Releases the {@code clientPrefaceString}. Any active streams will be left in the open.
+         */
+        private void cleanup() {
+            if (clientPrefaceString != null) {
+                clientPrefaceString.release();
+                clientPrefaceString = null;
+            }
+        }
+
+        /**
+         * Decodes the client connection preface string from the input buffer.
+         *
+         * @return {@code true} if processing of the client preface string is complete. Since client preface strings can
+         * only be received by servers, returns true immediately for client endpoints.
+         */
+        private boolean readClientPrefaceString(ByteBuf in) throws Http2Exception {
+            if (clientPrefaceString == null) {
+                return true;
+            }
+
+            int prefaceRemaining = clientPrefaceString.readableBytes();
+            int bytesRead = min(in.readableBytes(), prefaceRemaining);
+
+            // If the input so far doesn't match the preface, break the connection.
+            if (bytesRead == 0 || !ByteBufUtil.equals(in, in.readerIndex(), clientPrefaceString, clientPrefaceString.readerIndex(), bytesRead)) {
+                int maxSearch = 1024; // picked because 512 is too little, and 2048 too much
+                int http1Index = ByteBufUtil.indexOf(HTTP_1_X_BUF, in.slice(in.readerIndex(), min(in.readableBytes(), maxSearch)));
+                if (http1Index != -1) {
+                    String chunk = in.toString(in.readerIndex(), http1Index - in.readerIndex(), CharsetUtil.US_ASCII);
+                    throw connectionError(PROTOCOL_ERROR, "Unexpected HTTP/1.x request: %s", chunk);
+                }
+                String receivedBytes = hexDump(in, in.readerIndex(), min(in.readableBytes(), clientPrefaceString.readableBytes()));
+                throw connectionError(PROTOCOL_ERROR, "HTTP/2 client preface string missing or corrupt. " + "Hex dump for received bytes: %s", receivedBytes);
+            }
+            in.skipBytes(bytesRead);
+            clientPrefaceString.skipBytes(bytesRead);
+
+            if (!clientPrefaceString.isReadable()) {
+                // Entire preface has been read.
+                clientPrefaceString.release();
+                clientPrefaceString = null;
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Peeks at that the next frame in the buffer and verifies that it is a non-ack {@code SETTINGS} frame.
+         *
+         * @param in the inbound buffer.
+         * @return {@code true} if the next frame is a non-ack {@code SETTINGS} frame, {@code false} if more
+         * data is required before we can determine the next frame type.
+         * @throws Http2Exception thrown if the next frame is NOT a non-ack {@code SETTINGS} frame.
+         */
+        private boolean verifyFirstFrameIsSettings(ByteBuf in) throws Http2Exception {
+            if (in.readableBytes() < 5) {
+                // Need more data before we can see the frame type for the first frame.
+                return false;
+            }
+
+            short frameType = in.getUnsignedByte(in.readerIndex() + 3);
+            short flags = in.getUnsignedByte(in.readerIndex() + 4);
+            if (frameType != SETTINGS || (flags & Http2Flags.ACK) != 0) {
+                throw connectionError(PROTOCOL_ERROR, "First received frame was not SETTINGS. " + "Hex dump for first 5 bytes: %s", hexDump(in, in.readerIndex(), 5));
+            }
+            return true;
+        }
+
+        /**
+         * Sends the HTTP/2 connection preface upon establishment of the connection, if not already sent.
+         */
+        private void sendPreface(ChannelHandlerContext ctx) throws Exception {
+            if (prefaceSent || !ctx.channel().isActive()) {
+                return;
+            }
+
+            prefaceSent = true;
+
+            final boolean isClient = !connection().isServer();
+            if (isClient) {
+                // Clients must send the preface string as the first bytes on the connection.
+                ctx.write(connectionPrefaceBuf()).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+            }
+
+            // Both client and server must send their initial settings.
+            encoder.writeSettings(ctx, initialSettings, ctx.newPromise()).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+
+            if (isClient) {
+                // If this handler is extended by the user and we directly fire the userEvent from this context then
+                // the user will not see the event. We should fire the event starting with this handler so this class
+                // (and extending classes) have a chance to process the event.
+                userEventTriggered(ctx, Http2ConnectionPrefaceAndSettingsFrameWrittenEvent.INSTANCE);
+            }
+        }
+    }
+
+    private final class FrameDecoder extends BaseDecoder {
+        @Override
+        public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+            try {
+                decoder.decodeFrame(ctx, in, out);
+            } catch (Throwable e) {
+                onError(ctx, false, e);
             }
         }
     }

@@ -24,43 +24,6 @@ import io.netty.util.internal.UnstableApi;
 public interface Http2Stream {
 
     /**
-     * The allowed states of an HTTP2 stream.
-     */
-    enum State {
-        IDLE(false, false),
-        RESERVED_LOCAL(false, false),
-        RESERVED_REMOTE(false, false),
-        OPEN(true, true),
-        HALF_CLOSED_LOCAL(false, true),
-        HALF_CLOSED_REMOTE(true, false),
-        CLOSED(false, false);
-
-        private final boolean localSideOpen;
-        private final boolean remoteSideOpen;
-
-        State(boolean localSideOpen, boolean remoteSideOpen) {
-            this.localSideOpen = localSideOpen;
-            this.remoteSideOpen = remoteSideOpen;
-        }
-
-        /**
-         * Indicates whether the local side of this stream is open (i.e. the state is either
-         * {@link State#OPEN} or {@link State#HALF_CLOSED_REMOTE}).
-         */
-        public boolean localSideOpen() {
-            return localSideOpen;
-        }
-
-        /**
-         * Indicates whether the remote side of this stream is open (i.e. the state is either
-         * {@link State#OPEN} or {@link State#HALF_CLOSED_LOCAL}).
-         */
-        public boolean remoteSideOpen() {
-            return remoteSideOpen;
-        }
-    }
-
-    /**
      * Gets the unique identifier for this stream within the connection.
      */
     int id();
@@ -115,6 +78,7 @@ public interface Http2Stream {
 
     /**
      * Associates the application-defined data with this stream.
+     *
      * @return The value that was previously associated with {@code key}, or {@code null} if there was none.
      */
     <V> V setProperty(Http2Connection.PropertyKey key, V value);
@@ -133,6 +97,7 @@ public interface Http2Stream {
      * Indicates that headers have been sent to the remote endpoint on this stream. The first call to this method would
      * be for the initial headers (see {@link #isHeadersSent()}} and the second call would indicate the trailers
      * (see {@link #isTrailersReceived()}).
+     *
      * @param isInformational {@code true} if the headers contain an informational status code (for responses only).
      */
     Http2Stream headersSent(boolean isInformational);
@@ -151,6 +116,7 @@ public interface Http2Stream {
      * Indicates that headers have been received. The first call to this method would be for the initial headers
      * (see {@link #isHeadersReceived()}} and the second call would indicate the trailers
      * (see {@link #isTrailersReceived()}).
+     *
      * @param isInformational {@code true} if the headers contain an informational status code (for responses only).
      */
     Http2Stream headersReceived(boolean isInformational);
@@ -174,4 +140,35 @@ public interface Http2Stream {
      * Indicates whether or not a push promise was sent to the remote endpoint.
      */
     boolean isPushPromiseSent();
+
+    /**
+     * The allowed states of an HTTP2 stream.
+     */
+    enum State {
+        IDLE(false, false), RESERVED_LOCAL(false, false), RESERVED_REMOTE(false, false), OPEN(true, true), HALF_CLOSED_LOCAL(false, true), HALF_CLOSED_REMOTE(true, false), CLOSED(false, false);
+
+        private final boolean localSideOpen;
+        private final boolean remoteSideOpen;
+
+        State(boolean localSideOpen, boolean remoteSideOpen) {
+            this.localSideOpen = localSideOpen;
+            this.remoteSideOpen = remoteSideOpen;
+        }
+
+        /**
+         * Indicates whether the local side of this stream is open (i.e. the state is either
+         * {@link State#OPEN} or {@link State#HALF_CLOSED_REMOTE}).
+         */
+        public boolean localSideOpen() {
+            return localSideOpen;
+        }
+
+        /**
+         * Indicates whether the remote side of this stream is open (i.e. the state is either
+         * {@link State#OPEN} or {@link State#HALF_CLOSED_LOCAL}).
+         */
+        public boolean remoteSideOpen() {
+            return remoteSideOpen;
+        }
+    }
 }

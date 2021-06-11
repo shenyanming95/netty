@@ -30,8 +30,7 @@ public abstract class SctpMessageToMessageDecoder extends MessageToMessageDecode
                 return true;
             }
 
-            throw new CodecException(String.format("Received SctpMessage is not complete, please add %s in " +
-                    "the pipeline before this handler", SctpMessageCompletionHandler.class.getSimpleName()));
+            throw new CodecException(String.format("Received SctpMessage is not complete, please add %s in " + "the pipeline before this handler", SctpMessageCompletionHandler.class.getSimpleName()));
         } else {
             return false;
         }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.localecho;
 
 import io.netty.bootstrap.Bootstrap;
@@ -43,34 +28,25 @@ public final class LocalEcho {
             // are handled by the same event loop thread which drives a certain socket channel
             // to reduce the communication latency between socket channels and local channels.
             ServerBootstrap sb = new ServerBootstrap();
-            sb.group(serverGroup)
-              .channel(LocalServerChannel.class)
-              .handler(new ChannelInitializer<LocalServerChannel>() {
-                  @Override
-                  public void initChannel(LocalServerChannel ch) throws Exception {
-                      ch.pipeline().addLast(new LoggingHandler(LogLevel.INFO));
-                  }
-              })
-              .childHandler(new ChannelInitializer<LocalChannel>() {
-                  @Override
-                  public void initChannel(LocalChannel ch) throws Exception {
-                      ch.pipeline().addLast(
-                              new LoggingHandler(LogLevel.INFO),
-                              new LocalEchoServerHandler());
-                  }
-              });
+            sb.group(serverGroup).channel(LocalServerChannel.class).handler(new ChannelInitializer<LocalServerChannel>() {
+                @Override
+                public void initChannel(LocalServerChannel ch) throws Exception {
+                    ch.pipeline().addLast(new LoggingHandler(LogLevel.INFO));
+                }
+            }).childHandler(new ChannelInitializer<LocalChannel>() {
+                @Override
+                public void initChannel(LocalChannel ch) throws Exception {
+                    ch.pipeline().addLast(new LoggingHandler(LogLevel.INFO), new LocalEchoServerHandler());
+                }
+            });
 
             Bootstrap cb = new Bootstrap();
-            cb.group(clientGroup)
-              .channel(LocalChannel.class)
-              .handler(new ChannelInitializer<LocalChannel>() {
-                  @Override
-                  public void initChannel(LocalChannel ch) throws Exception {
-                      ch.pipeline().addLast(
-                              new LoggingHandler(LogLevel.INFO),
-                              new LocalEchoClientHandler());
-                  }
-              });
+            cb.group(clientGroup).channel(LocalChannel.class).handler(new ChannelInitializer<LocalChannel>() {
+                @Override
+                public void initChannel(LocalChannel ch) throws Exception {
+                    ch.pipeline().addLast(new LoggingHandler(LogLevel.INFO), new LocalEchoClientHandler());
+                }
+            });
 
             // Start the server.
             sb.bind(addr).sync();
@@ -82,7 +58,7 @@ public final class LocalEcho {
             System.out.println("Enter text (quit to end)");
             ChannelFuture lastWriteFuture = null;
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-            for (;;) {
+            for (; ; ) {
                 String line = in.readLine();
                 if (line == null || "quit".equalsIgnoreCase(line)) {
                     break;

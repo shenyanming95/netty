@@ -1,104 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Copyright 2012 The Netty Project
-  ~
-  ~ The Netty Project licenses this file to you under the Apache License,
-  ~ version 2.0 (the "License"); you may not use this file except in compliance
-  ~ with the License. You may obtain a copy of the License at:
-  ~
-  ~   http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-  ~ License for the specific language governing permissions and limitations
-  ~ under the License.
-  -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <artifactId>netty-handler</artifactId>
+  <dependencies>
+    <dependency>
+      <artifactId>netty-common</artifactId>
+      <groupId>${project.groupId}</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>netty-resolver</artifactId>
+      <groupId>${project.groupId}</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>netty-buffer</artifactId>
+      <groupId>${project.groupId}</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>netty-transport</artifactId>
+      <groupId>${project.groupId}</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>netty-codec</artifactId>
+      <groupId>${project.groupId}</groupId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>${tcnative.artifactId}</artifactId>
+      <classifier>${tcnative.classifier}</classifier>
+      <groupId>${project.groupId}</groupId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <groupId>org.bouncycastle</groupId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <artifactId>npn-api</artifactId>
+      <groupId>org.eclipse.jetty.npn</groupId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <artifactId>alpn-api</artifactId>
+      <groupId>org.eclipse.jetty.alpn</groupId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <artifactId>${conscrypt.artifactId}</artifactId>
+      <classifier>${conscrypt.classifier}</classifier>
+      <groupId>${conscrypt.groupId}</groupId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <artifactId>mockito-core</artifactId>
+      <groupId>org.mockito</groupId>
+    </dependency>
+
+    <dependency>
+      <artifactId>AmazonCorrettoCryptoProvider</artifactId>
+      <classifier>linux-x86_64</classifier>
+      <groupId>software.amazon.cryptools</groupId>
+      <scope>test</scope>
+      <version>1.1.0</version>
+    </dependency>
+  </dependencies>
 
   <modelVersion>4.0.0</modelVersion>
+  <name>Netty/Handler</name>
+
+  <packaging>jar</packaging>
+
   <parent>
-    <groupId>io.netty</groupId>
     <artifactId>netty-parent</artifactId>
+    <groupId>io.netty</groupId>
     <version>4.1.52.Final-SNAPSHOT</version>
   </parent>
 
-  <artifactId>netty-handler</artifactId>
-  <packaging>jar</packaging>
-
   <properties>
-    <javaModuleName>io.netty.handler</javaModuleName>
-    <!-- Needed for SelfSignedCertificate -->
     <argLine.java9.extras>--add-exports java.base/sun.security.x509=ALL-UNNAMED</argLine.java9.extras>
+      <!-- Needed for SelfSignedCertificate -->
+      <javaModuleName>io.netty.handler</javaModuleName>
   </properties>
-
-  <name>Netty/Handler</name>
-
-  <dependencies>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>netty-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>netty-resolver</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>netty-buffer</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>netty-transport</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>netty-codec</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>${tcnative.artifactId}</artifactId>
-      <classifier>${tcnative.classifier}</classifier>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpkix-jdk15on</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.npn</groupId>
-      <artifactId>npn-api</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.alpn</groupId>
-      <artifactId>alpn-api</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>${conscrypt.groupId}</groupId>
-      <artifactId>${conscrypt.artifactId}</artifactId>
-      <classifier>${conscrypt.classifier}</classifier>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>software.amazon.cryptools</groupId>
-      <artifactId>AmazonCorrettoCryptoProvider</artifactId>
-      <version>1.1.0</version>
-      <classifier>linux-x86_64</classifier>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
 </project>
 

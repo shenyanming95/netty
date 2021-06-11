@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.handler.codec.DateFormatter;
@@ -33,26 +18,20 @@ import java.util.TimeZone;
  * <li>Sunday, 06-Nov-94 08:49:37 GMT: obsolete specification</li>
  * <li>Sun Nov  6 08:49:37 1994: obsolete specification</li>
  * </ul>
+ *
  * @deprecated Use {@link DateFormatter} instead
  */
 @Deprecated
 public final class HttpHeaderDateFormat extends SimpleDateFormat {
     private static final long serialVersionUID = -925286159755905325L;
-
+    private static final FastThreadLocal<HttpHeaderDateFormat> dateFormatThreadLocal = new FastThreadLocal<HttpHeaderDateFormat>() {
+        @Override
+        protected HttpHeaderDateFormat initialValue() {
+            return new HttpHeaderDateFormat();
+        }
+    };
     private final SimpleDateFormat format1 = new HttpHeaderDateFormatObsolete1();
     private final SimpleDateFormat format2 = new HttpHeaderDateFormatObsolete2();
-
-    private static final FastThreadLocal<HttpHeaderDateFormat> dateFormatThreadLocal =
-            new FastThreadLocal<HttpHeaderDateFormat>() {
-                @Override
-                protected HttpHeaderDateFormat initialValue() {
-                    return new HttpHeaderDateFormat();
-                }
-            };
-
-    public static HttpHeaderDateFormat get() {
-        return dateFormatThreadLocal.get();
-    }
 
     /**
      * Standard date format<p>
@@ -61,6 +40,10 @@ public final class HttpHeaderDateFormat extends SimpleDateFormat {
     private HttpHeaderDateFormat() {
         super("E, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
         setTimeZone(TimeZone.getTimeZone("GMT"));
+    }
+
+    public static HttpHeaderDateFormat get() {
+        return dateFormatThreadLocal.get();
     }
 
     @Override

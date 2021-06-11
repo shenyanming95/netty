@@ -41,10 +41,9 @@ public class CorsHandler extends ChannelDuplexHandler {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(CorsHandler.class);
     private static final String ANY_ORIGIN = "*";
     private static final String NULL_ORIGIN = "null";
-    private CorsConfig config;
-
-    private HttpRequest request;
     private final List<CorsConfig> configList;
+    private CorsConfig config;
+    private HttpRequest request;
     private boolean isShortCircuit;
 
     /**
@@ -65,6 +64,46 @@ public class CorsHandler extends ChannelDuplexHandler {
         checkNonEmpty(configList, "configList");
         this.configList = configList;
         this.isShortCircuit = isShortCircuit;
+    }
+
+    private static void setVaryHeader(final HttpResponse response) {
+        response.headers().set(HttpHeaderNames.VARY, HttpHeaderNames.ORIGIN);
+    }
+
+    private static void setAnyOrigin(final HttpResponse response) {
+        setOrigin(response, ANY_ORIGIN);
+    }
+
+    private static void setNullOrigin(final HttpResponse response) {
+        setOrigin(response, NULL_ORIGIN);
+    }
+
+    private static void setOrigin(final HttpResponse response, final String origin) {
+        response.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+    }
+
+    private static boolean isPreflightRequest(final HttpRequest request) {
+        final HttpHeaders headers = request.headers();
+        return OPTIONS.equals(request.method()) && headers.contains(HttpHeaderNames.ORIGIN) && headers.contains(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD);
+    }
+
+    private static void forbidden(final ChannelHandlerContext ctx, final HttpRequest request) {
+        HttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), FORBIDDEN, ctx.alloc().buffer(0));
+        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, HttpHeaderValues.ZERO);
+        release(request);
+        respond(ctx, request, response);
+    }
+
+    private static void respond(final ChannelHandlerContext ctx, final HttpRequest request, final HttpResponse response) {
+
+        final boolean keepAlive = HttpUtil.isKeepAlive(request);
+
+        HttpUtil.setKeepAlive(response, keepAlive);
+
+        final ChannelFuture future = ctx.writeAndFlush(response);
+        if (!keepAlive) {
+            future.addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     @Override
@@ -156,34 +195,10 @@ public class CorsHandler extends ChannelDuplexHandler {
         setOrigin(response, request.headers().get(HttpHeaderNames.ORIGIN));
     }
 
-    private static void setVaryHeader(final HttpResponse response) {
-        response.headers().set(HttpHeaderNames.VARY, HttpHeaderNames.ORIGIN);
-    }
-
-    private static void setAnyOrigin(final HttpResponse response) {
-        setOrigin(response, ANY_ORIGIN);
-    }
-
-    private static void setNullOrigin(final HttpResponse response) {
-        setOrigin(response, NULL_ORIGIN);
-    }
-
-    private static void setOrigin(final HttpResponse response, final String origin) {
-        response.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-    }
-
     private void setAllowCredentials(final HttpResponse response) {
-        if (config.isCredentialsAllowed()
-                && !response.headers().get(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN).equals(ANY_ORIGIN)) {
+        if (config.isCredentialsAllowed() && !response.headers().get(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN).equals(ANY_ORIGIN)) {
             response.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         }
-    }
-
-    private static boolean isPreflightRequest(final HttpRequest request) {
-        final HttpHeaders headers = request.headers();
-        return OPTIONS.equals(request.method()) &&
-                headers.contains(HttpHeaderNames.ORIGIN) &&
-                headers.contains(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD);
     }
 
     private void setExposeHeaders(final HttpResponse response) {
@@ -205,8 +220,7 @@ public class CorsHandler extends ChannelDuplexHandler {
     }
 
     @Override
-    public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise promise)
-            throws Exception {
+    public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise promise) throws Exception {
         if (config != null && config.isCorsSupportEnabled() && msg instanceof HttpResponse) {
             final HttpResponse response = (HttpResponse) msg;
             if (setOrigin(response)) {
@@ -215,28 +229,5 @@ public class CorsHandler extends ChannelDuplexHandler {
             }
         }
         ctx.write(msg, promise);
-    }
-
-    private static void forbidden(final ChannelHandlerContext ctx, final HttpRequest request) {
-        HttpResponse response = new DefaultFullHttpResponse(
-                request.protocolVersion(), FORBIDDEN, ctx.alloc().buffer(0));
-        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, HttpHeaderValues.ZERO);
-        release(request);
-        respond(ctx, request, response);
-    }
-
-    private static void respond(
-            final ChannelHandlerContext ctx,
-            final HttpRequest request,
-            final HttpResponse response) {
-
-        final boolean keepAlive = HttpUtil.isKeepAlive(request);
-
-        HttpUtil.setKeepAlive(response, keepAlive);
-
-        final ChannelFuture future = ctx.writeAndFlush(response);
-        if (!keepAlive) {
-            future.addListener(ChannelFutureListener.CLOSE);
-        }
     }
 }

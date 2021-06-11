@@ -32,59 +32,40 @@ import java.util.Set;
  * Base class for server side web socket opening and closing handshakes
  */
 public abstract class WebSocketServerHandshaker {
-    protected static final InternalLogger logger = InternalLoggerFactory.getInstance(WebSocketServerHandshaker.class);
-
-    private final String uri;
-
-    private final String[] subprotocols;
-
-    private final WebSocketVersion version;
-
-    private final WebSocketDecoderConfig decoderConfig;
-
-    private String selectedSubprotocol;
-
     /**
      * Use this as wildcard to support all requested sub-protocols
      */
     public static final String SUB_PROTOCOL_WILDCARD = "*";
+    protected static final InternalLogger logger = InternalLoggerFactory.getInstance(WebSocketServerHandshaker.class);
+    private final String uri;
+    private final String[] subprotocols;
+    private final WebSocketVersion version;
+    private final WebSocketDecoderConfig decoderConfig;
+    private String selectedSubprotocol;
 
     /**
      * Constructor specifying the destination web socket location
      *
-     * @param version
-     *            the protocol version
-     * @param uri
-     *            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
-     *            sent to this URL.
-     * @param subprotocols
-     *            CSV of supported protocols. Null if sub protocols not supported.
-     * @param maxFramePayloadLength
-     *            Maximum length of a frame's payload
+     * @param version               the protocol version
+     * @param uri                   URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
+     *                              sent to this URL.
+     * @param subprotocols          CSV of supported protocols. Null if sub protocols not supported.
+     * @param maxFramePayloadLength Maximum length of a frame's payload
      */
-    protected WebSocketServerHandshaker(
-            WebSocketVersion version, String uri, String subprotocols,
-            int maxFramePayloadLength) {
-        this(version, uri, subprotocols, WebSocketDecoderConfig.newBuilder()
-            .maxFramePayloadLength(maxFramePayloadLength)
-            .build());
+    protected WebSocketServerHandshaker(WebSocketVersion version, String uri, String subprotocols, int maxFramePayloadLength) {
+        this(version, uri, subprotocols, WebSocketDecoderConfig.newBuilder().maxFramePayloadLength(maxFramePayloadLength).build());
     }
 
     /**
      * Constructor specifying the destination web socket location
      *
-     * @param version
-     *            the protocol version
-     * @param uri
-     *            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
-     *            sent to this URL.
-     * @param subprotocols
-     *            CSV of supported protocols. Null if sub protocols not supported.
-     * @param decoderConfig
-     *            Frames decoder configuration.
+     * @param version       the protocol version
+     * @param uri           URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
+     *                      sent to this URL.
+     * @param subprotocols  CSV of supported protocols. Null if sub protocols not supported.
+     * @param decoderConfig Frames decoder configuration.
      */
-    protected WebSocketServerHandshaker(
-            WebSocketVersion version, String uri, String subprotocols, WebSocketDecoderConfig decoderConfig) {
+    protected WebSocketServerHandshaker(WebSocketVersion version, String uri, String subprotocols, WebSocketDecoderConfig decoderConfig) {
         this.version = version;
         this.uri = uri;
         if (subprotocols != null) {
@@ -144,12 +125,10 @@ public abstract class WebSocketServerHandshaker {
      * Performs the opening handshake. When call this method you <strong>MUST NOT</strong> retain the
      * {@link FullHttpRequest} which is passed in.
      *
-     * @param channel
-     *              Channel
-     * @param req
-     *              HTTP Request
+     * @param channel Channel
+     * @param req     HTTP Request
      * @return future
-     *              The {@link ChannelFuture} which is notified once the opening handshake completes
+     * The {@link ChannelFuture} which is notified once the opening handshake completes
      */
     public ChannelFuture handshake(Channel channel, FullHttpRequest req) {
         return handshake(channel, req, null, channel.newPromise());
@@ -157,22 +136,17 @@ public abstract class WebSocketServerHandshaker {
 
     /**
      * Performs the opening handshake
-     *
+     * <p>
      * When call this method you <strong>MUST NOT</strong> retain the {@link FullHttpRequest} which is passed in.
      *
-     * @param channel
-     *            Channel
-     * @param req
-     *            HTTP Request
-     * @param responseHeaders
-     *            Extra headers to add to the handshake response or {@code null} if no extra headers should be added
-     * @param promise
-     *            the {@link ChannelPromise} to be notified when the opening handshake is done
+     * @param channel         Channel
+     * @param req             HTTP Request
+     * @param responseHeaders Extra headers to add to the handshake response or {@code null} if no extra headers should be added
+     * @param promise         the {@link ChannelPromise} to be notified when the opening handshake is done
      * @return future
-     *            the {@link ChannelFuture} which is notified when the opening handshake is done
+     * the {@link ChannelFuture} which is notified when the opening handshake is done
      */
-    public final ChannelFuture handshake(Channel channel, FullHttpRequest req,
-                                            HttpHeaders responseHeaders, final ChannelPromise promise) {
+    public final ChannelFuture handshake(Channel channel, FullHttpRequest req, HttpHeaders responseHeaders, final ChannelPromise promise) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("{} WebSocket version {} server handshake", channel, version());
@@ -191,8 +165,7 @@ public abstract class WebSocketServerHandshaker {
             // this means the user use an HttpServerCodec
             ctx = p.context(HttpServerCodec.class);
             if (ctx == null) {
-                promise.setFailure(
-                        new IllegalStateException("No HttpDecoder and no HttpServerCodec in the pipeline"));
+                promise.setFailure(new IllegalStateException("No HttpDecoder and no HttpServerCodec in the pipeline"));
                 return promise;
             }
             p.addBefore(ctx.name(), "wsencoder", newWebSocketEncoder());
@@ -223,12 +196,10 @@ public abstract class WebSocketServerHandshaker {
      * Performs the opening handshake. When call this method you <strong>MUST NOT</strong> retain the
      * {@link FullHttpRequest} which is passed in.
      *
-     * @param channel
-     *              Channel
-     * @param req
-     *              HTTP Request
+     * @param channel Channel
+     * @param req     HTTP Request
      * @return future
-     *              The {@link ChannelFuture} which is notified once the opening handshake completes
+     * The {@link ChannelFuture} which is notified once the opening handshake completes
      */
     public ChannelFuture handshake(Channel channel, HttpRequest req) {
         return handshake(channel, req, null, channel.newPromise());
@@ -236,22 +207,17 @@ public abstract class WebSocketServerHandshaker {
 
     /**
      * Performs the opening handshake
-     *
+     * <p>
      * When call this method you <strong>MUST NOT</strong> retain the {@link HttpRequest} which is passed in.
      *
-     * @param channel
-     *            Channel
-     * @param req
-     *            HTTP Request
-     * @param responseHeaders
-     *            Extra headers to add to the handshake response or {@code null} if no extra headers should be added
-     * @param promise
-     *            the {@link ChannelPromise} to be notified when the opening handshake is done
+     * @param channel         Channel
+     * @param req             HTTP Request
+     * @param responseHeaders Extra headers to add to the handshake response or {@code null} if no extra headers should be added
+     * @param promise         the {@link ChannelPromise} to be notified when the opening handshake is done
      * @return future
-     *            the {@link ChannelFuture} which is notified when the opening handshake is done
+     * the {@link ChannelFuture} which is notified when the opening handshake is done
      */
-    public final ChannelFuture handshake(final Channel channel, HttpRequest req,
-                                         final HttpHeaders responseHeaders, final ChannelPromise promise) {
+    public final ChannelFuture handshake(final Channel channel, HttpRequest req, final HttpHeaders responseHeaders, final ChannelPromise promise) {
 
         if (req instanceof FullHttpRequest) {
             return handshake(channel, (FullHttpRequest) req, responseHeaders, promise);
@@ -265,8 +231,7 @@ public abstract class WebSocketServerHandshaker {
             // this means the user use an HttpServerCodec
             ctx = p.context(HttpServerCodec.class);
             if (ctx == null) {
-                promise.setFailure(
-                        new IllegalStateException("No HttpDecoder and no HttpServerCodec in the pipeline"));
+                promise.setFailure(new IllegalStateException("No HttpDecoder and no HttpServerCodec in the pipeline"));
                 return promise;
             }
         }
@@ -312,15 +277,13 @@ public abstract class WebSocketServerHandshaker {
     /**
      * Returns a new {@link FullHttpResponse) which will be used for as response to the handshake request.
      */
-    protected abstract FullHttpResponse newHandshakeResponse(FullHttpRequest req,
-                                         HttpHeaders responseHeaders);
+    protected abstract FullHttpResponse newHandshakeResponse(FullHttpRequest req, HttpHeaders responseHeaders);
+
     /**
      * Performs the closing handshake
      *
-     * @param channel
-     *            Channel
-     * @param frame
-     *            Closing Frame that was received
+     * @param channel Channel
+     * @param frame   Closing Frame that was received
      */
     public ChannelFuture close(Channel channel, CloseWebSocketFrame frame) {
         ObjectUtil.checkNotNull(channel, "channel");
@@ -330,12 +293,9 @@ public abstract class WebSocketServerHandshaker {
     /**
      * Performs the closing handshake
      *
-     * @param channel
-     *            Channel
-     * @param frame
-     *            Closing Frame that was received
-     * @param promise
-     *            the {@link ChannelPromise} to be notified when the closing handshake is done
+     * @param channel Channel
+     * @param frame   Closing Frame that was received
+     * @param promise the {@link ChannelPromise} to be notified when the closing handshake is done
      */
     public ChannelFuture close(Channel channel, CloseWebSocketFrame frame, ChannelPromise promise) {
         ObjectUtil.checkNotNull(channel, "channel");
@@ -345,8 +305,7 @@ public abstract class WebSocketServerHandshaker {
     /**
      * Selects the first matching supported sub protocol
      *
-     * @param requestedSubprotocols
-     *            CSV of protocols to be supported. e.g. "chat, superchat"
+     * @param requestedSubprotocols CSV of protocols to be supported. e.g. "chat, superchat"
      * @return First matching supported sub protocol. Null if not found.
      */
     protected String selectSubprotocol(String requestedSubprotocols) {
@@ -355,12 +314,11 @@ public abstract class WebSocketServerHandshaker {
         }
 
         String[] requestedSubprotocolArray = requestedSubprotocols.split(",");
-        for (String p: requestedSubprotocolArray) {
+        for (String p : requestedSubprotocolArray) {
             String requestedSubprotocol = p.trim();
 
-            for (String supportedSubprotocol: subprotocols) {
-                if (SUB_PROTOCOL_WILDCARD.equals(supportedSubprotocol)
-                        || requestedSubprotocol.equals(supportedSubprotocol)) {
+            for (String supportedSubprotocol : subprotocols) {
+                if (SUB_PROTOCOL_WILDCARD.equals(supportedSubprotocol) || requestedSubprotocol.equals(supportedSubprotocol)) {
                     selectedSubprotocol = requestedSubprotocol;
                     return requestedSubprotocol;
                 }

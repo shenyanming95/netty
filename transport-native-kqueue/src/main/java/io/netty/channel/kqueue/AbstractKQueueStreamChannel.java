@@ -41,10 +41,7 @@ import static io.netty.channel.internal.ChannelUtils.WRITE_STATUS_SNDBUF_FULL;
 public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel implements DuplexChannel {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractKQueueStreamChannel.class);
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
-    private static final String EXPECTED_TYPES =
-            " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " +
-                    StringUtil.simpleClassName(DefaultFileRegion.class) + ')';
-    private WritableByteChannel byteChannel;
+    private static final String EXPECTED_TYPES = " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " + StringUtil.simpleClassName(DefaultFileRegion.class) + ')';
     private final Runnable flushTask = new Runnable() {
         @Override
         public void run() {
@@ -53,6 +50,7 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
             ((AbstractKQueueUnsafe) unsafe()).flush0();
         }
     };
+    private WritableByteChannel byteChannel;
 
     AbstractKQueueStreamChannel(Channel parent, BsdSocket fd, boolean active) {
         super(parent, fd, active);
@@ -64,6 +62,21 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
 
     AbstractKQueueStreamChannel(BsdSocket fd) {
         this(null, fd, isSoErrorZero(fd));
+    }
+
+    private static void shutdownDone(ChannelFuture shutdownOutputFuture, ChannelFuture shutdownInputFuture, ChannelPromise promise) {
+        Throwable shutdownOutputCause = shutdownOutputFuture.cause();
+        Throwable shutdownInputCause = shutdownInputFuture.cause();
+        if (shutdownOutputCause != null) {
+            if (shutdownInputCause != null) {
+                logger.debug("Exception suppressed because a previous exception occurred.", shutdownInputCause);
+            }
+            promise.setFailure(shutdownOutputCause);
+        } else if (shutdownInputCause != null) {
+            promise.setFailure(shutdownInputCause);
+        } else {
+            promise.setSuccess();
+        }
     }
 
     @Override
@@ -78,7 +91,8 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
 
     /**
      * Write bytes form the given {@link ByteBuf} to the underlying {@link java.nio.channels.Channel}.
-     * @param in the collection which contains objects to write.
+     *
+     * @param in  the collection which contains objects to write.
      * @param buf the {@link ByteBuf} from which the bytes should be written
      * @return The value that should be decremented from the write quantum which starts at
      * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
@@ -101,8 +115,7 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
             return doWriteBytes(in, buf);
         } else {
             ByteBuffer[] nioBuffers = buf.nioBuffers();
-            return writeBytesMultiple(in, nioBuffers, nioBuffers.length, readableBytes,
-                    config().getMaxBytesPerGatheringWrite());
+            return writeBytesMultiple(in, nioBuffers, nioBuffers.length, readableBytes, config().getMaxBytesPerGatheringWrite());
         }
     }
 
@@ -121,7 +134,8 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
 
     /**
      * Write multiple bytes via {@link IovArray}.
-     * @param in the collection which contains objects to write.
+     *
+     * @param in    the collection which contains objects to write.
      * @param array The array which contains the content to write.
      * @return The value that should be decremented from the write quantum which starts at
      * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
@@ -151,10 +165,11 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
 
     /**
      * Write multiple bytes via {@link ByteBuffer} array.
-     * @param in the collection which contains objects to write.
-     * @param nioBuffers The buffers to write.
-     * @param nioBufferCnt The number of buffers to write.
-     * @param expectedWrittenBytes The number of bytes we expect to write.
+     *
+     * @param in                        the collection which contains objects to write.
+     * @param nioBuffers                The buffers to write.
+     * @param nioBufferCnt              The number of buffers to write.
+     * @param expectedWrittenBytes      The number of bytes we expect to write.
      * @param maxBytesPerGatheringWrite The maximum number of bytes we should attempt to write.
      * @return The value that should be decremented from the write quantum which starts at
      * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
@@ -167,9 +182,7 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
      * </ul>
      * @throws IOException If an I/O exception occurs during write.
      */
-    private int writeBytesMultiple(
-            ChannelOutboundBuffer in, ByteBuffer[] nioBuffers, int nioBufferCnt, long expectedWrittenBytes,
-            long maxBytesPerGatheringWrite) throws IOException {
+    private int writeBytesMultiple(ChannelOutboundBuffer in, ByteBuffer[] nioBuffers, int nioBufferCnt, long expectedWrittenBytes, long maxBytesPerGatheringWrite) throws IOException {
         assert expectedWrittenBytes != 0;
         if (expectedWrittenBytes > maxBytesPerGatheringWrite) {
             expectedWrittenBytes = maxBytesPerGatheringWrite;
@@ -186,7 +199,8 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
 
     /**
      * Write a {@link DefaultFileRegion}
-     * @param in the collection which contains objects to write.
+     *
+     * @param in     the collection which contains objects to write.
      * @param region the {@link DefaultFileRegion} from which the bytes should be written
      * @return The value that should be decremented from the write quantum which starts at
      * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
@@ -222,7 +236,8 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
 
     /**
      * Write a {@link FileRegion}
-     * @param in the collection which contains objects to write.
+     *
+     * @param in     the collection which contains objects to write.
      * @param region the {@link FileRegion} from which the bytes should be written
      * @return The value that should be decremented from the write quantum which starts at
      * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
@@ -294,6 +309,7 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
 
     /**
      * Attempt to write a single object.
+     *
      * @param in the collection which contains objects to write.
      * @return The value that should be decremented from the write quantum which starts at
      * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
@@ -323,6 +339,7 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
 
     /**
      * Attempt to write multiple {@link ByteBuf} objects.
+     *
      * @param in the collection which contains objects to write.
      * @return The value that should be decremented from the write quantum which starts at
      * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
@@ -354,15 +371,14 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
     protected Object filterOutboundMessage(Object msg) {
         if (msg instanceof ByteBuf) {
             ByteBuf buf = (ByteBuf) msg;
-            return UnixChannelUtil.isBufferCopyNeededForWrite(buf)? newDirectBuffer(buf) : buf;
+            return UnixChannelUtil.isBufferCopyNeededForWrite(buf) ? newDirectBuffer(buf) : buf;
         }
 
         if (msg instanceof FileRegion) {
             return msg;
         }
 
-        throw new UnsupportedOperationException(
-                "unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
+        throw new UnsupportedOperationException("unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
     }
 
     @UnstableApi
@@ -473,24 +489,6 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
         }
     }
 
-    private static void shutdownDone(ChannelFuture shutdownOutputFuture,
-                                     ChannelFuture shutdownInputFuture,
-                                     ChannelPromise promise) {
-        Throwable shutdownOutputCause = shutdownOutputFuture.cause();
-        Throwable shutdownInputCause = shutdownInputFuture.cause();
-        if (shutdownOutputCause != null) {
-            if (shutdownInputCause != null) {
-                logger.debug("Exception suppressed because a previous exception occurred.",
-                        shutdownInputCause);
-            }
-            promise.setFailure(shutdownOutputCause);
-        } else if (shutdownInputCause != null) {
-            promise.setFailure(shutdownInputCause);
-        } else {
-            promise.setSuccess();
-        }
-    }
-
     class KQueueStreamUnsafe extends AbstractKQueueUnsafe {
         // Overridden here just to be able to access this method from AbstractKQueueStreamChannel
         @Override
@@ -563,8 +561,7 @@ public abstract class AbstractKQueueStreamChannel extends AbstractKQueueChannel 
             }
         }
 
-        private void handleReadException(ChannelPipeline pipeline, ByteBuf byteBuf, Throwable cause, boolean close,
-                                         KQueueRecvByteAllocatorHandle allocHandle) {
+        private void handleReadException(ChannelPipeline pipeline, ByteBuf byteBuf, Throwable cause, boolean close, KQueueRecvByteAllocatorHandle allocHandle) {
             if (byteBuf != null) {
                 if (byteBuf.isReadable()) {
                     readPending = false;

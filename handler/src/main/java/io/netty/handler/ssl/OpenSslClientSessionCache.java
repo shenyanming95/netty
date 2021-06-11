@@ -1,18 +1,3 @@
-/*
- * Copyright 2020 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.util.AsciiString;
@@ -31,6 +16,24 @@ final class OpenSslClientSessionCache extends OpenSslSessionCache {
 
     OpenSslClientSessionCache(OpenSslEngineMap engineMap) {
         super(engineMap);
+    }
+
+    private static boolean isProtocolEnabled(OpenSslSession session, String[] enabledProtocols) {
+        return arrayContains(session.getProtocol(), enabledProtocols);
+    }
+
+    private static boolean isCipherSuiteEnabled(OpenSslSession session, String[] enabledCipherSuites) {
+        return arrayContains(session.getCipherSuite(), enabledCipherSuites);
+    }
+
+    private static boolean arrayContains(String expected, String[] array) {
+        for (int i = 0; i < array.length; ++i) {
+            String value = array[i];
+            if (value.equals(expected)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -60,24 +63,6 @@ final class OpenSslClientSessionCache extends OpenSslSessionCache {
         sessions.remove(new HostPort(host, port));
     }
 
-    private static boolean isProtocolEnabled(OpenSslSession session, String[] enabledProtocols) {
-        return arrayContains(session.getProtocol(), enabledProtocols);
-    }
-
-    private static boolean isCipherSuiteEnabled(OpenSslSession session, String[] enabledCipherSuites) {
-        return arrayContains(session.getCipherSuite(), enabledCipherSuites);
-    }
-
-    private static boolean arrayContains(String expected, String[] array) {
-        for (int i = 0; i < array.length; ++i) {
-            String value = array[i];
-            if (value.equals(expected)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     void setSession(ReferenceCountedOpenSslEngine engine) throws SSLException {
         String host = engine.getPeerHost();
         int port = engine.getPeerPort();
@@ -97,8 +82,7 @@ final class OpenSslClientSessionCache extends OpenSslSessionCache {
             }
 
             // Ensure the protocol and ciphersuite can be used.
-            if (!isProtocolEnabled(session, engine.getEnabledProtocols()) ||
-                    !isCipherSuiteEnabled(session, engine.getEnabledCipherSuites())) {
+            if (!isProtocolEnabled(session, engine.getEnabledProtocols()) || !isCipherSuiteEnabled(session, engine.getEnabledCipherSuites())) {
                 return;
             }
 

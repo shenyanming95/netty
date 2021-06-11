@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.compression;
 
 import io.netty.buffer.ByteBuf;
@@ -25,9 +10,9 @@ import static io.netty.handler.codec.compression.Snappy.validateChecksum;
 
 /**
  * Uncompresses a {@link ByteBuf} encoded with the Snappy framing format.
- *
+ * <p>
  * See <a href="https://github.com/google/snappy/blob/master/framing_format.txt">Snappy framing format</a>.
- *
+ * <p>
  * Note that by default, validation of the checksum header in each chunk is
  * DISABLED for performance improvements. If performance is less of an issue,
  * or if you would prefer the safety that checksum validation brings, please
@@ -36,20 +21,10 @@ import static io.netty.handler.codec.compression.Snappy.validateChecksum;
  */
 public class SnappyFrameDecoder extends ByteToMessageDecoder {
 
-    private enum ChunkType {
-        STREAM_IDENTIFIER,
-        COMPRESSED_DATA,
-        UNCOMPRESSED_DATA,
-        RESERVED_UNSKIPPABLE,
-        RESERVED_SKIPPABLE
-    }
-
     private static final int SNAPPY_IDENTIFIER_LEN = 6;
     private static final int MAX_UNCOMPRESSED_DATA_SIZE = 65536 + 4;
-
     private final Snappy snappy = new Snappy();
     private final boolean validateChecksums;
-
     private boolean started;
     private boolean corrupted;
 
@@ -66,13 +41,38 @@ public class SnappyFrameDecoder extends ByteToMessageDecoder {
      * Creates a new snappy-framed decoder with validation of checksums
      * as specified.
      *
-     * @param validateChecksums
-     *        If true, the checksum field will be validated against the actual
-     *        uncompressed data, and if the checksums do not match, a suitable
-     *        {@link DecompressionException} will be thrown
+     * @param validateChecksums If true, the checksum field will be validated against the actual
+     *                          uncompressed data, and if the checksums do not match, a suitable
+     *                          {@link DecompressionException} will be thrown
      */
     public SnappyFrameDecoder(boolean validateChecksums) {
         this.validateChecksums = validateChecksums;
+    }
+
+    private static void checkByte(byte actual, byte expect) {
+        if (actual != expect) {
+            throw new DecompressionException("Unexpected stream identifier contents. Mismatched snappy " + "protocol version?");
+        }
+    }
+
+    /**
+     * Decodes the chunk type from the type tag byte.
+     *
+     * @param type The tag byte extracted from the stream
+     * @return The appropriate {@link ChunkType}, defaulting to {@link ChunkType#RESERVED_UNSKIPPABLE}
+     */
+    private static ChunkType mapChunkType(byte type) {
+        if (type == 0) {
+            return ChunkType.COMPRESSED_DATA;
+        } else if (type == 1) {
+            return ChunkType.UNCOMPRESSED_DATA;
+        } else if (type == (byte) 0xff) {
+            return ChunkType.STREAM_IDENTIFIER;
+        } else if ((type & 0x80) == 0x80) {
+            return ChunkType.RESERVED_SKIPPABLE;
+        } else {
+            return ChunkType.RESERVED_UNSKIPPABLE;
+        }
     }
 
     @Override
@@ -134,8 +134,7 @@ public class SnappyFrameDecoder extends ByteToMessageDecoder {
                     // The spec mandates that reserved unskippable chunks must immediately
                     // return an error, as we must assume that we cannot decode the stream
                     // correctly
-                    throw new DecompressionException(
-                            "Found reserved unskippable chunk type: 0x" + Integer.toHexString(chunkTypeVal));
+                    throw new DecompressionException("Found reserved unskippable chunk type: 0x" + Integer.toHexString(chunkTypeVal));
                 case UNCOMPRESSED_DATA:
                     if (!started) {
                         throw new DecompressionException("Received UNCOMPRESSED_DATA tag before STREAM_IDENTIFIER");
@@ -198,30 +197,7 @@ public class SnappyFrameDecoder extends ByteToMessageDecoder {
         }
     }
 
-    private static void checkByte(byte actual, byte expect) {
-        if (actual != expect) {
-            throw new DecompressionException("Unexpected stream identifier contents. Mismatched snappy " +
-                    "protocol version?");
-        }
-    }
-
-    /**
-     * Decodes the chunk type from the type tag byte.
-     *
-     * @param type The tag byte extracted from the stream
-     * @return The appropriate {@link ChunkType}, defaulting to {@link ChunkType#RESERVED_UNSKIPPABLE}
-     */
-    private static ChunkType mapChunkType(byte type) {
-        if (type == 0) {
-            return ChunkType.COMPRESSED_DATA;
-        } else if (type == 1) {
-            return ChunkType.UNCOMPRESSED_DATA;
-        } else if (type == (byte) 0xff) {
-            return ChunkType.STREAM_IDENTIFIER;
-        } else if ((type & 0x80) == 0x80) {
-            return ChunkType.RESERVED_SKIPPABLE;
-        } else {
-            return ChunkType.RESERVED_UNSKIPPABLE;
-        }
+    private enum ChunkType {
+        STREAM_IDENTIFIER, COMPRESSED_DATA, UNCOMPRESSED_DATA, RESERVED_UNSKIPPABLE, RESERVED_SKIPPABLE
     }
 }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.cookie;
 
 import java.util.*;
@@ -21,9 +6,9 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A <a href="http://tools.ietf.org/html/rfc6265">RFC6265</a> compliant cookie decoder to be used server side.
- *
+ * <p>
  * Only name and value fields are expected, so old fields are not populated (path, domain, etc).
- *
+ * <p>
  * Old <a href="http://tools.ietf.org/html/rfc2965">RFC2965</a> cookies are still supported,
  * old fields will simply be ignored.
  *
@@ -31,24 +16,19 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  */
 public final class ServerCookieDecoder extends CookieDecoder {
 
-    private static final String RFC2965_VERSION = "$Version";
-
-    private static final String RFC2965_PATH = "$" + CookieHeaderNames.PATH;
-
-    private static final String RFC2965_DOMAIN = "$" + CookieHeaderNames.DOMAIN;
-
-    private static final String RFC2965_PORT = "$Port";
-
     /**
      * Strict encoder that validates that name and value chars are in the valid scope
      * defined in RFC6265
      */
     public static final ServerCookieDecoder STRICT = new ServerCookieDecoder(true);
-
     /**
      * Lax instance that doesn't validate name and value
      */
     public static final ServerCookieDecoder LAX = new ServerCookieDecoder(false);
+    private static final String RFC2965_VERSION = "$Version";
+    private static final String RFC2965_PATH = "$" + CookieHeaderNames.PATH;
+    private static final String RFC2965_DOMAIN = "$" + CookieHeaderNames.DOMAIN;
+    private static final String RFC2965_PORT = "$Port";
 
     private ServerCookieDecoder(boolean strict) {
         super(strict);
@@ -98,16 +78,16 @@ public final class ServerCookieDecoder extends CookieDecoder {
             rfc2965Style = true;
         }
 
-        loop: for (;;) {
+        loop:
+        for (; ; ) {
 
             // Skip spaces and separators.
-            for (;;) {
+            for (; ; ) {
                 if (i == headerLen) {
                     break loop;
                 }
                 char c = header.charAt(i);
-                if (c == '\t' || c == '\n' || c == 0x0b || c == '\f'
-                        || c == '\r' || c == ' ' || c == ',' || c == ';') {
+                if (c == '\t' || c == '\n' || c == 0x0b || c == '\f' || c == '\r' || c == ' ' || c == ',' || c == ';') {
                     i++;
                     continue;
                 }
@@ -119,7 +99,7 @@ public final class ServerCookieDecoder extends CookieDecoder {
             int valueBegin;
             int valueEnd;
 
-            for (;;) {
+            for (; ; ) {
 
                 char curChar = header.charAt(i);
                 if (curChar == ';') {
@@ -155,9 +135,7 @@ public final class ServerCookieDecoder extends CookieDecoder {
                 }
             }
 
-            if (rfc2965Style && (header.regionMatches(nameBegin, RFC2965_PATH, 0, RFC2965_PATH.length()) ||
-                    header.regionMatches(nameBegin, RFC2965_DOMAIN, 0, RFC2965_DOMAIN.length()) ||
-                    header.regionMatches(nameBegin, RFC2965_PORT, 0, RFC2965_PORT.length()))) {
+            if (rfc2965Style && (header.regionMatches(nameBegin, RFC2965_PATH, 0, RFC2965_PATH.length()) || header.regionMatches(nameBegin, RFC2965_DOMAIN, 0, RFC2965_DOMAIN.length()) || header.regionMatches(nameBegin, RFC2965_PORT, 0, RFC2965_PORT.length()))) {
 
                 // skip obsolete RFC2965 fields
                 continue;

@@ -35,6 +35,24 @@ import static io.netty.channel.unix.Errors.newIOException;
  * <p><strong>Internal usage only!</strong>
  */
 final class Native {
+    static final short EV_ADD = evAdd();
+    static final short EV_ENABLE = evEnable();
+    static final short EV_DISABLE = evDisable();
+    static final short EV_DELETE = evDelete();
+    static final short EV_CLEAR = evClear();
+    static final short EV_ERROR = evError();
+    static final short EV_EOF = evEOF();
+    static final int NOTE_READCLOSED = noteReadClosed();
+    static final int NOTE_CONNRESET = noteConnReset();
+    static final int NOTE_DISCONNECTED = noteDisconnected();
+    static final int NOTE_RDHUP = NOTE_READCLOSED | NOTE_CONNRESET | NOTE_DISCONNECTED;
+    // Commonly used combinations of EV defines
+    static final short EV_ADD_CLEAR_ENABLE = (short) (EV_ADD | EV_CLEAR | EV_ENABLE);
+    static final short EV_DELETE_DISABLE = (short) (EV_DELETE | EV_DISABLE);
+    static final short EVFILT_READ = evfiltRead();
+    static final short EVFILT_WRITE = evfiltWrite();
+    static final short EVFILT_USER = evfiltUser();
+    static final short EVFILT_SOCK = evfiltSock();
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(Native.class);
 
     static {
@@ -49,37 +67,16 @@ final class Native {
         Socket.initialize();
     }
 
-    static final short EV_ADD = evAdd();
-    static final short EV_ENABLE = evEnable();
-    static final short EV_DISABLE = evDisable();
-    static final short EV_DELETE = evDelete();
-    static final short EV_CLEAR = evClear();
-    static final short EV_ERROR = evError();
-    static final short EV_EOF = evEOF();
-
-    static final int NOTE_READCLOSED = noteReadClosed();
-    static final int NOTE_CONNRESET = noteConnReset();
-    static final int NOTE_DISCONNECTED = noteDisconnected();
-
-    static final int NOTE_RDHUP = NOTE_READCLOSED | NOTE_CONNRESET | NOTE_DISCONNECTED;
-
-    // Commonly used combinations of EV defines
-    static final short EV_ADD_CLEAR_ENABLE = (short) (EV_ADD | EV_CLEAR | EV_ENABLE);
-    static final short EV_DELETE_DISABLE = (short) (EV_DELETE | EV_DISABLE);
-
-    static final short EVFILT_READ = evfiltRead();
-    static final short EVFILT_WRITE = evfiltWrite();
-    static final short EVFILT_USER = evfiltUser();
-    static final short EVFILT_SOCK = evfiltSock();
+    private Native() {
+        // utility
+    }
 
     static FileDescriptor newKQueue() {
         return new FileDescriptor(kqueueCreate());
     }
 
-    static int keventWait(int kqueueFd, KQueueEventArray changeList, KQueueEventArray eventList,
-                          int tvSec, int tvNsec) throws IOException {
-        int ready = keventWait(kqueueFd, changeList.memoryAddress(), changeList.size(),
-                               eventList.memoryAddress(), eventList.capacity(), tvSec, tvNsec);
+    static int keventWait(int kqueueFd, KQueueEventArray changeList, KQueueEventArray eventList, int tvSec, int tvNsec) throws IOException {
+        int ready = keventWait(kqueueFd, changeList.memoryAddress(), changeList.size(), eventList.memoryAddress(), eventList.capacity(), tvSec, tvNsec);
         if (ready < 0) {
             throw newIOException("kevent", ready);
         }
@@ -87,17 +84,24 @@ final class Native {
     }
 
     private static native int kqueueCreate();
-    private static native int keventWait(int kqueueFd, long changeListAddress, int changeListLength,
-                                         long eventListAddress, int eventListLength, int tvSec, int tvNsec);
+
+    private static native int keventWait(int kqueueFd, long changeListAddress, int changeListLength, long eventListAddress, int eventListLength, int tvSec, int tvNsec);
+
     static native int keventTriggerUserEvent(int kqueueFd, int ident);
+
     static native int keventAddUserEvent(int kqueueFd, int ident);
 
     // kevent related
     static native int sizeofKEvent();
+
     static native int offsetofKEventIdent();
+
     static native int offsetofKEventFlags();
+
     static native int offsetofKEventFFlags();
+
     static native int offsetofKEventFilter();
+
     static native int offsetofKeventData();
 
     private static void loadNativeLibrary() {
@@ -119,9 +123,5 @@ final class Native {
                 throw e1;
             }
         }
-    }
-
-    private Native() {
-        // utility
     }
 }

@@ -28,10 +28,8 @@ import java.net.SocketAddress;
 import static io.netty.channel.kqueue.BsdSocket.newSocketDomain;
 
 @UnstableApi
-public final class KQueueServerDomainSocketChannel extends AbstractKQueueServerChannel
-                                                  implements ServerDomainSocketChannel {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(
-            KQueueServerDomainSocketChannel.class);
+public final class KQueueServerDomainSocketChannel extends AbstractKQueueServerChannel implements ServerDomainSocketChannel {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(KQueueServerDomainSocketChannel.class);
 
     private final KQueueServerChannelConfig config = new KQueueServerChannelConfig(this);
     private volatile DomainSocketAddress local;

@@ -49,8 +49,7 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
         this(delegate, DEFAULT_COMPRESSION_LEVEL, DEFAULT_WINDOW_BITS, DEFAULT_MEM_LEVEL);
     }
 
-    public CompressorHttp2ConnectionEncoder(Http2ConnectionEncoder delegate, int compressionLevel, int windowBits,
-                                            int memLevel) {
+    public CompressorHttp2ConnectionEncoder(Http2ConnectionEncoder delegate, int compressionLevel, int windowBits, int memLevel) {
         super(delegate);
         if (compressionLevel < 0 || compressionLevel > 9) {
             throw new IllegalArgumentException("compressionLevel: " + compressionLevel + " (expected: 0-9)");
@@ -77,9 +76,28 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
         });
     }
 
+    /**
+     * Read the next compressed {@link ByteBuf} from the {@link EmbeddedChannel} or {@code null} if one does not exist.
+     *
+     * @param compressor The channel to read from
+     * @return The next decoded {@link ByteBuf} from the {@link EmbeddedChannel} or {@code null} if one does not exist
+     */
+    private static ByteBuf nextReadableBuf(EmbeddedChannel compressor) {
+        for (; ; ) {
+            final ByteBuf buf = compressor.readOutbound();
+            if (buf == null) {
+                return null;
+            }
+            if (!buf.isReadable()) {
+                buf.release();
+                continue;
+            }
+            return buf;
+        }
+    }
+
     @Override
-    public ChannelFuture writeData(final ChannelHandlerContext ctx, final int streamId, ByteBuf data, int padding,
-            final boolean endOfStream, ChannelPromise promise) {
+    public ChannelFuture writeData(final ChannelHandlerContext ctx, final int streamId, ByteBuf data, int padding, final boolean endOfStream, ChannelPromise promise) {
         final Http2Stream stream = connection().stream(streamId);
         final EmbeddedChannel channel = stream == null ? null : (EmbeddedChannel) stream.getProperty(propertyKey);
         if (channel == null) {
@@ -96,8 +114,7 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
                     if (channel.finish()) {
                         buf = nextReadableBuf(channel);
                     }
-                    return super.writeData(ctx, streamId, buf == null ? Unpooled.EMPTY_BUFFER : buf, padding,
-                            true, promise);
+                    return super.writeData(ctx, streamId, buf == null ? Unpooled.EMPTY_BUFFER : buf, padding, true, promise);
                 }
                 // END_STREAM is not set and the assumption is data is still forthcoming.
                 promise.setSuccess();
@@ -105,7 +122,7 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
             }
 
             PromiseCombiner combiner = new PromiseCombiner(ctx.executor());
-            for (;;) {
+            for (; ; ) {
                 ByteBuf nextBuf = nextReadableBuf(channel);
                 boolean compressedEndOfStream = nextBuf == null && endOfStream;
                 if (compressedEndOfStream && channel.finish()) {
@@ -135,8 +152,7 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
     }
 
     @Override
-    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int padding,
-            boolean endStream, ChannelPromise promise) {
+    public ChannelFuture writeHeaders(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int padding, boolean endStream, ChannelPromise promise) {
         try {
             // Determine if compression is required and sanitize the headers.
             EmbeddedChannel compressor = newCompressor(ctx, headers, endStream);
@@ -155,16 +171,13 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
     }
 
     @Override
-    public ChannelFuture writeHeaders(final ChannelHandlerContext ctx, final int streamId, final Http2Headers headers,
-            final int streamDependency, final short weight, final boolean exclusive, final int padding,
-            final boolean endOfStream, final ChannelPromise promise) {
+    public ChannelFuture writeHeaders(final ChannelHandlerContext ctx, final int streamId, final Http2Headers headers, final int streamDependency, final short weight, final boolean exclusive, final int padding, final boolean endOfStream, final ChannelPromise promise) {
         try {
             // Determine if compression is required and sanitize the headers.
             EmbeddedChannel compressor = newCompressor(ctx, headers, endOfStream);
 
             // Write the headers and create the stream object.
-            ChannelFuture future = super.writeHeaders(ctx, streamId, headers, streamDependency, weight, exclusive,
-                                                      padding, endOfStream, promise);
+            ChannelFuture future = super.writeHeaders(ctx, streamId, headers, streamDependency, weight, exclusive, padding, endOfStream, promise);
 
             // After the stream object has been created, then attach the compressor as a property for data compression.
             bindCompressorToStream(compressor, streamId);
@@ -180,14 +193,13 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
      * Returns a new {@link EmbeddedChannel} that encodes the HTTP2 message content encoded in the specified
      * {@code contentEncoding}.
      *
-     * @param ctx the context.
+     * @param ctx             the context.
      * @param contentEncoding the value of the {@code content-encoding} header
      * @return a new {@link ByteToMessageDecoder} if the specified encoding is supported. {@code null} otherwise
      * (alternatively, you can throw a {@link Http2Exception} to block unknown encoding).
      * @throws Http2Exception If the specified encoding is not not supported and warrants an exception
      */
-    protected EmbeddedChannel newContentCompressor(ChannelHandlerContext ctx, CharSequence contentEncoding)
-            throws Http2Exception {
+    protected EmbeddedChannel newContentCompressor(ChannelHandlerContext ctx, CharSequence contentEncoding) throws Http2Exception {
         if (GZIP.contentEqualsIgnoreCase(contentEncoding) || X_GZIP.contentEqualsIgnoreCase(contentEncoding)) {
             return newCompressionChannel(ctx, ZlibWrapper.GZIP);
         }
@@ -212,27 +224,25 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
 
     /**
      * Generate a new instance of an {@link EmbeddedChannel} capable of compressing data
-     * @param ctx the context.
+     *
+     * @param ctx     the context.
      * @param wrapper Defines what type of encoder should be used
      */
     private EmbeddedChannel newCompressionChannel(final ChannelHandlerContext ctx, ZlibWrapper wrapper) {
-        return new EmbeddedChannel(ctx.channel().id(), ctx.channel().metadata().hasDisconnect(),
-                ctx.channel().config(), ZlibCodecFactory.newZlibEncoder(wrapper, compressionLevel, windowBits,
-                memLevel));
+        return new EmbeddedChannel(ctx.channel().id(), ctx.channel().metadata().hasDisconnect(), ctx.channel().config(), ZlibCodecFactory.newZlibEncoder(wrapper, compressionLevel, windowBits, memLevel));
     }
 
     /**
      * Checks if a new compressor object is needed for the stream identified by {@code streamId}. This method will
      * modify the {@code content-encoding} header contained in {@code headers}.
      *
-     * @param ctx the context.
-     * @param headers Object representing headers which are to be written
+     * @param ctx         the context.
+     * @param headers     Object representing headers which are to be written
      * @param endOfStream Indicates if the stream has ended
      * @return The channel used to compress data.
      * @throws Http2Exception if any problems occur during initialization.
      */
-    private EmbeddedChannel newCompressor(ChannelHandlerContext ctx, Http2Headers headers, boolean endOfStream)
-            throws Http2Exception {
+    private EmbeddedChannel newCompressor(ChannelHandlerContext ctx, Http2Headers headers, boolean endOfStream) throws Http2Exception {
         if (endOfStream) {
             return null;
         }
@@ -261,8 +271,9 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
 
     /**
      * Called after the super class has written the headers and created any associated stream objects.
+     *
      * @param compressor The compressor associated with the stream identified by {@code streamId}.
-     * @param streamId The stream id for which the headers were written.
+     * @param streamId   The stream id for which the headers were written.
      */
     private void bindCompressorToStream(EmbeddedChannel compressor, int streamId) {
         if (compressor != null) {
@@ -276,31 +287,11 @@ public class CompressorHttp2ConnectionEncoder extends DecoratingHttp2ConnectionE
     /**
      * Release remaining content from {@link EmbeddedChannel} and remove the compressor from the {@link Http2Stream}.
      *
-     * @param stream The stream for which {@code compressor} is the compressor for
+     * @param stream     The stream for which {@code compressor} is the compressor for
      * @param compressor The compressor for {@code stream}
      */
     void cleanup(Http2Stream stream, EmbeddedChannel compressor) {
         compressor.finishAndReleaseAll();
         stream.removeProperty(propertyKey);
-    }
-
-    /**
-     * Read the next compressed {@link ByteBuf} from the {@link EmbeddedChannel} or {@code null} if one does not exist.
-     *
-     * @param compressor The channel to read from
-     * @return The next decoded {@link ByteBuf} from the {@link EmbeddedChannel} or {@code null} if one does not exist
-     */
-    private static ByteBuf nextReadableBuf(EmbeddedChannel compressor) {
-        for (;;) {
-            final ByteBuf buf = compressor.readOutbound();
-            if (buf == null) {
-                return null;
-            }
-            if (!buf.isReadable()) {
-                buf.release();
-                continue;
-            }
-            return buf;
-        }
     }
 }

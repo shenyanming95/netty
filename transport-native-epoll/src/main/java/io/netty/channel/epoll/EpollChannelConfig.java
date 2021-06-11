@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.epoll;
 
 import io.netty.buffer.ByteBufAllocator;
@@ -84,8 +69,7 @@ public class EpollChannelConfig extends DefaultChannelConfig {
     @Override
     public EpollChannelConfig setRecvByteBufAllocator(RecvByteBufAllocator allocator) {
         if (!(allocator.newHandle() instanceof RecvByteBufAllocator.ExtendedHandle)) {
-            throw new IllegalArgumentException("allocator.newHandle() must return an object of type: " +
-                    RecvByteBufAllocator.ExtendedHandle.class);
+            throw new IllegalArgumentException("allocator.newHandle() must return an object of type: " + RecvByteBufAllocator.ExtendedHandle.class);
         }
         super.setRecvByteBufAllocator(allocator);
         return this;
@@ -130,8 +114,7 @@ public class EpollChannelConfig extends DefaultChannelConfig {
      * {@link EpollMode#LEVEL_TRIGGERED}.
      */
     public EpollMode getEpollMode() {
-        return ((AbstractEpollChannel) channel).isFlagSet(Native.EPOLLET)
-                ? EpollMode.EDGE_TRIGGERED : EpollMode.LEVEL_TRIGGERED;
+        return ((AbstractEpollChannel) channel).isFlagSet(Native.EPOLLET) ? EpollMode.EDGE_TRIGGERED : EpollMode.LEVEL_TRIGGERED;
     }
 
     /**
@@ -147,16 +130,16 @@ public class EpollChannelConfig extends DefaultChannelConfig {
 
         try {
             switch (mode) {
-            case EDGE_TRIGGERED:
-                checkChannelNotRegistered();
-                ((AbstractEpollChannel) channel).setFlag(Native.EPOLLET);
-                break;
-            case LEVEL_TRIGGERED:
-                checkChannelNotRegistered();
-                ((AbstractEpollChannel) channel).clearFlag(Native.EPOLLET);
-                break;
-            default:
-                throw new Error();
+                case EDGE_TRIGGERED:
+                    checkChannelNotRegistered();
+                    ((AbstractEpollChannel) channel).setFlag(Native.EPOLLET);
+                    break;
+                case LEVEL_TRIGGERED:
+                    checkChannelNotRegistered();
+                    ((AbstractEpollChannel) channel).clearFlag(Native.EPOLLET);
+                    break;
+                default:
+                    throw new Error();
             }
         } catch (IOException e) {
             throw new ChannelException(e);
@@ -175,11 +158,11 @@ public class EpollChannelConfig extends DefaultChannelConfig {
         ((AbstractEpollChannel) channel).clearEpollIn();
     }
 
-    final void setMaxBytesPerGatheringWrite(long maxBytesPerGatheringWrite) {
-        this.maxBytesPerGatheringWrite = maxBytesPerGatheringWrite;
-    }
-
     final long getMaxBytesPerGatheringWrite() {
         return maxBytesPerGatheringWrite;
+    }
+
+    final void setMaxBytesPerGatheringWrite(long maxBytesPerGatheringWrite) {
+        this.maxBytesPerGatheringWrite = maxBytesPerGatheringWrite;
     }
 }

@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.handler.ssl.util;
 
 import io.netty.util.concurrent.FastThreadLocal;
@@ -41,16 +25,15 @@ public abstract class SimpleTrustManagerFactory extends TrustManagerFactory {
      * to delegate its callbacks back to {@link SimpleTrustManagerFactory}.  However, it is impossible to do so,
      * because {@link TrustManagerFactory} requires {@link TrustManagerFactorySpi} at construction time and
      * does not provide a way to access it later.
-     *
+     * <p>
      * To work around this issue, we use an ugly hack which uses a {@link ThreadLocal}.
      */
-    private static final FastThreadLocal<SimpleTrustManagerFactorySpi> CURRENT_SPI =
-            new FastThreadLocal<SimpleTrustManagerFactorySpi>() {
-                @Override
-                protected SimpleTrustManagerFactorySpi initialValue() {
-                    return new SimpleTrustManagerFactorySpi();
-                }
-            };
+    private static final FastThreadLocal<SimpleTrustManagerFactorySpi> CURRENT_SPI = new FastThreadLocal<SimpleTrustManagerFactorySpi>() {
+        @Override
+        protected SimpleTrustManagerFactorySpi initialValue() {
+            return new SimpleTrustManagerFactorySpi();
+        }
+    };
 
     /**
      * Creates a new instance.
@@ -98,6 +81,16 @@ public abstract class SimpleTrustManagerFactory extends TrustManagerFactory {
         private SimpleTrustManagerFactory parent;
         private volatile TrustManager[] trustManagers;
 
+        @SuppressJava6Requirement(reason = "Usage guarded by java version check")
+        private static void wrapIfNeeded(TrustManager[] trustManagers) {
+            for (int i = 0; i < trustManagers.length; i++) {
+                final TrustManager tm = trustManagers[i];
+                if (tm instanceof X509TrustManager && !(tm instanceof X509ExtendedTrustManager)) {
+                    trustManagers[i] = new X509TrustManagerWrapper((X509TrustManager) tm);
+                }
+            }
+        }
+
         void init(SimpleTrustManagerFactory parent) {
             this.parent = parent;
         }
@@ -114,8 +107,7 @@ public abstract class SimpleTrustManagerFactory extends TrustManagerFactory {
         }
 
         @Override
-        protected void engineInit(
-                ManagerFactoryParameters managerFactoryParameters) throws InvalidAlgorithmParameterException {
+        protected void engineInit(ManagerFactoryParameters managerFactoryParameters) throws InvalidAlgorithmParameterException {
             try {
                 parent.engineInit(managerFactoryParameters);
             } catch (InvalidAlgorithmParameterException e) {
@@ -136,16 +128,6 @@ public abstract class SimpleTrustManagerFactory extends TrustManagerFactory {
                 this.trustManagers = trustManagers;
             }
             return trustManagers.clone();
-        }
-
-        @SuppressJava6Requirement(reason = "Usage guarded by java version check")
-        private static void wrapIfNeeded(TrustManager[] trustManagers) {
-            for (int i = 0; i < trustManagers.length; i++) {
-                final TrustManager tm = trustManagers[i];
-                if (tm instanceof X509TrustManager && !(tm instanceof X509ExtendedTrustManager)) {
-                    trustManagers[i] = new X509TrustManagerWrapper((X509TrustManager) tm);
-                }
-            }
         }
     }
 }

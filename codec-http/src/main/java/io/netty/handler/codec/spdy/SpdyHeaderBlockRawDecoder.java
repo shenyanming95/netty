@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.spdy;
 
 import io.netty.buffer.ByteBuf;
@@ -35,18 +20,6 @@ public class SpdyHeaderBlockRawDecoder extends SpdyHeaderBlockDecoder {
     private int numHeaders;
     private int length;
     private String name;
-
-    private enum State {
-        READ_NUM_HEADERS,
-        READ_NAME_LENGTH,
-        READ_NAME,
-        SKIP_NAME,
-        READ_VALUE_LENGTH,
-        READ_VALUE,
-        SKIP_VALUE,
-        END_HEADER_BLOCK,
-        ERROR
-    }
 
     public SpdyHeaderBlockRawDecoder(SpdyVersion spdyVersion, int maxHeaderSize) {
         ObjectUtil.checkNotNull(spdyVersion, "spdyVersion");
@@ -85,7 +58,7 @@ public class SpdyHeaderBlockRawDecoder extends SpdyHeaderBlockDecoder {
     protected void decodeHeaderBlock(ByteBuf headerBlock, SpdyHeadersFrame frame) throws Exception {
         int skipLength;
         while (headerBlock.isReadable()) {
-            switch(state) {
+            switch (state) {
                 case READ_NUM_HEADERS:
                     if (headerBlock.readableBytes() < LENGTH_FIELD_SIZE) {
                         return;
@@ -208,7 +181,7 @@ public class SpdyHeaderBlockRawDecoder extends SpdyHeaderBlockDecoder {
 
                     while (index < length) {
                         while (index < valueBytes.length && valueBytes[index] != (byte) 0) {
-                            index ++;
+                            index++;
                         }
                         if (index < valueBytes.length) {
                             // Received NULL character
@@ -231,7 +204,7 @@ public class SpdyHeaderBlockRawDecoder extends SpdyHeaderBlockDecoder {
                             frame.setInvalid();
                             break;
                         }
-                        index ++;
+                        index++;
                         offset = index;
                     }
 
@@ -302,5 +275,9 @@ public class SpdyHeaderBlockRawDecoder extends SpdyHeaderBlockDecoder {
             cumulation.release();
             cumulation = null;
         }
+    }
+
+    private enum State {
+        READ_NUM_HEADERS, READ_NAME_LENGTH, READ_NAME, SKIP_NAME, READ_VALUE_LENGTH, READ_VALUE, SKIP_VALUE, END_HEADER_BLOCK, ERROR
     }
 }

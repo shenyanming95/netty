@@ -54,8 +54,7 @@ abstract class AbstractPooledDerivedByteBuf extends AbstractReferenceCountedByte
         return rootParent;
     }
 
-    final <U extends AbstractPooledDerivedByteBuf> U init(
-            AbstractByteBuf unwrapped, ByteBuf wrapped, int readerIndex, int writerIndex, int maxCapacity) {
+    final <U extends AbstractPooledDerivedByteBuf> U init(AbstractByteBuf unwrapped, ByteBuf wrapped, int readerIndex, int writerIndex, int maxCapacity) {
         wrapped.retain(); // Retain up front to ensure the parent is accessible before doing more work.
         parent = wrapped;
         rootParent = unwrapped;
@@ -65,8 +64,7 @@ abstract class AbstractPooledDerivedByteBuf extends AbstractReferenceCountedByte
             setIndex0(readerIndex, writerIndex); // It is assumed the bounds checking is done by the caller.
             resetRefCnt();
 
-            @SuppressWarnings("unchecked")
-            final U castThis = (U) this;
+            @SuppressWarnings("unchecked") final U castThis = (U) this;
             wrapped = null;
             return castThis;
         } finally {
@@ -236,8 +234,7 @@ abstract class AbstractPooledDerivedByteBuf extends AbstractReferenceCountedByte
     private static final class PooledNonRetainedSlicedByteBuf extends UnpooledSlicedByteBuf {
         private final ReferenceCounted referenceCountDelegate;
 
-        PooledNonRetainedSlicedByteBuf(ReferenceCounted referenceCountDelegate,
-                                       AbstractByteBuf buffer, int index, int length) {
+        PooledNonRetainedSlicedByteBuf(ReferenceCounted referenceCountDelegate, AbstractByteBuf buffer, int index, int length) {
             super(buffer, index, length);
             this.referenceCountDelegate = referenceCountDelegate;
         }
@@ -284,8 +281,7 @@ abstract class AbstractPooledDerivedByteBuf extends AbstractReferenceCountedByte
         @Override
         public ByteBuf duplicate() {
             ensureAccessible();
-            return new PooledNonRetainedDuplicateByteBuf(referenceCountDelegate, unwrap())
-                    .setIndex(idx(readerIndex()), idx(writerIndex()));
+            return new PooledNonRetainedDuplicateByteBuf(referenceCountDelegate, unwrap()).setIndex(idx(readerIndex()), idx(writerIndex()));
         }
 
         @Override

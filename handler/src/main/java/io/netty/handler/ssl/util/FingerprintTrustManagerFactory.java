@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.handler.ssl.util;
 
 import io.netty.buffer.ByteBufUtil;
@@ -89,7 +73,7 @@ public final class FingerprintTrustManagerFactory extends SimpleTrustManagerFact
             }
         }
     };
-
+    private final byte[][] fingerprints;
     private final TrustManager tm = new X509TrustManager() {
 
         @Override
@@ -106,7 +90,7 @@ public final class FingerprintTrustManagerFactory extends SimpleTrustManagerFact
             X509Certificate cert = chain[0];
             byte[] fingerprint = fingerprint(cert);
             boolean found = false;
-            for (byte[] allowedFingerprint: fingerprints) {
+            for (byte[] allowedFingerprint : fingerprints) {
                 if (Arrays.equals(fingerprint, allowedFingerprint)) {
                     found = true;
                     break;
@@ -114,8 +98,7 @@ public final class FingerprintTrustManagerFactory extends SimpleTrustManagerFact
             }
 
             if (!found) {
-                throw new CertificateException(
-                        type + " certificate with unknown fingerprint: " + cert.getSubjectDN());
+                throw new CertificateException(type + " certificate with unknown fingerprint: " + cert.getSubjectDN());
             }
         }
 
@@ -130,8 +113,6 @@ public final class FingerprintTrustManagerFactory extends SimpleTrustManagerFact
             return EmptyArrays.EMPTY_X509_CERTIFICATES;
         }
     };
-
-    private final byte[][] fingerprints;
 
     /**
      * Creates a new instance.
@@ -160,13 +141,12 @@ public final class FingerprintTrustManagerFactory extends SimpleTrustManagerFact
         ObjectUtil.checkNotNull(fingerprints, "fingerprints");
 
         List<byte[]> list = new ArrayList<byte[]>(fingerprints.length);
-        for (byte[] f: fingerprints) {
+        for (byte[] f : fingerprints) {
             if (f == null) {
                 break;
             }
             if (f.length != SHA1_BYTE_LEN) {
-                throw new IllegalArgumentException("malformed fingerprint: " +
-                        ByteBufUtil.hexDump(Unpooled.wrappedBuffer(f)) + " (expected: SHA1)");
+                throw new IllegalArgumentException("malformed fingerprint: " + ByteBufUtil.hexDump(Unpooled.wrappedBuffer(f)) + " (expected: SHA1)");
             }
             list.add(f.clone());
         }
@@ -178,7 +158,7 @@ public final class FingerprintTrustManagerFactory extends SimpleTrustManagerFact
         ObjectUtil.checkNotNull(fingerprints, "fingerprints");
 
         List<byte[]> list = new ArrayList<byte[]>();
-        for (String f: fingerprints) {
+        for (String f : fingerprints) {
             if (f == null) {
                 break;
             }
@@ -198,13 +178,15 @@ public final class FingerprintTrustManagerFactory extends SimpleTrustManagerFact
     }
 
     @Override
-    protected void engineInit(KeyStore keyStore) throws Exception { }
+    protected void engineInit(KeyStore keyStore) throws Exception {
+    }
 
     @Override
-    protected void engineInit(ManagerFactoryParameters managerFactoryParameters) throws Exception { }
+    protected void engineInit(ManagerFactoryParameters managerFactoryParameters) throws Exception {
+    }
 
     @Override
     protected TrustManager[] engineGetTrustManagers() {
-        return new TrustManager[] { tm };
+        return new TrustManager[]{tm};
     }
 }

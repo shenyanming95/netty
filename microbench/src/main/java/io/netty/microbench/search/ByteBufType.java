@@ -1,18 +1,3 @@
-/*
- * Copyright 2020 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbench.search;
 
 import io.netty.buffer.ByteBuf;
@@ -25,8 +10,7 @@ public enum ByteBufType {
         ByteBuf newBuffer(byte[] bytes) {
             return Unpooled.wrappedBuffer(bytes, 0, bytes.length);
         }
-    },
-    COMPOSITE {
+    }, COMPOSITE {
         @Override
         ByteBuf newBuffer(byte[] bytes) {
             CompositeByteBuf buf = Unpooled.compositeBuffer();
@@ -41,12 +25,12 @@ public enum ByteBufType {
             }
             return buf;
         }
-    },
-    DIRECT {
+    }, DIRECT {
         @Override
         ByteBuf newBuffer(byte[] bytes) {
             return Unpooled.directBuffer(bytes.length).writeBytes(bytes);
         }
     };
+
     abstract ByteBuf newBuffer(byte[] bytes);
 }

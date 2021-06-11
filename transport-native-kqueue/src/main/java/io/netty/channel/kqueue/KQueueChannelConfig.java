@@ -66,17 +66,17 @@ public class KQueueChannelConfig extends DefaultChannelConfig {
      * If this is {@code true} then the {@link RecvByteBufAllocator.Handle#guess()} will be overridden to always attempt
      * to read as many bytes as kqueue says are available.
      */
-    public KQueueChannelConfig setRcvAllocTransportProvidesGuess(boolean transportProvidesGuess) {
-        this.transportProvidesGuess = transportProvidesGuess;
-        return this;
+    public boolean getRcvAllocTransportProvidesGuess() {
+        return transportProvidesGuess;
     }
 
     /**
      * If this is {@code true} then the {@link RecvByteBufAllocator.Handle#guess()} will be overridden to always attempt
      * to read as many bytes as kqueue says are available.
      */
-    public boolean getRcvAllocTransportProvidesGuess() {
-        return transportProvidesGuess;
+    public KQueueChannelConfig setRcvAllocTransportProvidesGuess(boolean transportProvidesGuess) {
+        this.transportProvidesGuess = transportProvidesGuess;
+        return this;
     }
 
     @Override
@@ -107,8 +107,7 @@ public class KQueueChannelConfig extends DefaultChannelConfig {
     @Override
     public KQueueChannelConfig setRecvByteBufAllocator(RecvByteBufAllocator allocator) {
         if (!(allocator.newHandle() instanceof RecvByteBufAllocator.ExtendedHandle)) {
-            throw new IllegalArgumentException("allocator.newHandle() must return an object of type: " +
-                    RecvByteBufAllocator.ExtendedHandle.class);
+            throw new IllegalArgumentException("allocator.newHandle() must return an object of type: " + RecvByteBufAllocator.ExtendedHandle.class);
         }
         super.setRecvByteBufAllocator(allocator);
         return this;
@@ -151,11 +150,11 @@ public class KQueueChannelConfig extends DefaultChannelConfig {
         ((AbstractKQueueChannel) channel).clearReadFilter();
     }
 
-    final void setMaxBytesPerGatheringWrite(long maxBytesPerGatheringWrite) {
-        this.maxBytesPerGatheringWrite = min(SSIZE_MAX, maxBytesPerGatheringWrite);
-    }
-
     final long getMaxBytesPerGatheringWrite() {
         return maxBytesPerGatheringWrite;
+    }
+
+    final void setMaxBytesPerGatheringWrite(long maxBytesPerGatheringWrite) {
+        this.maxBytesPerGatheringWrite = min(SSIZE_MAX, maxBytesPerGatheringWrite);
     }
 }

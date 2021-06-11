@@ -43,8 +43,7 @@ import static io.netty.handler.codec.http2.Http2FrameTypes.SETTINGS;
 public class Http2ServerUpgradeCodec implements HttpServerUpgradeHandler.UpgradeCodec {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(Http2ServerUpgradeCodec.class);
-    private static final List<CharSequence> REQUIRED_UPGRADE_HEADERS =
-            Collections.singletonList(HTTP_UPGRADE_SETTINGS_HEADER);
+    private static final List<CharSequence> REQUIRED_UPGRADE_HEADERS = Collections.singletonList(HTTP_UPGRADE_SETTINGS_HEADER);
     private static final ChannelHandler[] EMPTY_HANDLERS = new ChannelHandler[0];
 
     private final String handlerName;
@@ -77,8 +76,8 @@ public class Http2ServerUpgradeCodec implements HttpServerUpgradeHandler.Upgrade
     /**
      * Creates the codec providing an upgrade to the given handler for HTTP/2.
      *
-     * @param handlerName the name of the HTTP/2 connection handler to be used in the pipeline,
-     *                    or {@code null} to auto-generate the name
+     * @param handlerName       the name of the HTTP/2 connection handler to be used in the pipeline,
+     *                          or {@code null} to auto-generate the name
      * @param connectionHandler the HTTP/2 connection handler
      */
     public Http2ServerUpgradeCodec(String handlerName, Http2ConnectionHandler connectionHandler) {
@@ -89,7 +88,7 @@ public class Http2ServerUpgradeCodec implements HttpServerUpgradeHandler.Upgrade
      * Creates the codec providing an upgrade to the given handler for HTTP/2.
      *
      * @param handlerName the name of the HTTP/2 connection handler to be used in the pipeline.
-     * @param http2Codec the HTTP/2 multiplexing handler.
+     * @param http2Codec  the HTTP/2 multiplexing handler.
      */
     public Http2ServerUpgradeCodec(String handlerName, Http2MultiplexCodec http2Codec) {
         this(handlerName, http2Codec, EMPTY_HANDLERS);
@@ -100,18 +99,28 @@ public class Http2ServerUpgradeCodec implements HttpServerUpgradeHandler.Upgrade
      * pipeline.
      *
      * @param http2Codec the HTTP/2 frame handler.
-     * @param handlers the handlers that will handle the {@link Http2Frame}s.
+     * @param handlers   the handlers that will handle the {@link Http2Frame}s.
      */
     public Http2ServerUpgradeCodec(Http2FrameCodec http2Codec, ChannelHandler... handlers) {
         this(null, http2Codec, handlers);
     }
 
-    private Http2ServerUpgradeCodec(String handlerName, Http2ConnectionHandler connectionHandler,
-            ChannelHandler... handlers) {
+    private Http2ServerUpgradeCodec(String handlerName, Http2ConnectionHandler connectionHandler, ChannelHandler... handlers) {
         this.handlerName = handlerName;
         this.connectionHandler = connectionHandler;
         this.handlers = handlers;
         frameReader = new DefaultHttp2FrameReader();
+    }
+
+    /**
+     * Creates an HTTP2-Settings header with the given payload. The payload buffer is released.
+     */
+    private static ByteBuf createSettingsFrame(ChannelHandlerContext ctx, ByteBuf payload) {
+        ByteBuf frame = ctx.alloc().buffer(FRAME_HEADER_LENGTH + payload.readableBytes());
+        writeFrameHeader(frame, payload.readableBytes(), SETTINGS, new Http2Flags(), 0);
+        frame.writeBytes(payload);
+        payload.release();
+        return frame;
     }
 
     @Override
@@ -120,15 +129,13 @@ public class Http2ServerUpgradeCodec implements HttpServerUpgradeHandler.Upgrade
     }
 
     @Override
-    public boolean prepareUpgradeResponse(ChannelHandlerContext ctx, FullHttpRequest upgradeRequest,
-            HttpHeaders headers) {
+    public boolean prepareUpgradeResponse(ChannelHandlerContext ctx, FullHttpRequest upgradeRequest, HttpHeaders headers) {
         try {
             // Decode the HTTP2-Settings header and set the settings on the handler to make
             // sure everything is fine with the request.
             List<String> upgradeHeaders = upgradeRequest.headers().getAll(HTTP_UPGRADE_SETTINGS_HEADER);
             if (upgradeHeaders.isEmpty() || upgradeHeaders.size() > 1) {
-                throw new IllegalArgumentException("There must be 1 and only 1 "
-                        + HTTP_UPGRADE_SETTINGS_HEADER + " header.");
+                throw new IllegalArgumentException("There must be 1 and only 1 " + HTTP_UPGRADE_SETTINGS_HEADER + " header.");
             }
             settings = decodeSettingsHeader(ctx, upgradeHeaders.get(0));
             // Everything looks good.
@@ -163,8 +170,7 @@ public class Http2ServerUpgradeCodec implements HttpServerUpgradeHandler.Upgrade
     /**
      * Decodes the settings header and returns a {@link Http2Settings} object.
      */
-    private Http2Settings decodeSettingsHeader(ChannelHandlerContext ctx, CharSequence settingsHeader)
-            throws Http2Exception {
+    private Http2Settings decodeSettingsHeader(ChannelHandlerContext ctx, CharSequence settingsHeader) throws Http2Exception {
         ByteBuf header = ByteBufUtil.encodeString(ctx.alloc(), CharBuffer.wrap(settingsHeader), CharsetUtil.UTF_8);
         try {
             // Decode the SETTINGS payload.
@@ -196,16 +202,5 @@ public class Http2ServerUpgradeCodec implements HttpServerUpgradeHandler.Upgrade
         } finally {
             frame.release();
         }
-    }
-
-    /**
-     * Creates an HTTP2-Settings header with the given payload. The payload buffer is released.
-     */
-    private static ByteBuf createSettingsFrame(ChannelHandlerContext ctx, ByteBuf payload) {
-        ByteBuf frame = ctx.alloc().buffer(FRAME_HEADER_LENGTH + payload.readableBytes());
-        writeFrameHeader(frame, payload.readableBytes(), SETTINGS, new Http2Flags(), 0);
-        frame.writeBytes(payload);
-        payload.release();
-        return frame;
     }
 }

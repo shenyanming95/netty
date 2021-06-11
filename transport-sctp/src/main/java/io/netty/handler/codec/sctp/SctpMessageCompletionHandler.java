@@ -56,11 +56,7 @@ public class SctpMessageCompletionHandler extends MessageToMessageDecoder<SctpMe
             fragments.put(streamIdentifier, Unpooled.wrappedBuffer(frag, byteBuf));
         } else if (isComplete && frag.isReadable()) {
             //last message to complete
-            SctpMessage assembledMsg = new SctpMessage(
-                    protocolIdentifier,
-                    streamIdentifier,
-                    isUnordered,
-                    Unpooled.wrappedBuffer(frag, byteBuf));
+            SctpMessage assembledMsg = new SctpMessage(protocolIdentifier, streamIdentifier, isUnordered, Unpooled.wrappedBuffer(frag, byteBuf));
             out.add(assembledMsg);
         } else {
             //first incomplete message
@@ -71,7 +67,7 @@ public class SctpMessageCompletionHandler extends MessageToMessageDecoder<SctpMe
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        for (ByteBuf buffer: fragments.values()) {
+        for (ByteBuf buffer : fragments.values()) {
             buffer.release();
         }
         fragments.clear();

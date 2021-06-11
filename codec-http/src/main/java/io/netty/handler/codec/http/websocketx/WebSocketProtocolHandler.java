@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.websocketx;
 
 
@@ -26,8 +11,7 @@ import java.nio.channels.ClosedChannelException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-abstract class WebSocketProtocolHandler extends MessageToMessageDecoder<WebSocketFrame>
-        implements ChannelOutboundHandler {
+abstract class WebSocketProtocolHandler extends MessageToMessageDecoder<WebSocketFrame> implements ChannelOutboundHandler {
 
     private final boolean dropPongFrames;
     private final WebSocketCloseStatus closeStatus;
@@ -45,19 +29,22 @@ abstract class WebSocketProtocolHandler extends MessageToMessageDecoder<WebSocke
      * Creates a new {@link WebSocketProtocolHandler}, given a parameter that determines whether or not to drop {@link
      * PongWebSocketFrame}s.
      *
-     * @param dropPongFrames
-     *            {@code true} if {@link PongWebSocketFrame}s should be dropped
+     * @param dropPongFrames {@code true} if {@link PongWebSocketFrame}s should be dropped
      */
     WebSocketProtocolHandler(boolean dropPongFrames) {
         this(dropPongFrames, null, 0L);
     }
 
-    WebSocketProtocolHandler(boolean dropPongFrames,
-                             WebSocketCloseStatus closeStatus,
-                             long forceCloseTimeoutMillis) {
+    WebSocketProtocolHandler(boolean dropPongFrames, WebSocketCloseStatus closeStatus, long forceCloseTimeoutMillis) {
         this.dropPongFrames = dropPongFrames;
         this.closeStatus = closeStatus;
         this.forceCloseTimeoutMillis = forceCloseTimeoutMillis;
+    }
+
+    private static void readIfNeeded(ChannelHandlerContext ctx) {
+        if (!ctx.channel().config().isAutoRead()) {
+            ctx.read();
+        }
     }
 
     @Override
@@ -74,12 +61,6 @@ abstract class WebSocketProtocolHandler extends MessageToMessageDecoder<WebSocke
         }
 
         out.add(frame.retain());
-    }
-
-    private static void readIfNeeded(ChannelHandlerContext ctx) {
-        if (!ctx.channel().config().isAutoRead()) {
-            ctx.read();
-        }
     }
 
     @Override
@@ -137,20 +118,17 @@ abstract class WebSocketProtocolHandler extends MessageToMessageDecoder<WebSocke
     }
 
     @Override
-    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress,
-                     ChannelPromise promise) throws Exception {
+    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         ctx.bind(localAddress, promise);
     }
 
     @Override
-    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress,
-                        SocketAddress localAddress, ChannelPromise promise) throws Exception {
+    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         ctx.connect(remoteAddress, localAddress, promise);
     }
 
     @Override
-    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise)
-            throws Exception {
+    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
         ctx.disconnect(promise);
     }
 

@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 final class ChannelHandlerMask {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ChannelHandlerMask.class);
-
     // Using to mask which methods must be called for a ChannelHandler.
     static final int MASK_EXCEPTION_CAUGHT = 1;
     static final int MASK_CHANNEL_REGISTERED = 1 << 1;
@@ -49,22 +47,21 @@ final class ChannelHandlerMask {
     static final int MASK_READ = 1 << 14;
     static final int MASK_WRITE = 1 << 15;
     static final int MASK_FLUSH = 1 << 16;
-
-    static final int MASK_ONLY_INBOUND =  MASK_CHANNEL_REGISTERED |
-            MASK_CHANNEL_UNREGISTERED | MASK_CHANNEL_ACTIVE | MASK_CHANNEL_INACTIVE | MASK_CHANNEL_READ |
-            MASK_CHANNEL_READ_COMPLETE | MASK_USER_EVENT_TRIGGERED | MASK_CHANNEL_WRITABILITY_CHANGED;
+    static final int MASK_ONLY_INBOUND = MASK_CHANNEL_REGISTERED | MASK_CHANNEL_UNREGISTERED | MASK_CHANNEL_ACTIVE | MASK_CHANNEL_INACTIVE | MASK_CHANNEL_READ | MASK_CHANNEL_READ_COMPLETE | MASK_USER_EVENT_TRIGGERED | MASK_CHANNEL_WRITABILITY_CHANGED;
+    static final int MASK_ONLY_OUTBOUND = MASK_BIND | MASK_CONNECT | MASK_DISCONNECT | MASK_CLOSE | MASK_DEREGISTER | MASK_READ | MASK_WRITE | MASK_FLUSH;
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ChannelHandlerMask.class);
     private static final int MASK_ALL_INBOUND = MASK_EXCEPTION_CAUGHT | MASK_ONLY_INBOUND;
-    static final int MASK_ONLY_OUTBOUND =  MASK_BIND | MASK_CONNECT | MASK_DISCONNECT |
-            MASK_CLOSE | MASK_DEREGISTER | MASK_READ | MASK_WRITE | MASK_FLUSH;
     private static final int MASK_ALL_OUTBOUND = MASK_EXCEPTION_CAUGHT | MASK_ONLY_OUTBOUND;
 
-    private static final FastThreadLocal<Map<Class<? extends ChannelHandler>, Integer>> MASKS =
-            new FastThreadLocal<Map<Class<? extends ChannelHandler>, Integer>>() {
-                @Override
-                protected Map<Class<? extends ChannelHandler>, Integer> initialValue() {
-                    return new WeakHashMap<Class<? extends ChannelHandler>, Integer>(32);
-                }
-            };
+    private static final FastThreadLocal<Map<Class<? extends ChannelHandler>, Integer>> MASKS = new FastThreadLocal<Map<Class<? extends ChannelHandler>, Integer>>() {
+        @Override
+        protected Map<Class<? extends ChannelHandler>, Integer> initialValue() {
+            return new WeakHashMap<Class<? extends ChannelHandler>, Integer>(32);
+        }
+    };
+
+    private ChannelHandlerMask() {
+    }
 
     /**
      * Return the {@code executionMask}.
@@ -119,12 +116,10 @@ final class ChannelHandlerMask {
             if (ChannelOutboundHandler.class.isAssignableFrom(handlerType)) {
                 mask |= MASK_ALL_OUTBOUND;
 
-                if (isSkippable(handlerType, "bind", ChannelHandlerContext.class,
-                        SocketAddress.class, ChannelPromise.class)) {
+                if (isSkippable(handlerType, "bind", ChannelHandlerContext.class, SocketAddress.class, ChannelPromise.class)) {
                     mask &= ~MASK_BIND;
                 }
-                if (isSkippable(handlerType, "connect", ChannelHandlerContext.class, SocketAddress.class,
-                        SocketAddress.class, ChannelPromise.class)) {
+                if (isSkippable(handlerType, "connect", ChannelHandlerContext.class, SocketAddress.class, SocketAddress.class, ChannelPromise.class)) {
                     mask &= ~MASK_CONNECT;
                 }
                 if (isSkippable(handlerType, "disconnect", ChannelHandlerContext.class, ChannelPromise.class)) {
@@ -139,8 +134,7 @@ final class ChannelHandlerMask {
                 if (isSkippable(handlerType, "read", ChannelHandlerContext.class)) {
                     mask &= ~MASK_READ;
                 }
-                if (isSkippable(handlerType, "write", ChannelHandlerContext.class,
-                        Object.class, ChannelPromise.class)) {
+                if (isSkippable(handlerType, "write", ChannelHandlerContext.class, Object.class, ChannelPromise.class)) {
                     mask &= ~MASK_WRITE;
                 }
                 if (isSkippable(handlerType, "flush", ChannelHandlerContext.class)) {
@@ -160,8 +154,7 @@ final class ChannelHandlerMask {
     }
 
     @SuppressWarnings("rawtypes")
-    private static boolean isSkippable(
-            final Class<?> handlerType, final String methodName, final Class<?>... paramTypes) throws Exception {
+    private static boolean isSkippable(final Class<?> handlerType, final String methodName, final Class<?>... paramTypes) throws Exception {
         return AccessController.doPrivileged(new PrivilegedExceptionAction<Boolean>() {
             @Override
             public Boolean run() throws Exception {
@@ -170,8 +163,7 @@ final class ChannelHandlerMask {
                     m = handlerType.getMethod(methodName, paramTypes);
                 } catch (NoSuchMethodException e) {
                     if (logger.isDebugEnabled()) {
-                        logger.debug(
-                            "Class {} missing method {}, assume we can not skip execution", handlerType, methodName, e);
+                        logger.debug("Class {} missing method {}, assume we can not skip execution", handlerType, methodName, e);
                     }
                     return false;
                 }
@@ -179,8 +171,6 @@ final class ChannelHandlerMask {
             }
         });
     }
-
-    private ChannelHandlerMask() { }
 
     /**
      * Indicates that the annotated event handler method in {@link ChannelHandler} will not be invoked by

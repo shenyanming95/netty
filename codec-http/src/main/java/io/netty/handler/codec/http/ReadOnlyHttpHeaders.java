@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.util.AsciiString;
@@ -41,10 +26,11 @@ public final class ReadOnlyHttpHeaders extends HttpHeaders {
 
     /**
      * Create a new instance.
+     *
      * @param validateHeaders {@code true} to validate the contents of each header name.
-     * @param nameValuePairs An array of the structure {@code [<name,value>,<name,value>,...]}.
-     *                      A copy will <strong>NOT</strong> be made of this array. If the contents of this array
-     *                      may be modified externally you are responsible for passing in a copy.
+     * @param nameValuePairs  An array of the structure {@code [<name,value>,<name,value>,...]}.
+     *                        A copy will <strong>NOT</strong> be made of this array. If the contents of this array
+     *                        may be modified externally you are responsible for passing in a copy.
      */
     public ReadOnlyHttpHeaders(boolean validateHeaders, CharSequence... nameValuePairs) {
         if ((nameValuePairs.length & 1) != 0) {
@@ -142,8 +128,7 @@ public final class ReadOnlyHttpHeaders extends HttpHeaders {
         }
         List<Map.Entry<String, String>> entries = new ArrayList<Map.Entry<String, String>>(size());
         for (int i = 0; i < nameValuePairs.length; i += 2) {
-            entries.add(new SimpleImmutableEntry<String, String>(nameValuePairs[i].toString(),
-                    nameValuePairs[i + 1].toString()));
+            entries.add(new SimpleImmutableEntry<String, String>(nameValuePairs[i].toString(), nameValuePairs[i + 1].toString()));
         }
         return entries;
     }
@@ -162,15 +147,13 @@ public final class ReadOnlyHttpHeaders extends HttpHeaders {
     public boolean containsValue(CharSequence name, CharSequence value, boolean ignoreCase) {
         if (ignoreCase) {
             for (int i = 0; i < nameValuePairs.length; i += 2) {
-                if (contentEqualsIgnoreCase(nameValuePairs[i], name) &&
-                        contentEqualsIgnoreCase(nameValuePairs[i + 1], value)) {
+                if (contentEqualsIgnoreCase(nameValuePairs[i], name) && contentEqualsIgnoreCase(nameValuePairs[i + 1], value)) {
                     return true;
                 }
             }
         } else {
             for (int i = 0; i < nameValuePairs.length; i += 2) {
-                if (contentEqualsIgnoreCase(nameValuePairs[i], name) &&
-                        contentEquals(nameValuePairs[i + 1], value)) {
+                if (contentEqualsIgnoreCase(nameValuePairs[i], name) && contentEquals(nameValuePairs[i + 1], value)) {
                     return true;
                 }
             }
@@ -270,8 +253,7 @@ public final class ReadOnlyHttpHeaders extends HttpHeaders {
         throw new UnsupportedOperationException("read only");
     }
 
-    private final class ReadOnlyIterator implements Map.Entry<CharSequence, CharSequence>,
-            Iterator<Map.Entry<CharSequence, CharSequence>> {
+    private final class ReadOnlyIterator implements Map.Entry<CharSequence, CharSequence>, Iterator<Map.Entry<CharSequence, CharSequence>> {
         private CharSequence key;
         private CharSequence value;
         private int nextNameIndex;
@@ -318,8 +300,7 @@ public final class ReadOnlyHttpHeaders extends HttpHeaders {
         }
     }
 
-    private final class ReadOnlyStringIterator implements Map.Entry<String, String>,
-            Iterator<Map.Entry<String, String>> {
+    private final class ReadOnlyStringIterator implements Map.Entry<String, String>, Iterator<Map.Entry<String, String>> {
         private String key;
         private String value;
         private int nextNameIndex;

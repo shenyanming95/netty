@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.buffer.ByteBuf;
@@ -41,18 +26,7 @@ import static java.lang.Math.min;
  * A {@link JdkSslEngine} that uses the Conscrypt provider or SSL with ALPN.
  */
 abstract class ConscryptAlpnSslEngine extends JdkSslEngine {
-    private static final boolean USE_BUFFER_ALLOCATOR = SystemPropertyUtil.getBoolean(
-            "io.netty.handler.ssl.conscrypt.useBufferAllocator", true);
-
-    static ConscryptAlpnSslEngine newClientEngine(SSLEngine engine, ByteBufAllocator alloc,
-            JdkApplicationProtocolNegotiator applicationNegotiator) {
-        return new ClientEngine(engine, alloc, applicationNegotiator);
-    }
-
-    static ConscryptAlpnSslEngine newServerEngine(SSLEngine engine, ByteBufAllocator alloc,
-            JdkApplicationProtocolNegotiator applicationNegotiator) {
-        return new ServerEngine(engine, alloc, applicationNegotiator);
-    }
+    private static final boolean USE_BUFFER_ALLOCATOR = SystemPropertyUtil.getBoolean("io.netty.handler.ssl.conscrypt.useBufferAllocator", true);
 
     private ConscryptAlpnSslEngine(SSLEngine engine, ByteBufAllocator alloc, List<String> protocols) {
         super(engine);
@@ -74,12 +48,20 @@ abstract class ConscryptAlpnSslEngine extends JdkSslEngine {
         Conscrypt.setApplicationProtocols(engine, protocols.toArray(new String[0]));
     }
 
+    static ConscryptAlpnSslEngine newClientEngine(SSLEngine engine, ByteBufAllocator alloc, JdkApplicationProtocolNegotiator applicationNegotiator) {
+        return new ClientEngine(engine, alloc, applicationNegotiator);
+    }
+
+    static ConscryptAlpnSslEngine newServerEngine(SSLEngine engine, ByteBufAllocator alloc, JdkApplicationProtocolNegotiator applicationNegotiator) {
+        return new ServerEngine(engine, alloc, applicationNegotiator);
+    }
+
     /**
      * Calculates the maximum size of the encrypted output buffer required to wrap the given plaintext bytes. Assumes
      * as a worst case that there is one TLS record per buffer.
      *
      * @param plaintextBytes the number of plaintext bytes to be wrapped.
-     * @param numBuffers the number of buffers that the plaintext bytes are spread across.
+     * @param numBuffers     the number of buffers that the plaintext bytes are spread across.
      * @return the maximum size of the encrypted output buffer required for the wrap operation.
      */
     final int calculateOutNetBufSize(int plaintextBytes, int numBuffers) {
@@ -96,8 +78,7 @@ abstract class ConscryptAlpnSslEngine extends JdkSslEngine {
     private static final class ClientEngine extends ConscryptAlpnSslEngine {
         private final ProtocolSelectionListener protocolListener;
 
-        ClientEngine(SSLEngine engine, ByteBufAllocator alloc,
-                JdkApplicationProtocolNegotiator applicationNegotiator) {
+        ClientEngine(SSLEngine engine, ByteBufAllocator alloc, JdkApplicationProtocolNegotiator applicationNegotiator) {
             super(engine, alloc, applicationNegotiator.protocols());
             // Register for completion of the handshake.
             Conscrypt.setHandshakeListener(engine, new HandshakeListener() {
@@ -107,9 +88,7 @@ abstract class ConscryptAlpnSslEngine extends JdkSslEngine {
                 }
             });
 
-            protocolListener = checkNotNull(applicationNegotiator
-                            .protocolListenerFactory().newListener(this, applicationNegotiator.protocols()),
-                    "protocolListener");
+            protocolListener = checkNotNull(applicationNegotiator.protocolListenerFactory().newListener(this, applicationNegotiator.protocols()), "protocolListener");
         }
 
         private void selectProtocol() throws SSLException {
@@ -125,8 +104,7 @@ abstract class ConscryptAlpnSslEngine extends JdkSslEngine {
     private static final class ServerEngine extends ConscryptAlpnSslEngine {
         private final ProtocolSelector protocolSelector;
 
-        ServerEngine(SSLEngine engine, ByteBufAllocator alloc,
-                     JdkApplicationProtocolNegotiator applicationNegotiator) {
+        ServerEngine(SSLEngine engine, ByteBufAllocator alloc, JdkApplicationProtocolNegotiator applicationNegotiator) {
             super(engine, alloc, applicationNegotiator.protocols());
 
             // Register for completion of the handshake.
@@ -137,17 +115,13 @@ abstract class ConscryptAlpnSslEngine extends JdkSslEngine {
                 }
             });
 
-            protocolSelector = checkNotNull(applicationNegotiator.protocolSelectorFactory()
-                            .newSelector(this,
-                                    new LinkedHashSet<String>(applicationNegotiator.protocols())),
-                    "protocolSelector");
+            protocolSelector = checkNotNull(applicationNegotiator.protocolSelectorFactory().newSelector(this, new LinkedHashSet<String>(applicationNegotiator.protocols())), "protocolSelector");
         }
 
         private void selectProtocol() throws SSLException {
             try {
                 String protocol = Conscrypt.getApplicationProtocol(getWrappedEngine());
-                protocolSelector.select(protocol != null ? Collections.singletonList(protocol)
-                        : Collections.<String>emptyList());
+                protocolSelector.select(protocol != null ? Collections.singletonList(protocol) : Collections.<String>emptyList());
             } catch (Throwable e) {
                 throw toSSLHandshakeException(e);
             }

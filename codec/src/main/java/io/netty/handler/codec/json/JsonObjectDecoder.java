@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.handler.codec.json;
 
 import io.netty.buffer.ByteBuf;
@@ -45,17 +29,13 @@ public class JsonObjectDecoder extends ByteToMessageDecoder {
     private static final int ST_INIT = 0;
     private static final int ST_DECODING_NORMAL = 1;
     private static final int ST_DECODING_ARRAY_STREAM = 2;
-
-    private int openBraces;
-    private int idx;
-
-    private int lastReaderIndex;
-
-    private int state;
-    private boolean insideString;
-
     private final int maxObjectLength;
     private final boolean streamArrayElements;
+    private int openBraces;
+    private int idx;
+    private int lastReaderIndex;
+    private int state;
+    private boolean insideString;
 
     public JsonObjectDecoder() {
         // 1 MB
@@ -71,13 +51,12 @@ public class JsonObjectDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * @param maxObjectLength   maximum number of bytes a JSON object/array may use (including braces and all).
-     *                             Objects exceeding this length are dropped and an {@link TooLongFrameException}
-     *                             is thrown.
-     * @param streamArrayElements   if set to true and the "top level" JSON object is an array, each of its entries
-     *                                  is passed through the pipeline individually and immediately after it was fully
-     *                                  received, allowing for arrays with "infinitely" many elements.
-     *
+     * @param maxObjectLength     maximum number of bytes a JSON object/array may use (including braces and all).
+     *                            Objects exceeding this length are dropped and an {@link TooLongFrameException}
+     *                            is thrown.
+     * @param streamArrayElements if set to true and the "top level" JSON object is an array, each of its entries
+     *                            is passed through the pipeline individually and immediately after it was fully
+     *                            received, allowing for arrays with "infinitely" many elements.
      */
     public JsonObjectDecoder(int maxObjectLength, boolean streamArrayElements) {
         if (maxObjectLength < 1) {
@@ -106,8 +85,7 @@ public class JsonObjectDecoder extends ByteToMessageDecoder {
             // buffer size exceeded maxObjectLength; discarding the complete buffer.
             in.skipBytes(in.readableBytes());
             reset();
-            throw new TooLongFrameException(
-                            "object length exceeds " + maxObjectLength + ": " + wrtIdx + " bytes discarded");
+            throw new TooLongFrameException("object length exceeds " + maxObjectLength + ": " + wrtIdx + " bytes discarded");
         }
 
         for (/* use current idx */; idx < wrtIdx; idx++) {
@@ -157,7 +135,7 @@ public class JsonObjectDecoder extends ByteToMessageDecoder {
                         reset();
                     }
                 }
-            // JSON object/array detected. Accumulate bytes until all braces/brackets are closed.
+                // JSON object/array detected. Accumulate bytes until all braces/brackets are closed.
             } else if (c == '{' || c == '[') {
                 initDecoding(c);
 
@@ -165,13 +143,12 @@ public class JsonObjectDecoder extends ByteToMessageDecoder {
                     // Discard the array bracket
                     in.skipBytes(1);
                 }
-            // Discard leading spaces in front of a JSON object/array.
+                // Discard leading spaces in front of a JSON object/array.
             } else if (Character.isWhitespace(c)) {
                 in.skipBytes(1);
             } else {
                 state = ST_CORRUPTED;
-                throw new CorruptedFrameException(
-                        "invalid JSON received at byte position " + idx + ": " + ByteBufUtil.hexDump(in));
+                throw new CorruptedFrameException("invalid JSON received at byte position " + idx + ": " + ByteBufUtil.hexDump(in));
             }
         }
 

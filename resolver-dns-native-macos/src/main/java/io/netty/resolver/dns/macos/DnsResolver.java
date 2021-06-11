@@ -32,8 +32,7 @@ final class DnsResolver {
     private final int timeout;
     private final int searchOrder;
 
-    DnsResolver(String domain, byte[][] nameservers, int port,
-                String[] searches, String options, int timeout, int searchOrder) {
+    DnsResolver(String domain, byte[][] nameservers, int port, String[] searches, String options, int timeout, int searchOrder) {
         this.domain = domain;
         if (nameservers == null) {
             this.nameservers = new InetSocketAddress[0];

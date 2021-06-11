@@ -21,9 +21,6 @@ import com.oracle.svm.core.annotate.TargetClass;
 
 @TargetClass(className = "io.netty.util.internal.PlatformDependent")
 final class PlatformDependentSubstitution {
-    private PlatformDependentSubstitution() {
-    }
-
     /**
      * The class PlatformDependent caches the byte array base offset by reading the
      * field from PlatformDependent0. The automatic recomputation of Substrate VM
@@ -32,8 +29,9 @@ final class PlatformDependentSubstitution {
      * is cached.
      */
     @Alias
-    @RecomputeFieldValue(
-        kind = RecomputeFieldValue.Kind.ArrayBaseOffset,
-        declClass = byte[].class)
+    @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.ArrayBaseOffset, declClass = byte[].class)
     private static long BYTE_ARRAY_BASE_OFFSET;
+
+    private PlatformDependentSubstitution() {
+    }
 }

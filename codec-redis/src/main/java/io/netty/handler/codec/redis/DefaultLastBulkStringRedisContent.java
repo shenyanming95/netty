@@ -22,11 +22,11 @@ import io.netty.util.internal.UnstableApi;
  * A default implementation for {@link LastBulkStringRedisContent}.
  */
 @UnstableApi
-public final class DefaultLastBulkStringRedisContent extends DefaultBulkStringRedisContent
-        implements LastBulkStringRedisContent {
+public final class DefaultLastBulkStringRedisContent extends DefaultBulkStringRedisContent implements LastBulkStringRedisContent {
 
     /**
      * Creates a {@link DefaultLastBulkStringRedisContent} for the given {@code content}.
+     *
      * @param content the content, can be {@code null}.
      */
     public DefaultLastBulkStringRedisContent(ByteBuf content) {

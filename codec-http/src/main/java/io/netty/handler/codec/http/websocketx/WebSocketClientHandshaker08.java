@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.websocketx;
 
 import io.netty.buffer.Unpooled;
@@ -32,138 +17,90 @@ import java.net.URI;
  */
 public class WebSocketClientHandshaker08 extends WebSocketClientHandshaker {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(WebSocketClientHandshaker08.class);
-
     public static final String MAGIC_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-
-    private String expectedChallengeResponseString;
-
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(WebSocketClientHandshaker08.class);
     private final boolean allowExtensions;
     private final boolean performMasking;
     private final boolean allowMaskMismatch;
+    private String expectedChallengeResponseString;
 
     /**
      * Creates a new instance.
      *
-     * @param webSocketURL
-     *            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
-     *            sent to this URL.
-     * @param version
-     *            Version of web socket specification to use to connect to the server
-     * @param subprotocol
-     *            Sub protocol request sent to the server.
-     * @param allowExtensions
-     *            Allow extensions to be used in the reserved bits of the web socket frame
-     * @param customHeaders
-     *            Map of custom headers to add to the client request
-     * @param maxFramePayloadLength
-     *            Maximum length of a frame's payload
+     * @param webSocketURL          URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
+     *                              sent to this URL.
+     * @param version               Version of web socket specification to use to connect to the server
+     * @param subprotocol           Sub protocol request sent to the server.
+     * @param allowExtensions       Allow extensions to be used in the reserved bits of the web socket frame
+     * @param customHeaders         Map of custom headers to add to the client request
+     * @param maxFramePayloadLength Maximum length of a frame's payload
      */
-    public WebSocketClientHandshaker08(URI webSocketURL, WebSocketVersion version, String subprotocol,
-                                       boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength) {
-        this(webSocketURL, version, subprotocol, allowExtensions, customHeaders, maxFramePayloadLength, true,
-                false, DEFAULT_FORCE_CLOSE_TIMEOUT_MILLIS);
+    public WebSocketClientHandshaker08(URI webSocketURL, WebSocketVersion version, String subprotocol, boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength) {
+        this(webSocketURL, version, subprotocol, allowExtensions, customHeaders, maxFramePayloadLength, true, false, DEFAULT_FORCE_CLOSE_TIMEOUT_MILLIS);
     }
 
     /**
      * Creates a new instance.
      *
-     * @param webSocketURL
-     *            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
-     *            sent to this URL.
-     * @param version
-     *            Version of web socket specification to use to connect to the server
-     * @param subprotocol
-     *            Sub protocol request sent to the server.
-     * @param allowExtensions
-     *            Allow extensions to be used in the reserved bits of the web socket frame
-     * @param customHeaders
-     *            Map of custom headers to add to the client request
-     * @param maxFramePayloadLength
-     *            Maximum length of a frame's payload
-     * @param performMasking
-     *            Whether to mask all written websocket frames. This must be set to true in order to be fully compatible
-     *            with the websocket specifications. Client applications that communicate with a non-standard server
-     *            which doesn't require masking might set this to false to achieve a higher performance.
-     * @param allowMaskMismatch
-     *            When set to true, frames which are not masked properly according to the standard will still be
-     *            accepted
+     * @param webSocketURL          URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
+     *                              sent to this URL.
+     * @param version               Version of web socket specification to use to connect to the server
+     * @param subprotocol           Sub protocol request sent to the server.
+     * @param allowExtensions       Allow extensions to be used in the reserved bits of the web socket frame
+     * @param customHeaders         Map of custom headers to add to the client request
+     * @param maxFramePayloadLength Maximum length of a frame's payload
+     * @param performMasking        Whether to mask all written websocket frames. This must be set to true in order to be fully compatible
+     *                              with the websocket specifications. Client applications that communicate with a non-standard server
+     *                              which doesn't require masking might set this to false to achieve a higher performance.
+     * @param allowMaskMismatch     When set to true, frames which are not masked properly according to the standard will still be
+     *                              accepted
      */
-    public WebSocketClientHandshaker08(URI webSocketURL, WebSocketVersion version, String subprotocol,
-                                       boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength,
-                                       boolean performMasking, boolean allowMaskMismatch) {
-        this(webSocketURL, version, subprotocol, allowExtensions, customHeaders, maxFramePayloadLength, performMasking,
-                allowMaskMismatch, DEFAULT_FORCE_CLOSE_TIMEOUT_MILLIS);
+    public WebSocketClientHandshaker08(URI webSocketURL, WebSocketVersion version, String subprotocol, boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength, boolean performMasking, boolean allowMaskMismatch) {
+        this(webSocketURL, version, subprotocol, allowExtensions, customHeaders, maxFramePayloadLength, performMasking, allowMaskMismatch, DEFAULT_FORCE_CLOSE_TIMEOUT_MILLIS);
     }
 
     /**
      * Creates a new instance.
      *
-     * @param webSocketURL
-     *            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
-     *            sent to this URL.
-     * @param version
-     *            Version of web socket specification to use to connect to the server
-     * @param subprotocol
-     *            Sub protocol request sent to the server.
-     * @param allowExtensions
-     *            Allow extensions to be used in the reserved bits of the web socket frame
-     * @param customHeaders
-     *            Map of custom headers to add to the client request
-     * @param maxFramePayloadLength
-     *            Maximum length of a frame's payload
-     * @param performMasking
-     *            Whether to mask all written websocket frames. This must be set to true in order to be fully compatible
-     *            with the websocket specifications. Client applications that communicate with a non-standard server
-     *            which doesn't require masking might set this to false to achieve a higher performance.
-     * @param allowMaskMismatch
-     *            When set to true, frames which are not masked properly according to the standard will still be
-     *            accepted
-     * @param forceCloseTimeoutMillis
-     *            Close the connection if it was not closed by the server after timeout specified.
+     * @param webSocketURL            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
+     *                                sent to this URL.
+     * @param version                 Version of web socket specification to use to connect to the server
+     * @param subprotocol             Sub protocol request sent to the server.
+     * @param allowExtensions         Allow extensions to be used in the reserved bits of the web socket frame
+     * @param customHeaders           Map of custom headers to add to the client request
+     * @param maxFramePayloadLength   Maximum length of a frame's payload
+     * @param performMasking          Whether to mask all written websocket frames. This must be set to true in order to be fully compatible
+     *                                with the websocket specifications. Client applications that communicate with a non-standard server
+     *                                which doesn't require masking might set this to false to achieve a higher performance.
+     * @param allowMaskMismatch       When set to true, frames which are not masked properly according to the standard will still be
+     *                                accepted
+     * @param forceCloseTimeoutMillis Close the connection if it was not closed by the server after timeout specified.
      */
-    public WebSocketClientHandshaker08(URI webSocketURL, WebSocketVersion version, String subprotocol,
-            boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength,
-            boolean performMasking, boolean allowMaskMismatch, long forceCloseTimeoutMillis) {
-        this(webSocketURL, version, subprotocol, allowExtensions, customHeaders, maxFramePayloadLength, performMasking,
-                allowMaskMismatch, forceCloseTimeoutMillis, false);
+    public WebSocketClientHandshaker08(URI webSocketURL, WebSocketVersion version, String subprotocol, boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength, boolean performMasking, boolean allowMaskMismatch, long forceCloseTimeoutMillis) {
+        this(webSocketURL, version, subprotocol, allowExtensions, customHeaders, maxFramePayloadLength, performMasking, allowMaskMismatch, forceCloseTimeoutMillis, false);
     }
 
     /**
      * Creates a new instance.
      *
-     * @param webSocketURL
-     *            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
-     *            sent to this URL.
-     * @param version
-     *            Version of web socket specification to use to connect to the server
-     * @param subprotocol
-     *            Sub protocol request sent to the server.
-     * @param allowExtensions
-     *            Allow extensions to be used in the reserved bits of the web socket frame
-     * @param customHeaders
-     *            Map of custom headers to add to the client request
-     * @param maxFramePayloadLength
-     *            Maximum length of a frame's payload
-     * @param performMasking
-     *            Whether to mask all written websocket frames. This must be set to true in order to be fully compatible
-     *            with the websocket specifications. Client applications that communicate with a non-standard server
-     *            which doesn't require masking might set this to false to achieve a higher performance.
-     * @param allowMaskMismatch
-     *            When set to true, frames which are not masked properly according to the standard will still be
-     *            accepted
-     * @param forceCloseTimeoutMillis
-     *            Close the connection if it was not closed by the server after timeout specified.
-     * @param  absoluteUpgradeUrl
-     *            Use an absolute url for the Upgrade request, typically when connecting through an HTTP proxy over
-     *            clear HTTP
+     * @param webSocketURL            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
+     *                                sent to this URL.
+     * @param version                 Version of web socket specification to use to connect to the server
+     * @param subprotocol             Sub protocol request sent to the server.
+     * @param allowExtensions         Allow extensions to be used in the reserved bits of the web socket frame
+     * @param customHeaders           Map of custom headers to add to the client request
+     * @param maxFramePayloadLength   Maximum length of a frame's payload
+     * @param performMasking          Whether to mask all written websocket frames. This must be set to true in order to be fully compatible
+     *                                with the websocket specifications. Client applications that communicate with a non-standard server
+     *                                which doesn't require masking might set this to false to achieve a higher performance.
+     * @param allowMaskMismatch       When set to true, frames which are not masked properly according to the standard will still be
+     *                                accepted
+     * @param forceCloseTimeoutMillis Close the connection if it was not closed by the server after timeout specified.
+     * @param absoluteUpgradeUrl      Use an absolute url for the Upgrade request, typically when connecting through an HTTP proxy over
+     *                                clear HTTP
      */
-    WebSocketClientHandshaker08(URI webSocketURL, WebSocketVersion version, String subprotocol,
-                                boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength,
-                                boolean performMasking, boolean allowMaskMismatch, long forceCloseTimeoutMillis,
-                                boolean absoluteUpgradeUrl) {
-        super(webSocketURL, version, subprotocol, customHeaders, maxFramePayloadLength, forceCloseTimeoutMillis,
-                absoluteUpgradeUrl);
+    WebSocketClientHandshaker08(URI webSocketURL, WebSocketVersion version, String subprotocol, boolean allowExtensions, HttpHeaders customHeaders, int maxFramePayloadLength, boolean performMasking, boolean allowMaskMismatch, long forceCloseTimeoutMillis, boolean absoluteUpgradeUrl) {
+        super(webSocketURL, version, subprotocol, customHeaders, maxFramePayloadLength, forceCloseTimeoutMillis, absoluteUpgradeUrl);
         this.allowExtensions = allowExtensions;
         this.performMasking = performMasking;
         this.allowMaskMismatch = allowMaskMismatch;
@@ -185,7 +122,6 @@ public class WebSocketClientHandshaker08 extends WebSocketClientHandshaker {
      * Sec-WebSocket-Protocol: chat, superchat
      * Sec-WebSocket-Version: 8
      * </pre>
-     *
      */
     @Override
     protected FullHttpRequest newHandshakeRequest() {
@@ -200,14 +136,11 @@ public class WebSocketClientHandshaker08 extends WebSocketClientHandshaker {
         expectedChallengeResponseString = WebSocketUtil.base64(sha1);
 
         if (logger.isDebugEnabled()) {
-            logger.debug(
-                    "WebSocket version 08 client handshake key: {}, expected response: {}",
-                    key, expectedChallengeResponseString);
+            logger.debug("WebSocket version 08 client handshake key: {}, expected response: {}", key, expectedChallengeResponseString);
         }
 
         // Format request
-        FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, upgradeUrl(wsURL),
-                Unpooled.EMPTY_BUFFER);
+        FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, upgradeUrl(wsURL), Unpooled.EMPTY_BUFFER);
         HttpHeaders headers = request.headers();
 
         if (customHeaders != null) {
@@ -222,9 +155,7 @@ public class WebSocketClientHandshaker08 extends WebSocketClientHandshaker {
             headers.set(HttpHeaderNames.HOST, websocketHostValue(wsURL));
         }
 
-        headers.set(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET)
-               .set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE)
-               .set(HttpHeaderNames.SEC_WEBSOCKET_KEY, key);
+        headers.set(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET).set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE).set(HttpHeaderNames.SEC_WEBSOCKET_KEY, key);
 
         if (!headers.contains(HttpHeaderNames.SEC_WEBSOCKET_ORIGIN)) {
             headers.set(HttpHeaderNames.SEC_WEBSOCKET_ORIGIN, websocketOriginValue(wsURL));
@@ -252,8 +183,7 @@ public class WebSocketClientHandshaker08 extends WebSocketClientHandshaker {
      * Sec-WebSocket-Protocol: chat
      * </pre>
      *
-     * @param response
-     *            HTTP response returned from the server for the request sent by beginOpeningHandshake00().
+     * @param response HTTP response returned from the server for the request sent by beginOpeningHandshake00().
      * @throws WebSocketHandshakeException
      */
     @Override
@@ -271,14 +201,12 @@ public class WebSocketClientHandshaker08 extends WebSocketClientHandshaker {
         }
 
         if (!headers.containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true)) {
-            throw new WebSocketHandshakeException("Invalid handshake response connection: "
-                    + headers.get(HttpHeaderNames.CONNECTION));
+            throw new WebSocketHandshakeException("Invalid handshake response connection: " + headers.get(HttpHeaderNames.CONNECTION));
         }
 
         CharSequence accept = headers.get(HttpHeaderNames.SEC_WEBSOCKET_ACCEPT);
         if (accept == null || !accept.equals(expectedChallengeResponseString)) {
-            throw new WebSocketHandshakeException(String.format(
-                    "Invalid challenge. Actual: %s. Expected: %s", accept, expectedChallengeResponseString));
+            throw new WebSocketHandshakeException(String.format("Invalid challenge. Actual: %s. Expected: %s", accept, expectedChallengeResponseString));
         }
     }
 

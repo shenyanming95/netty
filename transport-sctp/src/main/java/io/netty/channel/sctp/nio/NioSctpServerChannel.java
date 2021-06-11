@@ -32,23 +32,12 @@ import java.util.*;
 /**
  * {@link io.netty.channel.sctp.SctpServerChannel} implementation which use non-blocking mode to accept new
  * connections and create the {@link NioSctpChannel} for them.
- *
+ * <p>
  * Be aware that not all operations systems support SCTP. Please refer to the documentation of your operation system,
  * to understand what you need to do to use it. Also this feature is only supported on Java 7+.
  */
-public class NioSctpServerChannel extends AbstractNioMessageChannel
-        implements io.netty.channel.sctp.SctpServerChannel {
+public class NioSctpServerChannel extends AbstractNioMessageChannel implements io.netty.channel.sctp.SctpServerChannel {
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
-
-    private static SctpServerChannel newSocket() {
-        try {
-            return SctpServerChannel.open();
-        } catch (IOException e) {
-            throw new ChannelException(
-                    "Failed to open a server socket.", e);
-        }
-    }
-
     private final SctpServerChannelConfig config;
 
     /**
@@ -57,6 +46,14 @@ public class NioSctpServerChannel extends AbstractNioMessageChannel
     public NioSctpServerChannel() {
         super(null, newSocket(), SelectionKey.OP_ACCEPT);
         config = new NioSctpServerChannelConfig(this, javaChannel());
+    }
+
+    private static SctpServerChannel newSocket() {
+        try {
+            return SctpServerChannel.open();
+        } catch (IOException e) {
+            throw new ChannelException("Failed to open a server socket.", e);
+        }
     }
 
     @Override
@@ -188,8 +185,7 @@ public class NioSctpServerChannel extends AbstractNioMessageChannel
 
     // Unnecessary stuff
     @Override
-    protected boolean doConnect(
-            SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
+    protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         throw new UnsupportedOperationException();
     }
 

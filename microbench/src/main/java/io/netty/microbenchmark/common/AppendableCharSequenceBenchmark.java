@@ -23,13 +23,11 @@ import java.util.Random;
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
 public class AppendableCharSequenceBenchmark extends AbstractMicrobenchmark {
-    @Param({ "32", "64", "128", "256" })
-    private int charsInitSize;
-
-    @Param({ "10", "100", "10000", "1000000" })
-    private int simulatedDataSize;
-
     private static final Random rand = new Random();
+    @Param({"32", "64", "128", "256"})
+    private int charsInitSize;
+    @Param({"10", "100", "10000", "1000000"})
+    private int simulatedDataSize;
     private char[] chars;
     private char simulatedData;
     private int pos;

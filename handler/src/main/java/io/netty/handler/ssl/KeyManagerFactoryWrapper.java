@@ -31,14 +31,15 @@ final class KeyManagerFactoryWrapper extends SimpleKeyManagerFactory {
     }
 
     @Override
-    protected void engineInit(KeyStore keyStore, char[] var2) throws Exception { }
+    protected void engineInit(KeyStore keyStore, char[] var2) throws Exception {
+    }
 
     @Override
-    protected void engineInit(ManagerFactoryParameters managerFactoryParameters)
-            throws Exception { }
+    protected void engineInit(ManagerFactoryParameters managerFactoryParameters) throws Exception {
+    }
 
     @Override
     protected KeyManager[] engineGetKeyManagers() {
-        return new KeyManager[] {km};
+        return new KeyManager[]{km};
     }
 }

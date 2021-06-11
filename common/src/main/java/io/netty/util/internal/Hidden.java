@@ -40,62 +40,31 @@ class Hidden {
 
         @Override
         public void applyTo(BlockHound.Builder builder) {
-            builder.allowBlockingCallsInside(
-                    "io.netty.channel.nio.NioEventLoop",
-                    "handleLoopException"
-            );
+            builder.allowBlockingCallsInside("io.netty.channel.nio.NioEventLoop", "handleLoopException");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.channel.kqueue.KQueueEventLoop",
-                    "handleLoopException"
-            );
+            builder.allowBlockingCallsInside("io.netty.channel.kqueue.KQueueEventLoop", "handleLoopException");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.channel.epoll.EpollEventLoop",
-                    "handleLoopException"
-            );
+            builder.allowBlockingCallsInside("io.netty.channel.epoll.EpollEventLoop", "handleLoopException");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.util.HashedWheelTimer$Worker",
-                    "waitForNextTick"
-            );
+            builder.allowBlockingCallsInside("io.netty.util.HashedWheelTimer$Worker", "waitForNextTick");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.util.concurrent.SingleThreadEventExecutor",
-                    "confirmShutdown"
-            );
+            builder.allowBlockingCallsInside("io.netty.util.concurrent.SingleThreadEventExecutor", "confirmShutdown");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.handler.ssl.SslHandler",
-                    "handshake"
-            );
+            builder.allowBlockingCallsInside("io.netty.handler.ssl.SslHandler", "handshake");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.handler.ssl.SslHandler",
-                    "runAllDelegatedTasks"
-            );
+            builder.allowBlockingCallsInside("io.netty.handler.ssl.SslHandler", "runAllDelegatedTasks");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.util.concurrent.GlobalEventExecutor",
-                    "takeTask");
+            builder.allowBlockingCallsInside("io.netty.util.concurrent.GlobalEventExecutor", "takeTask");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.util.concurrent.GlobalEventExecutor",
-                    "addTask");
+            builder.allowBlockingCallsInside("io.netty.util.concurrent.GlobalEventExecutor", "addTask");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.util.concurrent.SingleThreadEventExecutor",
-                    "takeTask");
+            builder.allowBlockingCallsInside("io.netty.util.concurrent.SingleThreadEventExecutor", "takeTask");
 
-            builder.allowBlockingCallsInside(
-                    "io.netty.handler.ssl.ReferenceCountedOpenSslClientContext$ExtendedTrustManagerVerifyCallback",
-                    "verify");
+            builder.allowBlockingCallsInside("io.netty.handler.ssl.ReferenceCountedOpenSslClientContext$ExtendedTrustManagerVerifyCallback", "verify");
 
             // Let's whitelist SSLEngineImpl.unwrap(...) for now as it may fail otherwise for TLS 1.3.
             // See https://mail.openjdk.java.net/pipermail/security-dev/2020-August/022271.html
-            builder.allowBlockingCallsInside(
-                    "sun.security.ssl.SSLEngineImpl",
-                    "unwrap");
+            builder.allowBlockingCallsInside("sun.security.ssl.SSLEngineImpl", "unwrap");
 
             builder.nonBlockingThreadPredicate(new Function<Predicate<Thread>, Predicate<Thread>>() {
                 @Override

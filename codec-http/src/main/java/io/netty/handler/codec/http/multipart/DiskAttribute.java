@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.multipart;
 
 import io.netty.buffer.ByteBuf;
@@ -29,14 +14,10 @@ import static io.netty.buffer.Unpooled.wrappedBuffer;
  * Disk implementation of Attributes
  */
 public class DiskAttribute extends AbstractDiskHttpData implements Attribute {
-    public static String baseDirectory;
-
-    public static boolean deleteOnExitTemporaryFile = true;
-
     public static final String prefix = "Attr_";
-
     public static final String postfix = ".att";
-
+    public static String baseDirectory;
+    public static boolean deleteOnExitTemporaryFile = true;
     private String baseDir;
 
     private boolean deleteOnExit;
@@ -92,8 +73,7 @@ public class DiskAttribute extends AbstractDiskHttpData implements Attribute {
         this(name, value, charset, baseDirectory, deleteOnExitTemporaryFile);
     }
 
-    public DiskAttribute(String name, String value, Charset charset,
-                         String baseDir, boolean deleteOnExit) throws IOException {
+    public DiskAttribute(String name, String value, Charset charset, String baseDir, boolean deleteOnExit) throws IOException {
         super(name, charset, 0); // Attribute have no default size
         setValue(value);
         this.baseDir = baseDir == null ? baseDirectory : baseDir;
@@ -107,14 +87,14 @@ public class DiskAttribute extends AbstractDiskHttpData implements Attribute {
 
     @Override
     public String getValue() throws IOException {
-        byte [] bytes = get();
+        byte[] bytes = get();
         return new String(bytes, getCharset());
     }
 
     @Override
     public void setValue(String value) throws IOException {
         ObjectUtil.checkNotNull(value, "value");
-        byte [] bytes = value.getBytes(getCharset());
+        byte[] bytes = value.getBytes(getCharset());
         checkSize(bytes.length);
         ByteBuf buffer = wrappedBuffer(bytes);
         if (definedSize > 0) {
@@ -150,8 +130,7 @@ public class DiskAttribute extends AbstractDiskHttpData implements Attribute {
     @Override
     public int compareTo(InterfaceHttpData o) {
         if (!(o instanceof Attribute)) {
-            throw new ClassCastException("Cannot compare " + getHttpDataType() +
-                    " with " + o.getHttpDataType());
+            throw new ClassCastException("Cannot compare " + getHttpDataType() + " with " + o.getHttpDataType());
         }
         return compareTo((Attribute) o);
     }

@@ -119,8 +119,7 @@ class SimpleLeakAwareCompositeByteBuf extends WrappedCompositeByteBuf {
         return newLeakAwareByteBuf(wrapped, unwrap(), leak);
     }
 
-    protected SimpleLeakAwareByteBuf newLeakAwareByteBuf(
-            ByteBuf wrapped, ByteBuf trackedByteBuf, ResourceLeakTracker<ByteBuf> leakTracker) {
+    protected SimpleLeakAwareByteBuf newLeakAwareByteBuf(ByteBuf wrapped, ByteBuf trackedByteBuf, ResourceLeakTracker<ByteBuf> leakTracker) {
         return new SimpleLeakAwareByteBuf(wrapped, trackedByteBuf, leakTracker);
     }
 }

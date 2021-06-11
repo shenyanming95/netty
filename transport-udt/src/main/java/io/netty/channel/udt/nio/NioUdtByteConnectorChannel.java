@@ -44,8 +44,7 @@ import static java.nio.channels.SelectionKey.OP_CONNECT;
 @Deprecated
 public class NioUdtByteConnectorChannel extends AbstractNioByteChannel implements UdtChannel {
 
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(NioUdtByteConnectorChannel.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioUdtByteConnectorChannel.class);
 
     private final UdtChannelConfig config;
 
@@ -58,13 +57,13 @@ public class NioUdtByteConnectorChannel extends AbstractNioByteChannel implement
         try {
             channelUDT.configureBlocking(false);
             switch (channelUDT.socketUDT().status()) {
-            case INIT:
-            case OPENED:
-                config = new DefaultUdtChannelConfig(this, channelUDT, true);
-                break;
-            default:
-                config = new DefaultUdtChannelConfig(this, channelUDT, false);
-                break;
+                case INIT:
+                case OPENED:
+                    config = new DefaultUdtChannelConfig(this, channelUDT, true);
+                    break;
+                default:
+                    config = new DefaultUdtChannelConfig(this, channelUDT, false);
+                    break;
             }
         } catch (final Exception e) {
             try {
@@ -86,6 +85,20 @@ public class NioUdtByteConnectorChannel extends AbstractNioByteChannel implement
         this(NioUdtProvider.newConnectorChannelUDT(type));
     }
 
+    private static void privilegedBind(final SocketChannelUDT socketChannel, final SocketAddress localAddress) throws IOException {
+        try {
+            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
+                @Override
+                public Void run() throws IOException {
+                    socketChannel.bind(localAddress);
+                    return null;
+                }
+            });
+        } catch (PrivilegedActionException e) {
+            throw (IOException) e.getCause();
+        }
+    }
+
     @Override
     public UdtChannelConfig config() {
         return config;
@@ -102,15 +115,13 @@ public class NioUdtByteConnectorChannel extends AbstractNioByteChannel implement
     }
 
     @Override
-    protected boolean doConnect(final SocketAddress remoteAddress,
-                                final SocketAddress localAddress) throws Exception {
-        doBind(localAddress != null? localAddress : new InetSocketAddress(0));
+    protected boolean doConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) throws Exception {
+        doBind(localAddress != null ? localAddress : new InetSocketAddress(0));
         boolean success = false;
         try {
             final boolean connected = SocketUtils.connect(javaChannel(), remoteAddress);
             if (!connected) {
-                selectionKey().interestOps(
-                        selectionKey().interestOps() | OP_CONNECT);
+                selectionKey().interestOps(selectionKey().interestOps() | OP_CONNECT);
             }
             success = true;
             return connected;
@@ -129,11 +140,9 @@ public class NioUdtByteConnectorChannel extends AbstractNioByteChannel implement
     @Override
     protected void doFinishConnect() throws Exception {
         if (javaChannel().finishConnect()) {
-            selectionKey().interestOps(
-                    selectionKey().interestOps() & ~OP_CONNECT);
+            selectionKey().interestOps(selectionKey().interestOps() & ~OP_CONNECT);
         } else {
-            throw new Error(
-                    "Provider error: failed to finish connect. Provider library should be upgraded.");
+            throw new Error("Provider error: failed to finish connect. Provider library should be upgraded.");
         }
     }
 
@@ -189,21 +198,6 @@ public class NioUdtByteConnectorChannel extends AbstractNioByteChannel implement
     @Override
     public InetSocketAddress remoteAddress() {
         return (InetSocketAddress) super.remoteAddress();
-    }
-
-    private static void privilegedBind(final SocketChannelUDT socketChannel, final SocketAddress localAddress)
-            throws IOException {
-        try {
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
-                @Override
-                public Void run() throws IOException {
-                    socketChannel.bind(localAddress);
-                    return null;
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            throw (IOException) e.getCause();
-        }
     }
 
 }

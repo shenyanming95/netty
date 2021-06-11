@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.internal;
 
 import io.netty.util.CharsetUtil;
@@ -59,40 +44,29 @@ import static java.lang.Math.min;
  */
 public final class PlatformDependent {
 
+    public static final boolean BIG_ENDIAN_NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PlatformDependent.class);
-
-    private static final Pattern MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN = Pattern.compile(
-            "\\s*-XX:MaxDirectMemorySize\\s*=\\s*([0-9]+)\\s*([kKmMgG]?)\\s*$");
-
+    private static final Pattern MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN = Pattern.compile("\\s*-XX:MaxDirectMemorySize\\s*=\\s*([0-9]+)\\s*([kKmMgG]?)\\s*$");
     private static final boolean IS_WINDOWS = isWindows0();
     private static final boolean IS_OSX = isOsx0();
     private static final boolean IS_J9_JVM = isJ9Jvm0();
     private static final boolean IS_IVKVM_DOT_NET = isIkvmDotNet0();
-
     private static final boolean MAYBE_SUPER_USER;
-
     private static final boolean CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !isAndroid();
-
     private static final Throwable UNSAFE_UNAVAILABILITY_CAUSE = unsafeUnavailabilityCause0();
     private static final boolean DIRECT_BUFFER_PREFERRED;
     private static final long MAX_DIRECT_MEMORY = maxDirectMemory0();
-
-    private static final int MPSC_CHUNK_SIZE =  1024;
-    private static final int MIN_MAX_MPSC_CAPACITY =  MPSC_CHUNK_SIZE * 2;
+    private static final int MPSC_CHUNK_SIZE = 1024;
+    private static final int MIN_MAX_MPSC_CAPACITY = MPSC_CHUNK_SIZE * 2;
     private static final int MAX_ALLOWED_MPSC_CAPACITY = Pow2.MAX_POW2;
-
     private static final long BYTE_ARRAY_BASE_OFFSET = byteArrayBaseOffset0();
-
     private static final File TMPDIR = tmpdir0();
-
     private static final int BIT_MODE = bitMode0();
     private static final String NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", ""));
     private static final String NORMALIZED_OS = normalizeOs(SystemPropertyUtil.get("os.name", ""));
-
     // keep in sync with maven's pom.xml via os.detection.classifierWithLikes!
     private static final String[] ALLOWED_LINUX_OS_CLASSIFIERS = {"fedora", "suse", "arch"};
     private static final Set<String> LINUX_OS_CLASSIFIERS;
-
     private static final int ADDRESS_SIZE = addressSize0();
     private static final boolean USE_DIRECT_BUFFER_NO_CLEANER;
     private static final AtomicLong DIRECT_MEMORY_COUNTER;
@@ -104,8 +78,6 @@ public final class PlatformDependent {
     private static final String[] OS_RELEASE_FILES = {"/etc/os-release", "/usr/lib/os-release"};
     private static final String LINUX_ID_PREFIX = "ID=";
     private static final String LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
-    public static final boolean BIG_ENDIAN_NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
-
     private static final Cleaner NOOP = new Cleaner() {
         @Override
         public void freeDirectBuffer(ByteBuffer buffer) {
@@ -159,10 +131,8 @@ public final class PlatformDependent {
         logger.debug("-Dio.netty.maxDirectMemory: {} bytes", maxDirectMemory);
         DIRECT_MEMORY_LIMIT = maxDirectMemory >= 1 ? maxDirectMemory : MAX_DIRECT_MEMORY;
 
-        int tryAllocateUninitializedArray =
-                SystemPropertyUtil.getInt("io.netty.uninitializedArrayAllocationThreshold", 1024);
-        UNINITIALIZED_ARRAY_ALLOCATION_THRESHOLD = javaVersion() >= 9 && PlatformDependent0.hasAllocateArrayMethod() ?
-                tryAllocateUninitializedArray : -1;
+        int tryAllocateUninitializedArray = SystemPropertyUtil.getInt("io.netty.uninitializedArrayAllocationThreshold", 1024);
+        UNINITIALIZED_ARRAY_ALLOCATION_THRESHOLD = javaVersion() >= 9 && PlatformDependent0.hasAllocateArrayMethod() ? tryAllocateUninitializedArray : -1;
         logger.debug("-Dio.netty.uninitializedArrayAllocationThreshold: {}", UNINITIALIZED_ARRAY_ALLOCATION_THRESHOLD);
 
         MAYBE_SUPER_USER = maybeSuperUser0();
@@ -180,8 +150,7 @@ public final class PlatformDependent {
         }
 
         // We should always prefer direct buffers by default if we can use a Cleaner to release direct buffers.
-        DIRECT_BUFFER_PREFERRED = CLEANER != NOOP
-                                  && !SystemPropertyUtil.getBoolean("io.netty.noPreferDirect", false);
+        DIRECT_BUFFER_PREFERRED = CLEANER != NOOP && !SystemPropertyUtil.getBoolean("io.netty.noPreferDirect", false);
         if (logger.isDebugEnabled()) {
             logger.debug("-Dio.netty.noPreferDirect: {}", !DIRECT_BUFFER_PREFERRED);
         }
@@ -191,14 +160,10 @@ public final class PlatformDependent {
          * guard.
          */
         if (CLEANER == NOOP && !PlatformDependent0.isExplicitNoUnsafe()) {
-            logger.info(
-                    "Your platform does not provide complete low-level API for accessing direct buffers reliably. " +
-                    "Unless explicitly requested, heap buffer will always be preferred to avoid potential system " +
-                    "instability.");
+            logger.info("Your platform does not provide complete low-level API for accessing direct buffers reliably. " + "Unless explicitly requested, heap buffer will always be preferred to avoid potential system " + "instability.");
         }
 
-        final Set<String> allowedClassifiers = Collections.unmodifiableSet(
-                new HashSet<String>(Arrays.asList(ALLOWED_LINUX_OS_CLASSIFIERS)));
+        final Set<String> allowedClassifiers = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(ALLOWED_LINUX_OS_CLASSIFIERS)));
         final Set<String> availableClassifiers = new LinkedHashSet<String>();
         for (final String osReleaseFileName : OS_RELEASE_FILES) {
             final File file = new File(osReleaseFileName);
@@ -209,19 +174,15 @@ public final class PlatformDependent {
                         if (file.exists()) {
                             BufferedReader reader = null;
                             try {
-                                reader = new BufferedReader(
-                                        new InputStreamReader(
-                                                new FileInputStream(file), CharsetUtil.UTF_8));
+                                reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), CharsetUtil.UTF_8));
 
                                 String line;
                                 while ((line = reader.readLine()) != null) {
                                     if (line.startsWith(LINUX_ID_PREFIX)) {
-                                        String id = normalizeOsReleaseVariableValue(
-                                                line.substring(LINUX_ID_PREFIX.length()));
+                                        String id = normalizeOsReleaseVariableValue(line.substring(LINUX_ID_PREFIX.length()));
                                         addClassifier(allowedClassifiers, availableClassifiers, id);
                                     } else if (line.startsWith(LINUX_ID_LIKE_PREFIX)) {
-                                        line = normalizeOsReleaseVariableValue(
-                                                line.substring(LINUX_ID_LIKE_PREFIX.length()));
+                                        line = normalizeOsReleaseVariableValue(line.substring(LINUX_ID_LIKE_PREFIX.length()));
                                         addClassifier(allowedClassifiers, availableClassifiers, line.split("[ ]+"));
                                     }
                                 }
@@ -255,13 +216,16 @@ public final class PlatformDependent {
         LINUX_OS_CLASSIFIERS = Collections.unmodifiableSet(availableClassifiers);
     }
 
+    private PlatformDependent() {
+        // only static method supported
+    }
+
     public static boolean hasDirectBufferNoCleanerConstructor() {
         return PlatformDependent0.hasDirectBufferNoCleanerConstructor();
     }
 
     public static byte[] allocateUninitializedArray(int size) {
-        return UNINITIALIZED_ARRAY_ALLOCATION_THRESHOLD < 0 || UNINITIALIZED_ARRAY_ALLOCATION_THRESHOLD > size ?
-                new byte[size] : PlatformDependent0.allocateUninitializedArray(size);
+        return UNINITIALIZED_ARRAY_ALLOCATION_THRESHOLD < 0 || UNINITIALIZED_ARRAY_ALLOCATION_THRESHOLD > size ? new byte[size] : PlatformDependent0.allocateUninitializedArray(size);
     }
 
     /**
@@ -441,8 +405,7 @@ public final class PlatformDependent {
     /**
      * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
      */
-    public static <K, V> ConcurrentMap<K, V> newConcurrentHashMap(
-            int initialCapacity, float loadFactor, int concurrencyLevel) {
+    public static <K, V> ConcurrentMap<K, V> newConcurrentHashMap(int initialCapacity, float loadFactor, int concurrencyLevel) {
         return new ConcurrentHashMap<K, V>(initialCapacity, loadFactor, concurrencyLevel);
     }
 
@@ -469,8 +432,7 @@ public final class PlatformDependent {
         if (PlatformDependent0.hasDirectBufferNoCleanerConstructor()) {
             return PlatformDependent0.newDirectBuffer(memoryAddress, size);
         }
-        throw new UnsupportedOperationException(
-                "sun.misc.Unsafe or java.nio.DirectByteBuffer.<init>(long, int) not available");
+        throw new UnsupportedOperationException("sun.misc.Unsafe or java.nio.DirectByteBuffer.<init>(long, int) not available");
     }
 
     public static Object getObject(Object object, long fieldOffset) {
@@ -527,36 +489,16 @@ public final class PlatformDependent {
 
     private static long getLongSafe(byte[] bytes, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
-            return (long) bytes[offset] << 56 |
-                    ((long) bytes[offset + 1] & 0xff) << 48 |
-                    ((long) bytes[offset + 2] & 0xff) << 40 |
-                    ((long) bytes[offset + 3] & 0xff) << 32 |
-                    ((long) bytes[offset + 4] & 0xff) << 24 |
-                    ((long) bytes[offset + 5] & 0xff) << 16 |
-                    ((long) bytes[offset + 6] & 0xff) <<  8 |
-                    (long) bytes[offset + 7] & 0xff;
+            return (long) bytes[offset] << 56 | ((long) bytes[offset + 1] & 0xff) << 48 | ((long) bytes[offset + 2] & 0xff) << 40 | ((long) bytes[offset + 3] & 0xff) << 32 | ((long) bytes[offset + 4] & 0xff) << 24 | ((long) bytes[offset + 5] & 0xff) << 16 | ((long) bytes[offset + 6] & 0xff) << 8 | (long) bytes[offset + 7] & 0xff;
         }
-        return (long) bytes[offset] & 0xff |
-                ((long) bytes[offset + 1] & 0xff) << 8 |
-                ((long) bytes[offset + 2] & 0xff) << 16 |
-                ((long) bytes[offset + 3] & 0xff) << 24 |
-                ((long) bytes[offset + 4] & 0xff) << 32 |
-                ((long) bytes[offset + 5] & 0xff) << 40 |
-                ((long) bytes[offset + 6] & 0xff) << 48 |
-                (long) bytes[offset + 7] << 56;
+        return (long) bytes[offset] & 0xff | ((long) bytes[offset + 1] & 0xff) << 8 | ((long) bytes[offset + 2] & 0xff) << 16 | ((long) bytes[offset + 3] & 0xff) << 24 | ((long) bytes[offset + 4] & 0xff) << 32 | ((long) bytes[offset + 5] & 0xff) << 40 | ((long) bytes[offset + 6] & 0xff) << 48 | (long) bytes[offset + 7] << 56;
     }
 
     private static int getIntSafe(byte[] bytes, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
-            return bytes[offset] << 24 |
-                    (bytes[offset + 1] & 0xff) << 16 |
-                    (bytes[offset + 2] & 0xff) << 8 |
-                    bytes[offset + 3] & 0xff;
+            return bytes[offset] << 24 | (bytes[offset + 1] & 0xff) << 16 | (bytes[offset + 2] & 0xff) << 8 | bytes[offset + 3] & 0xff;
         }
-        return bytes[offset] & 0xff |
-                (bytes[offset + 1] & 0xff) << 8 |
-                (bytes[offset + 2] & 0xff) << 16 |
-                bytes[offset + 3] << 24;
+        return bytes[offset] & 0xff | (bytes[offset + 1] & 0xff) << 8 | (bytes[offset + 2] & 0xff) << 16 | bytes[offset + 3] << 24;
     }
 
     private static short getShortSafe(byte[] bytes, int offset) {
@@ -590,15 +532,9 @@ public final class PlatformDependent {
     private static int hashCodeAsciiSanitizeInt(CharSequence value, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             // mimic a unsafe.getInt call on a big endian machine
-            return (value.charAt(offset + 3) & 0x1f) |
-                   (value.charAt(offset + 2) & 0x1f) << 8 |
-                   (value.charAt(offset + 1) & 0x1f) << 16 |
-                   (value.charAt(offset) & 0x1f) << 24;
+            return (value.charAt(offset + 3) & 0x1f) | (value.charAt(offset + 2) & 0x1f) << 8 | (value.charAt(offset + 1) & 0x1f) << 16 | (value.charAt(offset) & 0x1f) << 24;
         }
-        return (value.charAt(offset + 3) & 0x1f) << 24 |
-               (value.charAt(offset + 2) & 0x1f) << 16 |
-               (value.charAt(offset + 1) & 0x1f) << 8 |
-               (value.charAt(offset) & 0x1f);
+        return (value.charAt(offset + 3) & 0x1f) << 24 | (value.charAt(offset + 2) & 0x1f) << 16 | (value.charAt(offset + 1) & 0x1f) << 8 | (value.charAt(offset) & 0x1f);
     }
 
     /**
@@ -607,11 +543,9 @@ public final class PlatformDependent {
     private static int hashCodeAsciiSanitizeShort(CharSequence value, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             // mimic a unsafe.getShort call on a big endian machine
-            return (value.charAt(offset + 1) & 0x1f) |
-                    (value.charAt(offset) & 0x1f) << 8;
+            return (value.charAt(offset + 1) & 0x1f) | (value.charAt(offset) & 0x1f) << 8;
         }
-        return (value.charAt(offset + 1) & 0x1f) << 8 |
-                (value.charAt(offset) & 0x1f);
+        return (value.charAt(offset + 1) & 0x1f) << 8 | (value.charAt(offset) & 0x1f);
     }
 
     /**
@@ -733,9 +667,7 @@ public final class PlatformDependent {
             long newUsedMemory = DIRECT_MEMORY_COUNTER.addAndGet(capacity);
             if (newUsedMemory > DIRECT_MEMORY_LIMIT) {
                 DIRECT_MEMORY_COUNTER.addAndGet(-capacity);
-                throw new OutOfDirectMemoryError("failed to allocate " + capacity
-                        + " byte(s) of direct memory (used: " + (newUsedMemory - capacity)
-                        + ", max: " + DIRECT_MEMORY_LIMIT + ')');
+                throw new OutOfDirectMemoryError("failed to allocate " + capacity + " byte(s) of direct memory (used: " + (newUsedMemory - capacity) + ", max: " + DIRECT_MEMORY_LIMIT + ')');
             }
         }
     }
@@ -755,30 +687,27 @@ public final class PlatformDependent {
      * Compare two {@code byte} arrays for equality. For performance reasons no bounds checking on the
      * parameters is performed.
      *
-     * @param bytes1 the first byte array.
+     * @param bytes1    the first byte array.
      * @param startPos1 the position (inclusive) to start comparing in {@code bytes1}.
-     * @param bytes2 the second byte array.
+     * @param bytes2    the second byte array.
      * @param startPos2 the position (inclusive) to start comparing in {@code bytes2}.
-     * @param length the amount of bytes to compare. This is assumed to be validated as not going out of bounds
-     * by the caller.
+     * @param length    the amount of bytes to compare. This is assumed to be validated as not going out of bounds
+     *                  by the caller.
      */
     public static boolean equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
-        return !hasUnsafe() || !unalignedAccess() ?
-                  equalsSafe(bytes1, startPos1, bytes2, startPos2, length) :
-                  PlatformDependent0.equals(bytes1, startPos1, bytes2, startPos2, length);
+        return !hasUnsafe() || !unalignedAccess() ? equalsSafe(bytes1, startPos1, bytes2, startPos2, length) : PlatformDependent0.equals(bytes1, startPos1, bytes2, startPos2, length);
     }
 
     /**
      * Determine if a subsection of an array is zero.
-     * @param bytes The byte array.
+     *
+     * @param bytes    The byte array.
      * @param startPos The starting index (inclusive) in {@code bytes}.
-     * @param length The amount of bytes to check for zero.
+     * @param length   The amount of bytes to check for zero.
      * @return {@code false} if {@code bytes[startPos:startsPos+length)} contains a value other than zero.
      */
     public static boolean isZero(byte[] bytes, int startPos, int length) {
-        return !hasUnsafe() || !unalignedAccess() ?
-                isZeroSafe(bytes, startPos, length) :
-                PlatformDependent0.isZero(bytes, startPos, length);
+        return !hasUnsafe() || !unalignedAccess() ? isZeroSafe(bytes, startPos, length) : PlatformDependent0.isZero(bytes, startPos, length);
     }
 
     /**
@@ -794,33 +723,31 @@ public final class PlatformDependent {
      *     boolean equals = (equalsConstantTime(s1, 0, s2, 0, s1.length) &
      *                       equalsConstantTime(s3, 0, s4, 0, s3.length)) != 0;
      * </pre>
-     * @param bytes1 the first byte array.
+     *
+     * @param bytes1    the first byte array.
      * @param startPos1 the position (inclusive) to start comparing in {@code bytes1}.
-     * @param bytes2 the second byte array.
+     * @param bytes2    the second byte array.
      * @param startPos2 the position (inclusive) to start comparing in {@code bytes2}.
-     * @param length the amount of bytes to compare. This is assumed to be validated as not going out of bounds
-     * by the caller.
+     * @param length    the amount of bytes to compare. This is assumed to be validated as not going out of bounds
+     *                  by the caller.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
     public static int equalsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
-        return !hasUnsafe() || !unalignedAccess() ?
-                  ConstantTimeUtils.equalsConstantTime(bytes1, startPos1, bytes2, startPos2, length) :
-                  PlatformDependent0.equalsConstantTime(bytes1, startPos1, bytes2, startPos2, length);
+        return !hasUnsafe() || !unalignedAccess() ? ConstantTimeUtils.equalsConstantTime(bytes1, startPos1, bytes2, startPos2, length) : PlatformDependent0.equalsConstantTime(bytes1, startPos1, bytes2, startPos2, length);
     }
 
     /**
      * Calculate a hash code of a byte array assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
-     * @param bytes The array which contains the data to hash.
+     *
+     * @param bytes    The array which contains the data to hash.
      * @param startPos What index to start generating a hash code in {@code bytes}
-     * @param length The amount of bytes that should be accounted for in the computation.
+     * @param length   The amount of bytes that should be accounted for in the computation.
      * @return The hash code of {@code bytes} assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
      */
     public static int hashCodeAscii(byte[] bytes, int startPos, int length) {
-        return !hasUnsafe() || !unalignedAccess() ?
-                hashCodeAsciiSafe(bytes, startPos, length) :
-                PlatformDependent0.hashCodeAscii(bytes, startPos, length);
+        return !hasUnsafe() || !unalignedAccess() ? hashCodeAsciiSafe(bytes, startPos, length) : PlatformDependent0.hashCodeAscii(bytes, startPos, length);
     }
 
     /**
@@ -829,6 +756,7 @@ public final class PlatformDependent {
      * <p>
      * This method assumes that {@code bytes} is equivalent to a {@code byte[]} but just using {@link CharSequence}
      * for storage. The upper most byte of each {@code char} from {@code bytes} is ignored.
+     *
      * @param bytes The array which contains the data to hash (assumed to be equivalent to a {@code byte[]}).
      * @return The hash code of {@code bytes} assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
@@ -862,65 +790,19 @@ public final class PlatformDependent {
             offset = 1;
         }
         if (remainingBytes != 1 & remainingBytes != 4 & remainingBytes != 5) { // 2, 3, 6, 7
-            hash = hash * (offset == 0 ? HASH_CODE_C1 : HASH_CODE_C2)
-                    + hashCodeAsciiSanitize(hashCodeAsciiSanitizeShort(bytes, offset));
+            hash = hash * (offset == 0 ? HASH_CODE_C1 : HASH_CODE_C2) + hashCodeAsciiSanitize(hashCodeAsciiSanitizeShort(bytes, offset));
             offset += 2;
         }
         if (remainingBytes >= 4) { // 4, 5, 6, 7
-            return hash * ((offset == 0 | offset == 3) ? HASH_CODE_C1 : HASH_CODE_C2)
-                    + hashCodeAsciiSanitizeInt(bytes, offset);
+            return hash * ((offset == 0 | offset == 3) ? HASH_CODE_C1 : HASH_CODE_C2) + hashCodeAsciiSanitizeInt(bytes, offset);
         }
         return hash;
-    }
-
-    private static final class Mpsc {
-        private static final boolean USE_MPSC_CHUNKED_ARRAY_QUEUE;
-
-        private Mpsc() {
-        }
-
-        static {
-            Object unsafe = null;
-            if (hasUnsafe()) {
-                // jctools goes through its own process of initializing unsafe; of
-                // course, this requires permissions which might not be granted to calling code, so we
-                // must mark this block as privileged too
-                unsafe = AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                    @Override
-                    public Object run() {
-                        // force JCTools to initialize unsafe
-                        return UnsafeAccess.UNSAFE;
-                    }
-                });
-            }
-
-            if (unsafe == null) {
-                logger.debug("org.jctools-core.MpscChunkedArrayQueue: unavailable");
-                USE_MPSC_CHUNKED_ARRAY_QUEUE = false;
-            } else {
-                logger.debug("org.jctools-core.MpscChunkedArrayQueue: available");
-                USE_MPSC_CHUNKED_ARRAY_QUEUE = true;
-            }
-        }
-
-        static <T> Queue<T> newMpscQueue(final int maxCapacity) {
-            // Calculate the max capacity which can not be bigger than MAX_ALLOWED_MPSC_CAPACITY.
-            // This is forced by the MpscChunkedArrayQueue implementation as will try to round it
-            // up to the next power of two and so will overflow otherwise.
-            final int capacity = max(min(maxCapacity, MAX_ALLOWED_MPSC_CAPACITY), MIN_MAX_MPSC_CAPACITY);
-            return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscChunkedArrayQueue<T>(MPSC_CHUNK_SIZE, capacity)
-                                                : new MpscChunkedAtomicArrayQueue<T>(MPSC_CHUNK_SIZE, capacity);
-        }
-
-        static <T> Queue<T> newMpscQueue() {
-            return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscUnboundedArrayQueue<T>(MPSC_CHUNK_SIZE)
-                                                : new MpscUnboundedAtomicArrayQueue<T>(MPSC_CHUNK_SIZE);
-        }
     }
 
     /**
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
      * consumer (one thread!).
+     *
      * @return A MPSC queue which may be unbounded.
      */
     public static <T> Queue<T> newMpscQueue() {
@@ -1000,8 +882,7 @@ public final class PlatformDependent {
     }
 
     private static boolean isOsx0() {
-        String osname = SystemPropertyUtil.get("os.name", "").toLowerCase(Locale.US)
-                .replaceAll("[^a-z0-9]+", "");
+        String osname = SystemPropertyUtil.get("os.name", "").toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "");
         boolean osx = osname.startsWith("macosx") || osname.startsWith("osx");
 
         if (osx) {
@@ -1102,16 +983,13 @@ public final class PlatformDependent {
         try {
             // Now try to get the JVM option (-XX:MaxDirectMemorySize) and parse it.
             // Note that we are using reflection because Android doesn't have these classes.
-            Class<?> mgmtFactoryClass = Class.forName(
-                    "java.lang.management.ManagementFactory", true, systemClassLoader);
-            Class<?> runtimeClass = Class.forName(
-                    "java.lang.management.RuntimeMXBean", true, systemClassLoader);
+            Class<?> mgmtFactoryClass = Class.forName("java.lang.management.ManagementFactory", true, systemClassLoader);
+            Class<?> runtimeClass = Class.forName("java.lang.management.RuntimeMXBean", true, systemClassLoader);
 
             Object runtime = mgmtFactoryClass.getDeclaredMethod("getRuntimeMXBean").invoke(null);
 
-            @SuppressWarnings("unchecked")
-            List<String> vmArgs = (List<String>) runtimeClass.getDeclaredMethod("getInputArguments").invoke(runtime);
-            for (int i = vmArgs.size() - 1; i >= 0; i --) {
+            @SuppressWarnings("unchecked") List<String> vmArgs = (List<String>) runtimeClass.getDeclaredMethod("getInputArguments").invoke(runtime);
+            for (int i = vmArgs.size() - 1; i >= 0; i--) {
                 Matcher m = MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN.matcher(vmArgs.get(i));
                 if (!m.matches()) {
                     continue;
@@ -1119,13 +997,16 @@ public final class PlatformDependent {
 
                 maxDirectMemory = Long.parseLong(m.group(1));
                 switch (m.group(2).charAt(0)) {
-                    case 'k': case 'K':
+                    case 'k':
+                    case 'K':
                         maxDirectMemory *= 1024;
                         break;
-                    case 'm': case 'M':
+                    case 'm':
+                    case 'M':
                         maxDirectMemory *= 1024 * 1024;
                         break;
-                    case 'g': case 'G':
+                    case 'g':
+                    case 'G':
                         maxDirectMemory *= 1024 * 1024 * 1024;
                         break;
                     default:
@@ -1313,28 +1194,23 @@ public final class PlatformDependent {
         for (int i = startPos - 8 + length; i >= end; i -= 8) {
             hash = PlatformDependent0.hashCodeAsciiCompute(getLongSafe(bytes, i), hash);
         }
-        switch(remainingBytes) {
-        case 7:
-            return ((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
-                          * HASH_CODE_C2 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos + 1)))
-                          * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 3));
-        case 6:
-            return (hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos)))
-                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 2));
-        case 5:
-            return (hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
-                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 1));
-        case 4:
-            return hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos));
-        case 3:
-            return (hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
-                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos + 1));
-        case 2:
-            return hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos));
-        case 1:
-            return hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]);
-        default:
-            return hash;
+        switch (remainingBytes) {
+            case 7:
+                return ((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos])) * HASH_CODE_C2 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos + 1))) * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 3));
+            case 6:
+                return (hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos))) * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 2));
+            case 5:
+                return (hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos])) * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 1));
+            case 4:
+                return hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos));
+            case 3:
+                return (hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos])) * HASH_CODE_C2 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos + 1));
+            case 2:
+                return hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos));
+            case 1:
+                return hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]);
+            default:
+                return hash;
         }
     }
 
@@ -1455,6 +1331,53 @@ public final class PlatformDependent {
         return "unknown";
     }
 
+    private interface ThreadLocalRandomProvider {
+        Random current();
+    }
+
+    private static final class Mpsc {
+        private static final boolean USE_MPSC_CHUNKED_ARRAY_QUEUE;
+
+        static {
+            Object unsafe = null;
+            if (hasUnsafe()) {
+                // jctools goes through its own process of initializing unsafe; of
+                // course, this requires permissions which might not be granted to calling code, so we
+                // must mark this block as privileged too
+                unsafe = AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                    @Override
+                    public Object run() {
+                        // force JCTools to initialize unsafe
+                        return UnsafeAccess.UNSAFE;
+                    }
+                });
+            }
+
+            if (unsafe == null) {
+                logger.debug("org.jctools-core.MpscChunkedArrayQueue: unavailable");
+                USE_MPSC_CHUNKED_ARRAY_QUEUE = false;
+            } else {
+                logger.debug("org.jctools-core.MpscChunkedArrayQueue: available");
+                USE_MPSC_CHUNKED_ARRAY_QUEUE = true;
+            }
+        }
+
+        private Mpsc() {
+        }
+
+        static <T> Queue<T> newMpscQueue(final int maxCapacity) {
+            // Calculate the max capacity which can not be bigger than MAX_ALLOWED_MPSC_CAPACITY.
+            // This is forced by the MpscChunkedArrayQueue implementation as will try to round it
+            // up to the next power of two and so will overflow otherwise.
+            final int capacity = max(min(maxCapacity, MAX_ALLOWED_MPSC_CAPACITY), MIN_MAX_MPSC_CAPACITY);
+            return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscChunkedArrayQueue<T>(MPSC_CHUNK_SIZE, capacity) : new MpscChunkedAtomicArrayQueue<T>(MPSC_CHUNK_SIZE, capacity);
+        }
+
+        static <T> Queue<T> newMpscQueue() {
+            return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscUnboundedArrayQueue<T>(MPSC_CHUNK_SIZE) : new MpscUnboundedAtomicArrayQueue<T>(MPSC_CHUNK_SIZE);
+        }
+    }
+
     private static final class AtomicLongCounter extends AtomicLong implements LongCounter {
         private static final long serialVersionUID = 4074772784610639305L;
 
@@ -1477,13 +1400,5 @@ public final class PlatformDependent {
         public long value() {
             return get();
         }
-    }
-
-    private interface ThreadLocalRandomProvider {
-        Random current();
-    }
-
-    private PlatformDependent() {
-        // only static method supported
     }
 }

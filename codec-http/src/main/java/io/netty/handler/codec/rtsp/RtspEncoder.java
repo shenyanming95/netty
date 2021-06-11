@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.rtsp;
 
 import io.netty.buffer.ByteBuf;
@@ -32,14 +17,12 @@ public class RtspEncoder extends HttpObjectEncoder<HttpMessage> {
     private static final int CRLF_SHORT = (CR << 8) | LF;
 
     @Override
-    public boolean acceptOutboundMessage(final Object msg)
-           throws Exception {
+    public boolean acceptOutboundMessage(final Object msg) throws Exception {
         return super.acceptOutboundMessage(msg) && ((msg instanceof HttpRequest) || (msg instanceof HttpResponse));
     }
 
     @Override
-    protected void encodeInitialLine(final ByteBuf buf, final HttpMessage message)
-           throws Exception {
+    protected void encodeInitialLine(final ByteBuf buf, final HttpMessage message) throws Exception {
         if (message instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) message;
             ByteBufUtil.copy(request.method().asciiName(), buf);
@@ -57,8 +40,7 @@ public class RtspEncoder extends HttpObjectEncoder<HttpMessage> {
             buf.writeCharSequence(response.status().reasonPhrase(), CharsetUtil.US_ASCII);
             ByteBufUtil.writeShortBE(buf, CRLF_SHORT);
         } else {
-            throw new UnsupportedMessageTypeException("Unsupported type "
-                                + StringUtil.simpleClassName(message));
+            throw new UnsupportedMessageTypeException("Unsupported type " + StringUtil.simpleClassName(message));
         }
     }
 }

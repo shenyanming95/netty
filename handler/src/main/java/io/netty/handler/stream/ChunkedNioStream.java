@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.stream;
 
 import io.netty.buffer.ByteBuf;
@@ -33,12 +18,11 @@ public class ChunkedNioStream implements ChunkedInput<ByteBuf> {
     private final ReadableByteChannel in;
 
     private final int chunkSize;
-    private long offset;
-
     /**
      * Associated ByteBuffer
      */
     private final ByteBuffer byteBuffer;
+    private long offset;
 
     /**
      * Creates a new instance that fetches data from the specified channel.
@@ -56,8 +40,7 @@ public class ChunkedNioStream implements ChunkedInput<ByteBuf> {
     public ChunkedNioStream(ReadableByteChannel in, int chunkSize) {
         ObjectUtil.checkNotNull(in, "in");
         if (chunkSize <= 0) {
-            throw new IllegalArgumentException("chunkSize: " + chunkSize +
-                    " (expected: a positive integer)");
+            throw new IllegalArgumentException("chunkSize: " + chunkSize + " (expected: a positive integer)");
         }
         this.in = in;
         offset = 0;
@@ -109,7 +92,7 @@ public class ChunkedNioStream implements ChunkedInput<ByteBuf> {
         }
         // buffer cannot be not be empty from there
         int readBytes = byteBuffer.position();
-        for (;;) {
+        for (; ; ) {
             int localReadBytes = in.read(byteBuffer);
             if (localReadBytes < 0) {
                 break;

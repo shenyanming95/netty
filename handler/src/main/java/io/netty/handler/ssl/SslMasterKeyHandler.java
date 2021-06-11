@@ -37,25 +37,21 @@ import java.lang.reflect.Field;
  */
 public abstract class SslMasterKeyHandler extends ChannelInboundHandlerAdapter {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SslMasterKeyHandler.class);
-
-    /**
-     * The JRE SSLSessionImpl cannot be imported
-     */
-    private static final Class<?> SSL_SESSIONIMPL_CLASS;
-
-    /**
-     * The master key field in the SSLSessionImpl
-     */
-    private static final Field SSL_SESSIONIMPL_MASTER_SECRET_FIELD;
-
     /**
      * A system property that can be used to turn on/off the {@link SslMasterKeyHandler} dynamically without having
      * to edit your pipeline.
      * <code>-Dio.netty.ssl.masterKeyHandler=true</code>
      */
     public static final String SYSTEM_PROP_KEY = "io.netty.ssl.masterKeyHandler";
-
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SslMasterKeyHandler.class);
+    /**
+     * The JRE SSLSessionImpl cannot be imported
+     */
+    private static final Class<?> SSL_SESSIONIMPL_CLASS;
+    /**
+     * The master key field in the SSLSessionImpl
+     */
+    private static final Field SSL_SESSIONIMPL_MASTER_SECRET_FIELD;
     /**
      * The unavailability cause of whether the private Sun implementation of SSLSessionImpl is available.
      */
@@ -80,18 +76,18 @@ public abstract class SslMasterKeyHandler extends ChannelInboundHandlerAdapter {
 
     /**
      * Constructor.
-    */
+     */
     protected SslMasterKeyHandler() {
     }
 
     /**
      * Ensure that SSLSessionImpl is available.
+     *
      * @throws UnsatisfiedLinkError if unavailable
      */
     public static void ensureSunSslEngineAvailability() {
         if (UNAVAILABILITY_CAUSE != null) {
-            throw new IllegalStateException(
-                    "Failed to find SSLSessionImpl on classpath", UNAVAILABILITY_CAUSE);
+            throw new IllegalStateException("Failed to find SSLSessionImpl on classpath", UNAVAILABILITY_CAUSE);
         }
     }
 
@@ -111,9 +107,21 @@ public abstract class SslMasterKeyHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
+     * Create a {@link WiresharkSslMasterKeyHandler} instance.
+     * This TLS master key handler logs the master key and session-id in a format
+     * understood by Wireshark -- this can be especially useful if you need to ever
+     * decrypt a TLS session and are using perfect forward secrecy (i.e. Diffie-Hellman)
+     * The key and session identifier are forwarded to the log named 'io.netty.wireshark'.
+     */
+    public static SslMasterKeyHandler newWireSharkSslMasterKeyHandler() {
+        return new WiresharkSslMasterKeyHandler();
+    }
+
+    /**
      * Consume the master key for the session and the sessionId
+     *
      * @param masterKey A 48-byte secret shared between the client and server.
-     * @param session The current TLS session
+     * @param session   The current TLS session
      */
     protected abstract void accept(SecretKey masterKey, SSLSession session);
 
@@ -134,8 +142,7 @@ public abstract class SslMasterKeyHandler extends ChannelInboundHandlerAdapter {
                     try {
                         secretKey = (SecretKey) SSL_SESSIONIMPL_MASTER_SECRET_FIELD.get(sslSession);
                     } catch (IllegalAccessException e) {
-                        throw new IllegalArgumentException("Failed to access the field 'masterSecret' " +
-                                "via reflection.", e);
+                        throw new IllegalArgumentException("Failed to access the field 'masterSecret' " + "via reflection.", e);
                     }
                     accept(secretKey, sslSession);
                 } else if (OpenSsl.isAvailable() && engine instanceof ReferenceCountedOpenSslEngine) {
@@ -149,17 +156,6 @@ public abstract class SslMasterKeyHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * Create a {@link WiresharkSslMasterKeyHandler} instance.
-     * This TLS master key handler logs the master key and session-id in a format
-     * understood by Wireshark -- this can be especially useful if you need to ever
-     * decrypt a TLS session and are using perfect forward secrecy (i.e. Diffie-Hellman)
-     * The key and session identifier are forwarded to the log named 'io.netty.wireshark'.
-     */
-    public static SslMasterKeyHandler newWireSharkSslMasterKeyHandler() {
-        return new WiresharkSslMasterKeyHandler();
-    }
-
-    /**
      * Record the session identifier and master key to the {@link InternalLogger} named <code>io.netty.wireshark</code>.
      * ex. <code>RSA Session-ID:XXX Master-Key:YYY</code>
      * This format is understood by Wireshark 1.6.0.
@@ -168,8 +164,7 @@ public abstract class SslMasterKeyHandler extends ChannelInboundHandlerAdapter {
      */
     private static final class WiresharkSslMasterKeyHandler extends SslMasterKeyHandler {
 
-        private static final InternalLogger wireshark_logger =
-                InternalLoggerFactory.getInstance("io.netty.wireshark");
+        private static final InternalLogger wireshark_logger = InternalLoggerFactory.getInstance("io.netty.wireshark");
 
         private static final char[] hexCode = "0123456789ABCDEF".toCharArray();
 
@@ -179,9 +174,7 @@ public abstract class SslMasterKeyHandler extends ChannelInboundHandlerAdapter {
                 throw new IllegalArgumentException("An invalid length master key was provided.");
             }
             final byte[] sessionId = session.getId();
-            wireshark_logger.warn("RSA Session-ID:{} Master-Key:{}",
-                    ByteBufUtil.hexDump(sessionId).toLowerCase(),
-                    ByteBufUtil.hexDump(masterKey.getEncoded()).toLowerCase());
+            wireshark_logger.warn("RSA Session-ID:{} Master-Key:{}", ByteBufUtil.hexDump(sessionId).toLowerCase(), ByteBufUtil.hexDump(masterKey.getEncoded()).toLowerCase());
         }
     }
 

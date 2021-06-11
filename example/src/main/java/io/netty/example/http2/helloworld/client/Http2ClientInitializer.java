@@ -50,16 +50,7 @@ public class Http2ClientInitializer extends ChannelInitializer<SocketChannel> {
     @Override
     public void initChannel(SocketChannel ch) throws Exception {
         final Http2Connection connection = new DefaultHttp2Connection(false);
-        connectionHandler = new HttpToHttp2ConnectionHandlerBuilder()
-                .frameListener(new DelegatingDecompressorFrameListener(
-                        connection,
-                        new InboundHttp2ToHttpAdapterBuilder(connection)
-                                .maxContentLength(maxContentLength)
-                                .propagateSettings(true)
-                                .build()))
-                .frameLogger(logger)
-                .connection(connection)
-                .build();
+        connectionHandler = new HttpToHttp2ConnectionHandlerBuilder().frameListener(new DelegatingDecompressorFrameListener(connection, new InboundHttp2ToHttpAdapterBuilder(connection).maxContentLength(maxContentLength).propagateSettings(true).build())).frameLogger(logger).connection(connection).build();
         responseHandler = new HttpResponseHandler();
         settingsHandler = new Http2SettingsHandler(ch.newPromise());
         if (sslCtx != null) {
@@ -113,10 +104,18 @@ public class Http2ClientInitializer extends ChannelInitializer<SocketChannel> {
         Http2ClientUpgradeCodec upgradeCodec = new Http2ClientUpgradeCodec(connectionHandler);
         HttpClientUpgradeHandler upgradeHandler = new HttpClientUpgradeHandler(sourceCodec, upgradeCodec, 65536);
 
-        ch.pipeline().addLast(sourceCodec,
-                              upgradeHandler,
-                              new UpgradeRequestHandler(),
-                              new UserEventLogger());
+        ch.pipeline().addLast(sourceCodec, upgradeHandler, new UpgradeRequestHandler(), new UserEventLogger());
+    }
+
+    /**
+     * Class that logs any User Events triggered on this channel.
+     */
+    private static class UserEventLogger extends ChannelInboundHandlerAdapter {
+        @Override
+        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+            System.out.println("User Event Triggered: " + evt);
+            ctx.fireUserEventTriggered(evt);
+        }
     }
 
     /**
@@ -126,8 +125,7 @@ public class Http2ClientInitializer extends ChannelInitializer<SocketChannel> {
 
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            DefaultFullHttpRequest upgradeRequest =
-                    new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/", Unpooled.EMPTY_BUFFER);
+            DefaultFullHttpRequest upgradeRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/", Unpooled.EMPTY_BUFFER);
 
             // Set HOST header as the remote peer may require it.
             InetSocketAddress remote = (InetSocketAddress) ctx.channel().remoteAddress();
@@ -145,17 +143,6 @@ public class Http2ClientInitializer extends ChannelInitializer<SocketChannel> {
             ctx.pipeline().remove(this);
 
             configureEndOfPipeline(ctx.pipeline());
-        }
-    }
-
-    /**
-     * Class that logs any User Events triggered on this channel.
-     */
-    private static class UserEventLogger extends ChannelInboundHandlerAdapter {
-        @Override
-        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-            System.out.println("User Event Triggered: " + evt);
-            ctx.fireUserEventTriggered(evt);
         }
     }
 }

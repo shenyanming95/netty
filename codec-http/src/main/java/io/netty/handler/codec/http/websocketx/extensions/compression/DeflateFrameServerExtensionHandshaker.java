@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.websocketx.extensions.compression;
 
 import io.netty.handler.codec.http.websocketx.extensions.*;
@@ -43,8 +28,7 @@ public final class DeflateFrameServerExtensionHandshaker implements WebSocketSer
     /**
      * Constructor with custom configuration.
      *
-     * @param compressionLevel
-     *            Compression level between 0 and 9 (default is 6).
+     * @param compressionLevel Compression level between 0 and 9 (default is 6).
      */
     public DeflateFrameServerExtensionHandshaker(int compressionLevel) {
         this(compressionLevel, WebSocketExtensionFilterProvider.DEFAULT);
@@ -53,16 +37,12 @@ public final class DeflateFrameServerExtensionHandshaker implements WebSocketSer
     /**
      * Constructor with custom configuration.
      *
-     * @param compressionLevel
-     *            Compression level between 0 and 9 (default is 6).
-     * @param extensionFilterProvider
-     *            provides server extension filters for per frame deflate encoder and decoder.
+     * @param compressionLevel        Compression level between 0 and 9 (default is 6).
+     * @param extensionFilterProvider provides server extension filters for per frame deflate encoder and decoder.
      */
-    public DeflateFrameServerExtensionHandshaker(int compressionLevel,
-            WebSocketExtensionFilterProvider extensionFilterProvider) {
+    public DeflateFrameServerExtensionHandshaker(int compressionLevel, WebSocketExtensionFilterProvider extensionFilterProvider) {
         if (compressionLevel < 0 || compressionLevel > 9) {
-            throw new IllegalArgumentException(
-                    "compressionLevel: " + compressionLevel + " (expected: 0-9)");
+            throw new IllegalArgumentException("compressionLevel: " + compressionLevel + " (expected: 0-9)");
         }
         this.compressionLevel = compressionLevel;
         this.extensionFilterProvider = checkNotNull(extensionFilterProvider, "extensionFilterProvider");
@@ -70,8 +50,7 @@ public final class DeflateFrameServerExtensionHandshaker implements WebSocketSer
 
     @Override
     public WebSocketServerExtension handshakeExtension(WebSocketExtensionData extensionData) {
-        if (!X_WEBKIT_DEFLATE_FRAME_EXTENSION.equals(extensionData.name()) &&
-            !DEFLATE_FRAME_EXTENSION.equals(extensionData.name())) {
+        if (!X_WEBKIT_DEFLATE_FRAME_EXTENSION.equals(extensionData.name()) && !DEFLATE_FRAME_EXTENSION.equals(extensionData.name())) {
             return null;
         }
 
@@ -88,8 +67,7 @@ public final class DeflateFrameServerExtensionHandshaker implements WebSocketSer
         private final int compressionLevel;
         private final WebSocketExtensionFilterProvider extensionFilterProvider;
 
-        DeflateFrameServerExtension(int compressionLevel, String extensionName,
-                WebSocketExtensionFilterProvider extensionFilterProvider) {
+        DeflateFrameServerExtension(int compressionLevel, String extensionName, WebSocketExtensionFilterProvider extensionFilterProvider) {
             this.extensionName = extensionName;
             this.compressionLevel = compressionLevel;
             this.extensionFilterProvider = extensionFilterProvider;
@@ -102,8 +80,7 @@ public final class DeflateFrameServerExtensionHandshaker implements WebSocketSer
 
         @Override
         public WebSocketExtensionEncoder newExtensionEncoder() {
-            return new PerFrameDeflateEncoder(compressionLevel, 15, false,
-                                              extensionFilterProvider.encoderFilter());
+            return new PerFrameDeflateEncoder(compressionLevel, 15, false, extensionFilterProvider.encoderFilter());
         }
 
         @Override

@@ -22,14 +22,14 @@ import java.nio.ByteBuffer;
 
 /**
  * Represents an array of kevent structures, backed by offheap memory.
- *
+ * <p>
  * struct kevent {
- *  uintptr_t ident;
- *  short     keventFilter;
- *  u_short   flags;
- *  u_int     fflags;
- *  intptr_t  data;
- *  void      *udata;
+ * uintptr_t ident;
+ * short     keventFilter;
+ * u_short   flags;
+ * u_int     fflags;
+ * intptr_t  data;
+ * void      *udata;
  * };
  */
 final class KQueueEventArray {
@@ -53,6 +53,16 @@ final class KQueueEventArray {
         memoryAddress = Buffer.memoryAddress(memory);
         this.capacity = capacity;
     }
+
+    private static int getKEventOffset(int index) {
+        return index * KQUEUE_EVENT_SIZE;
+    }
+
+    private static int calculateBufferCapacity(int capacity) {
+        return capacity * KQUEUE_EVENT_SIZE;
+    }
+
+    private static native void evSet(long keventAddress, int ident, short filter, short flags, int fflags);
 
     /**
      * Return the {@code memoryAddress} which points to the start of this {@link KQueueEventArray}.
@@ -108,8 +118,7 @@ final class KQueueEventArray {
             memoryAddress = Buffer.memoryAddress(buffer);
         } catch (OutOfMemoryError e) {
             if (throwIfFail) {
-                OutOfMemoryError error = new OutOfMemoryError(
-                        "unable to allocate " + newLength + " new bytes! Existing capacity is: " + capacity);
+                OutOfMemoryError error = new OutOfMemoryError("unable to allocate " + newLength + " new bytes! Existing capacity is: " + capacity);
                 error.initCause(e);
                 throw error;
             }
@@ -122,10 +131,6 @@ final class KQueueEventArray {
     void free() {
         Buffer.free(memory);
         memoryAddress = size = capacity = 0;
-    }
-
-    private static int getKEventOffset(int index) {
-        return index * KQUEUE_EVENT_SIZE;
     }
 
     private long getKEventOffsetAddress(int index) {
@@ -164,10 +169,4 @@ final class KQueueEventArray {
         }
         return memory.getLong(getKEventOffset(index) + KQUEUE_DATA_OFFSET);
     }
-
-    private static int calculateBufferCapacity(int capacity) {
-        return capacity * KQUEUE_EVENT_SIZE;
-    }
-
-    private static native void evSet(long keventAddress, int ident, short filter, short flags, int fflags);
 }

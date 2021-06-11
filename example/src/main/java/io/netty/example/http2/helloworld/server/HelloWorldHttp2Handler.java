@@ -33,17 +33,13 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
 
     static final ByteBuf RESPONSE_BYTES = unreleasableBuffer(copiedBuffer("Hello World", CharsetUtil.UTF_8));
 
-    HelloWorldHttp2Handler(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder,
-                           Http2Settings initialSettings) {
+    HelloWorldHttp2Handler(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder, Http2Settings initialSettings) {
         super(decoder, encoder, initialSettings);
     }
 
     private static Http2Headers http1HeadersToHttp2Headers(FullHttpRequest request) {
         CharSequence host = request.headers().get(HttpHeaderNames.HOST);
-        Http2Headers http2Headers = new DefaultHttp2Headers()
-                .method(HttpMethod.GET.asciiName())
-                .path(request.uri())
-                .scheme(HttpScheme.HTTP.name());
+        Http2Headers http2Headers = new DefaultHttp2Headers().method(HttpMethod.GET.asciiName()).path(request.uri()).scheme(HttpScheme.HTTP.name());
         if (host != null) {
             http2Headers.authority(host);
         }
@@ -57,9 +53,8 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof HttpServerUpgradeHandler.UpgradeEvent) {
-            HttpServerUpgradeHandler.UpgradeEvent upgradeEvent =
-                    (HttpServerUpgradeHandler.UpgradeEvent) evt;
-            onHeadersRead(ctx, 1, http1HeadersToHttp2Headers(upgradeEvent.upgradeRequest()), 0 , true);
+            HttpServerUpgradeHandler.UpgradeEvent upgradeEvent = (HttpServerUpgradeHandler.UpgradeEvent) evt;
+            onHeadersRead(ctx, 1, http1HeadersToHttp2Headers(upgradeEvent.upgradeRequest()), 0, true);
         }
         super.userEventTriggered(ctx, evt);
     }
@@ -93,8 +88,7 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     }
 
     @Override
-    public void onHeadersRead(ChannelHandlerContext ctx, int streamId,
-                              Http2Headers headers, int padding, boolean endOfStream) {
+    public void onHeadersRead(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int padding, boolean endOfStream) {
         if (endOfStream) {
             ByteBuf content = ctx.alloc().buffer();
             content.writeBytes(RESPONSE_BYTES.duplicate());
@@ -104,14 +98,12 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     }
 
     @Override
-    public void onHeadersRead(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int streamDependency,
-                              short weight, boolean exclusive, int padding, boolean endOfStream) {
+    public void onHeadersRead(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int streamDependency, short weight, boolean exclusive, int padding, boolean endOfStream) {
         onHeadersRead(ctx, streamId, headers, padding, endOfStream);
     }
 
     @Override
-    public void onPriorityRead(ChannelHandlerContext ctx, int streamId, int streamDependency,
-                               short weight, boolean exclusive) {
+    public void onPriorityRead(ChannelHandlerContext ctx, int streamId, int streamDependency, short weight, boolean exclusive) {
     }
 
     @Override
@@ -135,8 +127,7 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     }
 
     @Override
-    public void onPushPromiseRead(ChannelHandlerContext ctx, int streamId, int promisedStreamId,
-                                  Http2Headers headers, int padding) {
+    public void onPushPromiseRead(ChannelHandlerContext ctx, int streamId, int promisedStreamId, Http2Headers headers, int padding) {
     }
 
     @Override
@@ -148,7 +139,6 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     }
 
     @Override
-    public void onUnknownFrame(ChannelHandlerContext ctx, byte frameType, int streamId,
-                               Http2Flags flags, ByteBuf payload) {
+    public void onUnknownFrame(ChannelHandlerContext ctx, byte frameType, int streamId, Http2Flags flags, ByteBuf payload) {
     }
 }

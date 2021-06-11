@@ -159,14 +159,14 @@ public final class KQueueDomainSocketChannelConfig extends KQueueChannelConfig i
     }
 
     @Override
-    public KQueueDomainSocketChannelConfig setReadMode(DomainSocketReadMode mode) {
-        this.mode = ObjectUtil.checkNotNull(mode, "mode");
-        return this;
+    public DomainSocketReadMode getReadMode() {
+        return mode;
     }
 
     @Override
-    public DomainSocketReadMode getReadMode() {
-        return mode;
+    public KQueueDomainSocketChannelConfig setReadMode(DomainSocketReadMode mode) {
+        this.mode = ObjectUtil.checkNotNull(mode, "mode");
+        return this;
     }
 
     public int getSendBufferSize() {

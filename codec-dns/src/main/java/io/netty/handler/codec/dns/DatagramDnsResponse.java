@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.dns;
 
 import io.netty.channel.AddressedEnvelope;
@@ -25,8 +10,7 @@ import java.net.SocketAddress;
  * A {@link DnsResponse} implementation for UDP/IP.
  */
 @UnstableApi
-public class DatagramDnsResponse extends DefaultDnsResponse
-        implements AddressedEnvelope<DatagramDnsResponse, InetSocketAddress> {
+public class DatagramDnsResponse extends DefaultDnsResponse implements AddressedEnvelope<DatagramDnsResponse, InetSocketAddress> {
 
     private final InetSocketAddress sender;
     private final InetSocketAddress recipient;
@@ -35,9 +19,9 @@ public class DatagramDnsResponse extends DefaultDnsResponse
      * Creates a new instance with the {@link DnsOpCode#QUERY} {@code opCode} and
      * the {@link DnsResponseCode#NOERROR} {@code RCODE}.
      *
-     * @param sender the address of the sender
+     * @param sender    the address of the sender
      * @param recipient the address of the recipient
-     * @param id the {@code ID} of the DNS response
+     * @param id        the {@code ID} of the DNS response
      */
     public DatagramDnsResponse(InetSocketAddress sender, InetSocketAddress recipient, int id) {
         this(sender, recipient, id, DnsOpCode.QUERY, DnsResponseCode.NOERROR);
@@ -46,10 +30,10 @@ public class DatagramDnsResponse extends DefaultDnsResponse
     /**
      * Creates a new instance with the {@link DnsResponseCode#NOERROR} responseCode.
      *
-     * @param sender the address of the sender
+     * @param sender    the address of the sender
      * @param recipient the address of the recipient
-     * @param id the {@code ID} of the DNS response
-     * @param opCode the {@code opCode} of the DNS response
+     * @param id        the {@code ID} of the DNS response
+     * @param opCode    the {@code opCode} of the DNS response
      */
     public DatagramDnsResponse(InetSocketAddress sender, InetSocketAddress recipient, int id, DnsOpCode opCode) {
         this(sender, recipient, id, opCode, DnsResponseCode.NOERROR);
@@ -58,15 +42,13 @@ public class DatagramDnsResponse extends DefaultDnsResponse
     /**
      * Creates a new instance.
      *
-     * @param sender the address of the sender
-     * @param recipient the address of the recipient
-     * @param id the {@code ID} of the DNS response
-     * @param opCode the {@code opCode} of the DNS response
+     * @param sender       the address of the sender
+     * @param recipient    the address of the recipient
+     * @param id           the {@code ID} of the DNS response
+     * @param opCode       the {@code opCode} of the DNS response
      * @param responseCode the {@code RCODE} of the DNS response
      */
-    public DatagramDnsResponse(
-            InetSocketAddress sender, InetSocketAddress recipient,
-            int id, DnsOpCode opCode, DnsResponseCode responseCode) {
+    public DatagramDnsResponse(InetSocketAddress sender, InetSocketAddress recipient, int id, DnsOpCode opCode, DnsResponseCode responseCode) {
         super(id, opCode, responseCode);
 
         if (recipient == null && sender == null) {
@@ -191,8 +173,7 @@ public class DatagramDnsResponse extends DefaultDnsResponse
             return false;
         }
 
-        @SuppressWarnings("unchecked")
-        final AddressedEnvelope<?, SocketAddress> that = (AddressedEnvelope<?, SocketAddress>) obj;
+        @SuppressWarnings("unchecked") final AddressedEnvelope<?, SocketAddress> that = (AddressedEnvelope<?, SocketAddress>) obj;
         if (sender() == null) {
             if (that.sender() != null) {
                 return false;

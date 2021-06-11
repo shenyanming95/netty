@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.buffer.ByteBuf;
@@ -39,13 +24,8 @@ import static java.util.Arrays.asList;
  * Constants for SSL packets.
  */
 final class SslUtils {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SslUtils.class);
-
     // See https://tools.ietf.org/html/rfc8446#appendix-B.4
-    static final Set<String> TLSV13_CIPHERS = Collections.unmodifiableSet(new LinkedHashSet<String>(
-            asList("TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256",
-                          "TLS_AES_128_GCM_SHA256", "TLS_AES_128_CCM_8_SHA256",
-                          "TLS_AES_128_CCM_SHA256")));
+    static final Set<String> TLSV13_CIPHERS = Collections.unmodifiableSet(new LinkedHashSet<String>(asList("TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256", "TLS_AES_128_GCM_SHA256", "TLS_AES_128_CCM_8_SHA256", "TLS_AES_128_CCM_SHA256")));
     // Protocols
     static final String PROTOCOL_SSL_V2_HELLO = "SSLv2Hello";
     static final String PROTOCOL_SSL_V2 = "SSLv2";
@@ -54,53 +34,43 @@ final class SslUtils {
     static final String PROTOCOL_TLS_V1_1 = "TLSv1.1";
     static final String PROTOCOL_TLS_V1_2 = "TLSv1.2";
     static final String PROTOCOL_TLS_V1_3 = "TLSv1.3";
-
     static final String INVALID_CIPHER = "SSL_NULL_WITH_NULL_NULL";
-
     /**
      * change cipher spec
      */
     static final int SSL_CONTENT_TYPE_CHANGE_CIPHER_SPEC = 20;
-
     /**
      * alert
      */
     static final int SSL_CONTENT_TYPE_ALERT = 21;
-
     /**
      * handshake
      */
     static final int SSL_CONTENT_TYPE_HANDSHAKE = 22;
-
     /**
      * application data
      */
     static final int SSL_CONTENT_TYPE_APPLICATION_DATA = 23;
-
     /**
      * HeartBeat Extension
      */
     static final int SSL_CONTENT_TYPE_EXTENSION_HEARTBEAT = 24;
-
     /**
      * the length of the ssl record header (in bytes)
      */
     static final int SSL_RECORD_HEADER_LENGTH = 5;
-
     /**
      * Not enough data in buffer to parse the record length
      */
     static final int NOT_ENOUGH_DATA = -1;
-
     /**
      * data is not encrypted
      */
     static final int NOT_ENCRYPTED = -2;
-
     static final String[] DEFAULT_CIPHER_SUITES;
     static final String[] DEFAULT_TLSV13_CIPHER_SUITES;
-    static final String[] TLSV13_CIPHER_SUITES = { "TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384" };
-
+    static final String[] TLSV13_CIPHER_SUITES = {"TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384"};
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SslUtils.class);
     private static final boolean TLSV1_3_JDK_SUPPORTED;
     private static final boolean TLSV1_3_JDK_DEFAULT_ENABLED;
 
@@ -112,13 +82,13 @@ final class SslUtils {
         try {
             SSLContext context = SSLContext.getInstance("TLS");
             context.init(null, new TrustManager[0], null);
-            for (String supported: context.getSupportedSSLParameters().getProtocols()) {
+            for (String supported : context.getSupportedSSLParameters().getProtocols()) {
                 if (PROTOCOL_TLS_V1_3.equals(supported)) {
                     tlsv13Supported = true;
                     break;
                 }
             }
-            for (String enabled: context.getDefaultSSLParameters().getProtocols()) {
+            for (String enabled : context.getDefaultSSLParameters().getProtocols()) {
                 if (PROTOCOL_TLS_V1_3.equals(enabled)) {
                     tlsv13Enabled = true;
                     break;
@@ -160,6 +130,9 @@ final class SslUtils {
         DEFAULT_CIPHER_SUITES = defaultCiphers.toArray(EmptyArrays.EMPTY_STRINGS);
     }
 
+    private SslUtils() {
+    }
+
     /**
      * Returns {@code true} if the JDK itself supports TLSv1.3, {@code false} otherwise.
      */
@@ -178,7 +151,7 @@ final class SslUtils {
      * Add elements from {@code names} into {@code enabled} if they are in {@code supported}.
      */
     static void addIfSupported(Set<String> supported, List<String> enabled, String... names) {
-        for (String n: names) {
+        for (String n : names) {
             if (supported.contains(n)) {
                 enabled.add(n);
             }
@@ -215,18 +188,16 @@ final class SslUtils {
      * Return how much bytes can be read out of the encrypted data. Be aware that this method will not increase
      * the readerIndex of the given {@link ByteBuf}.
      *
-     * @param   buffer
-     *                  The {@link ByteBuf} to read from. Be aware that it must have at least
-     *                  {@link #SSL_RECORD_HEADER_LENGTH} bytes to read,
-     *                  otherwise it will throw an {@link IllegalArgumentException}.
+     * @param buffer The {@link ByteBuf} to read from. Be aware that it must have at least
+     *               {@link #SSL_RECORD_HEADER_LENGTH} bytes to read,
+     *               otherwise it will throw an {@link IllegalArgumentException}.
      * @return length
-     *                  The length of the encrypted packet that is included in the buffer or
-     *                  {@link #SslUtils#NOT_ENOUGH_DATA} if not enough data is present in the
-     *                  {@link ByteBuf}. This will return {@link SslUtils#NOT_ENCRYPTED} if
-     *                  the given {@link ByteBuf} is not encrypted at all.
-     * @throws IllegalArgumentException
-     *                  Is thrown if the given {@link ByteBuf} has not at least {@link #SSL_RECORD_HEADER_LENGTH}
-     *                  bytes to read.
+     * The length of the encrypted packet that is included in the buffer or
+     * {@link #SslUtils#NOT_ENOUGH_DATA} if not enough data is present in the
+     * {@link ByteBuf}. This will return {@link SslUtils#NOT_ENCRYPTED} if
+     * the given {@link ByteBuf} is not encrypted at all.
+     * @throws IllegalArgumentException Is thrown if the given {@link ByteBuf} has not at least {@link #SSL_RECORD_HEADER_LENGTH}
+     *                                  bytes to read.
      */
     static int getEncryptedPacketLength(ByteBuf buffer, int offset) {
         int packetLength = 0;
@@ -268,8 +239,7 @@ final class SslUtils {
             int majorVersion = buffer.getUnsignedByte(offset + headerLength + 1);
             if (majorVersion == 2 || majorVersion == 3) {
                 // SSLv2
-                packetLength = headerLength == 2 ?
-                        (shortBE(buffer, offset) & 0x7FFF) + 2 : (shortBE(buffer, offset) & 0x3FFF) + 3;
+                packetLength = headerLength == 2 ? (shortBE(buffer, offset) & 0x7FFF) + 2 : (shortBE(buffer, offset) & 0x3FFF) + 3;
                 if (packetLength <= headerLength) {
                     return NOT_ENOUGH_DATA;
                 }
@@ -283,15 +253,13 @@ final class SslUtils {
     // Reads a big-endian unsigned short integer from the buffer
     @SuppressWarnings("deprecation")
     private static int unsignedShortBE(ByteBuf buffer, int offset) {
-        return buffer.order() == ByteOrder.BIG_ENDIAN ?
-                buffer.getUnsignedShort(offset) : buffer.getUnsignedShortLE(offset);
+        return buffer.order() == ByteOrder.BIG_ENDIAN ? buffer.getUnsignedShort(offset) : buffer.getUnsignedShortLE(offset);
     }
 
     // Reads a big-endian short integer from the buffer
     @SuppressWarnings("deprecation")
     private static short shortBE(ByteBuf buffer, int offset) {
-        return buffer.order() == ByteOrder.BIG_ENDIAN ?
-                buffer.getShort(offset) : buffer.getShortLE(offset);
+        return buffer.order() == ByteOrder.BIG_ENDIAN ? buffer.getShort(offset) : buffer.getShortLE(offset);
     }
 
     private static short unsignedByte(byte b) {
@@ -305,8 +273,7 @@ final class SslUtils {
 
     // Reads a big-endian short integer from the buffer
     private static short shortBE(ByteBuffer buffer, int offset) {
-        return buffer.order() == ByteOrder.BIG_ENDIAN ?
-                buffer.getShort(offset) : ByteBufUtil.swapShort(buffer.getShort(offset));
+        return buffer.order() == ByteOrder.BIG_ENDIAN ? buffer.getShort(offset) : ByteBufUtil.swapShort(buffer.getShort(offset));
     }
 
     static int getEncryptedPacketLength(ByteBuffer[] buffers, int offset) {
@@ -373,8 +340,7 @@ final class SslUtils {
             int majorVersion = unsignedByte(buffer.get(pos + headerLength + 1));
             if (majorVersion == 2 || majorVersion == 3) {
                 // SSLv2
-                packetLength = headerLength == 2 ?
-                        (shortBE(buffer, pos) & 0x7FFF) + 2 : (shortBE(buffer, pos) & 0x3FFF) + 3;
+                packetLength = headerLength == 2 ? (shortBE(buffer, pos) & 0x7FFF) + 2 : (shortBE(buffer, pos) & 0x3FFF) + 3;
                 if (packetLength <= headerLength) {
                     return NOT_ENOUGH_DATA;
                 }
@@ -418,8 +384,7 @@ final class SslUtils {
      * @see Base64#encode(ByteBuf, boolean)
      */
     static ByteBuf toBase64(ByteBufAllocator allocator, ByteBuf src) {
-        ByteBuf dst = Base64.encode(src, src.readerIndex(),
-                src.readableBytes(), true, Base64Dialect.STANDARD, allocator);
+        ByteBuf dst = Base64.encode(src, src.readerIndex(), src.readableBytes(), true, Base64Dialect.STANDARD, allocator);
         src.readerIndex(src.writerIndex());
         return dst;
     }
@@ -428,11 +393,7 @@ final class SslUtils {
      * Validate that the given hostname can be used in SNI extension.
      */
     static boolean isValidHostNameForSNI(String hostname) {
-        return hostname != null &&
-               hostname.indexOf('.') > 0 &&
-               !hostname.endsWith(".") &&
-               !NetUtil.isValidIpV4Address(hostname) &&
-               !NetUtil.isValidIpV6Address(hostname);
+        return hostname != null && hostname.indexOf('.') > 0 && !hostname.endsWith(".") && !NetUtil.isValidIpV4Address(hostname) && !NetUtil.isValidIpV6Address(hostname);
     }
 
     /**
@@ -445,8 +406,5 @@ final class SslUtils {
 
     static boolean isEmpty(Object[] arr) {
         return arr == null || arr.length == 0;
-    }
-
-    private SslUtils() {
     }
 }

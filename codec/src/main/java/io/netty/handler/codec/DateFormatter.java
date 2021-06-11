@@ -24,7 +24,7 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A formatter for HTTP header dates, such as "Expires" and "Date" headers, or "expires" field in "Set-Cookie".
- *
+ * <p>
  * On the parsing side, it honors RFC6265 (so it supports RFC1123).
  * Note that:
  * <ul>
@@ -33,7 +33,7 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  * </ul>
  * If you're looking for a date format that validates day of week, or supports other timezones, consider using
  * java.util.DateTimeFormatter.RFC_1123_DATE_TIME.
- *
+ * <p>
  * On the formatting side, it uses a subset of RFC1123 (2 digit day-of-month and 4 digit year) as per RFC2616.
  * This subset supports RFC6265.
  *
@@ -44,6 +44,15 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 public final class DateFormatter {
 
     private static final BitSet DELIMITERS = new BitSet();
+    private static final String[] DAY_OF_WEEK_TO_SHORT_NAME = new String[]{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    private static final String[] CALENDAR_MONTH_TO_SHORT_NAME = new String[]{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    private static final FastThreadLocal<DateFormatter> INSTANCES = new FastThreadLocal<DateFormatter>() {
+        @Override
+        protected DateFormatter initialValue() {
+            return new DateFormatter();
+        }
+    };
+
     static {
         DELIMITERS.set(0x09);
         for (char c = 0x20; c <= 0x2F; c++) {
@@ -60,22 +69,26 @@ public final class DateFormatter {
         }
     }
 
-    private static final String[] DAY_OF_WEEK_TO_SHORT_NAME =
-            new String[]{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    private final GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+    private final StringBuilder sb = new StringBuilder(29); // Sun, 27 Nov 2016 19:37:15 GMT
+    private boolean timeFound;
+    private int hours;
+    private int minutes;
+    private int seconds;
+    private boolean dayOfMonthFound;
+    private int dayOfMonth;
+    private boolean monthFound;
+    private int month;
+    private boolean yearFound;
+    private int year;
 
-    private static final String[] CALENDAR_MONTH_TO_SHORT_NAME =
-            new String[]{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-
-    private static final FastThreadLocal<DateFormatter> INSTANCES =
-            new FastThreadLocal<DateFormatter>() {
-                @Override
-                protected DateFormatter initialValue() {
-                    return new DateFormatter();
-                }
-            };
+    private DateFormatter() {
+        reset();
+    }
 
     /**
      * Parse some text into a {@link Date}, according to RFC6265
+     *
      * @param txt text to parse
      * @return a {@link Date}, or null if text couldn't be parsed
      */
@@ -85,9 +98,10 @@ public final class DateFormatter {
 
     /**
      * Parse some text into a {@link Date}, according to RFC6265
-     * @param txt text to parse
+     *
+     * @param txt   text to parse
      * @param start the start index inside {@code txt}
-     * @param end the end index inside {@code txt}
+     * @param end   the end index inside {@code txt}
      * @return a {@link Date}, or null if text couldn't be parsed
      */
     public static Date parseHttpDate(CharSequence txt, int start, int end) {
@@ -97,14 +111,14 @@ public final class DateFormatter {
         } else if (length < 0) {
             throw new IllegalArgumentException("Can't have end < start");
         } else if (length > 64) {
-            throw new IllegalArgumentException("Can't parse more than 64 chars," +
-                    "looks like a user error or a malformed header");
+            throw new IllegalArgumentException("Can't parse more than 64 chars," + "looks like a user error or a malformed header");
         }
         return formatter().parse0(checkNotNull(txt, "txt"), start, end);
     }
 
     /**
      * Format a {@link Date} into RFC1123 format
+     *
      * @param date the date to format
      * @return a RFC1123 string
      */
@@ -114,8 +128,9 @@ public final class DateFormatter {
 
     /**
      * Append a {@link Date} to a {@link StringBuilder} into RFC1123 format
+     *
      * @param date the date to format
-     * @param sb the StringBuilder
+     * @param sb   the StringBuilder
      * @return the same StringBuilder
      */
     public static StringBuilder append(Date date, StringBuilder sb) {
@@ -141,21 +156,11 @@ public final class DateFormatter {
         return c - 48;
     }
 
-    private final GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-    private final StringBuilder sb = new StringBuilder(29); // Sun, 27 Nov 2016 19:37:15 GMT
-    private boolean timeFound;
-    private int hours;
-    private int minutes;
-    private int seconds;
-    private boolean dayOfMonthFound;
-    private int dayOfMonth;
-    private boolean monthFound;
-    private int month;
-    private boolean yearFound;
-    private int year;
-
-    private DateFormatter() {
-        reset();
+    private static StringBuilder appendZeroLeftPadded(int value, StringBuilder sb) {
+        if (value < 10) {
+            sb.append('0');
+        }
+        return sb.append(value);
     }
 
     public void reset() {
@@ -193,7 +198,7 @@ public final class DateFormatter {
             if (isDigit(c)) {
                 currentPartValue = currentPartValue * 10 + getNumericalValue(c);
                 if (++numDigits > 2) {
-                  return false; // too many digits in this part
+                    return false; // too many digits in this part
                 }
             } else if (c == ':') {
                 if (numDigits == 0) {
@@ -318,10 +323,7 @@ public final class DateFormatter {
             char c2 = txt.charAt(tokenStart + 2);
             char c3 = txt.charAt(tokenStart + 3);
             if (isDigit(c0) && isDigit(c1) && isDigit(c2) && isDigit(c3)) {
-                year = getNumericalValue(c0) * 1000 +
-                        getNumericalValue(c1) * 100 +
-                        getNumericalValue(c2) * 10 +
-                        getNumericalValue(c3);
+                year = getNumericalValue(c0) * 1000 + getNumericalValue(c1) * 100 + getNumericalValue(c2) * 10 + getNumericalValue(c3);
                 return true;
             }
         }
@@ -389,11 +391,7 @@ public final class DateFormatter {
     }
 
     private boolean normalizeAndValidate() {
-        if (dayOfMonth < 1
-                || dayOfMonth > 31
-                || hours > 23
-                || minutes > 59
-                || seconds > 59) {
+        if (dayOfMonth < 1 || dayOfMonth > 31 || hours > 23 || minutes > 59 || seconds > 59) {
             return false;
         }
 
@@ -433,12 +431,5 @@ public final class DateFormatter {
         appendZeroLeftPadded(cal.get(Calendar.HOUR_OF_DAY), sb).append(':');
         appendZeroLeftPadded(cal.get(Calendar.MINUTE), sb).append(':');
         return appendZeroLeftPadded(cal.get(Calendar.SECOND), sb).append(" GMT");
-    }
-
-    private static StringBuilder appendZeroLeftPadded(int value, StringBuilder sb) {
-        if (value < 10) {
-            sb.append('0');
-        }
-        return sb.append(value);
     }
 }

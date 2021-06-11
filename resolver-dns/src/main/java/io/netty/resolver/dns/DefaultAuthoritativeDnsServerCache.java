@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.resolver.dns;
 
 import io.netty.channel.EventLoop;
@@ -66,8 +51,8 @@ public class DefaultAuthoritativeDnsServerCache implements AuthoritativeDnsServe
     /**
      * Create a cache.
      *
-     * @param minTtl the minimum TTL
-     * @param maxTtl the maximum TTL
+     * @param minTtl     the minimum TTL
+     * @param maxTtl     the maximum TTL
      * @param comparator the {@link Comparator} to order the {@link InetSocketAddress} for a hostname or {@code null}
      *                   if insertion order should be used.
      */
@@ -75,8 +60,7 @@ public class DefaultAuthoritativeDnsServerCache implements AuthoritativeDnsServe
         this.minTtl = Math.min(Cache.MAX_SUPPORTED_TTL_SECS, checkPositiveOrZero(minTtl, "minTtl"));
         this.maxTtl = Math.min(Cache.MAX_SUPPORTED_TTL_SECS, checkPositive(maxTtl, "maxTtl"));
         if (minTtl > maxTtl) {
-            throw new IllegalArgumentException(
-                    "minTtl: " + minTtl + ", maxTtl: " + maxTtl + " (expected: 0 <= minTtl <= maxTtl)");
+            throw new IllegalArgumentException("minTtl: " + minTtl + ", maxTtl: " + maxTtl + " (expected: 0 <= minTtl <= maxTtl)");
         }
         this.comparator = comparator;
     }
@@ -120,7 +104,6 @@ public class DefaultAuthoritativeDnsServerCache implements AuthoritativeDnsServe
 
     @Override
     public String toString() {
-        return "DefaultAuthoritativeDnsServerCache(minTtl=" + minTtl + ", maxTtl=" + maxTtl + ", cached nameservers=" +
-                resolveCache.size() + ')';
+        return "DefaultAuthoritativeDnsServerCache(minTtl=" + minTtl + ", maxTtl=" + maxTtl + ", cached nameservers=" + resolveCache.size() + ')';
     }
 }

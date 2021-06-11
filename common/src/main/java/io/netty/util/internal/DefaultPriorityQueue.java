@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.internal;
 
 import java.util.*;
@@ -22,10 +7,10 @@ import static io.netty.util.internal.PriorityQueueNode.INDEX_NOT_IN_QUEUE;
 /**
  * A priority queue which uses natural ordering of elements. Elements are also required to be of type
  * {@link PriorityQueueNode} for the purpose of maintaining the index in the priority queue.
+ *
  * @param <T> The object that is maintained in the queue.
  */
-public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends AbstractQueue<T>
-                                                                     implements PriorityQueue<T> {
+public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends AbstractQueue<T> implements PriorityQueue<T> {
     private static final PriorityQueueNode[] EMPTY_ARRAY = new PriorityQueueNode[0];
     private final Comparator<T> comparator;
     private T[] queue;
@@ -81,17 +66,14 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
     @Override
     public boolean offer(T e) {
         if (e.priorityQueueIndex(this) != INDEX_NOT_IN_QUEUE) {
-            throw new IllegalArgumentException("e.priorityQueueIndex(): " + e.priorityQueueIndex(this) +
-                    " (expected: " + INDEX_NOT_IN_QUEUE + ") + e: " + e);
+            throw new IllegalArgumentException("e.priorityQueueIndex(): " + e.priorityQueueIndex(this) + " (expected: " + INDEX_NOT_IN_QUEUE + ") + e: " + e);
         }
 
         // Check that the array capacity is enough to hold values by doubling capacity.
         if (size >= queue.length) {
             // Use a policy which allows for a 0 initial capacity. Same policy as JDK's priority queue, double when
             // "small", then grow by 50% when "large".
-            queue = Arrays.copyOf(queue, queue.length + ((queue.length < 64) ?
-                                                         (queue.length + 2) :
-                                                         (queue.length >>> 1)));
+            queue = Arrays.copyOf(queue, queue.length + ((queue.length < 64) ? (queue.length + 2) : (queue.length >>> 1)));
         }
 
         bubbleUp(size++, e);
@@ -208,29 +190,6 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
         return new PriorityQueueIterator();
     }
 
-    private final class PriorityQueueIterator implements Iterator<T> {
-        private int index;
-
-        @Override
-        public boolean hasNext() {
-            return index < size;
-        }
-
-        @Override
-        public T next() {
-            if (index >= size) {
-                throw new NoSuchElementException();
-            }
-
-            return queue[index++];
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove");
-        }
-    }
-
     private boolean contains(PriorityQueueNode node, int i) {
         return i >= 0 && i < size && node.equals(queue[i]);
     }
@@ -288,5 +247,28 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
         // We have found where node should live and still satisfy the min-heap property, so put it in the queue.
         queue[k] = node;
         node.priorityQueueIndex(this, k);
+    }
+
+    private final class PriorityQueueIterator implements Iterator<T> {
+        private int index;
+
+        @Override
+        public boolean hasNext() {
+            return index < size;
+        }
+
+        @Override
+        public T next() {
+            if (index >= size) {
+                throw new NoSuchElementException();
+            }
+
+            return queue[index++];
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("remove");
+        }
     }
 }

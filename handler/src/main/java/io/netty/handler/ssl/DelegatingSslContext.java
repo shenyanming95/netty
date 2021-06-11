@@ -95,8 +95,7 @@ public abstract class DelegatingSslContext extends SslContext {
     }
 
     @Override
-    protected SslHandler newHandler(ByteBufAllocator alloc, String peerHost, int peerPort,
-                                    boolean startTls, Executor executor) {
+    protected SslHandler newHandler(ByteBufAllocator alloc, String peerHost, int peerPort, boolean startTls, Executor executor) {
         SslHandler handler = ctx.newHandler(alloc, peerHost, peerPort, startTls, executor);
         initHandler(handler);
         return handler;

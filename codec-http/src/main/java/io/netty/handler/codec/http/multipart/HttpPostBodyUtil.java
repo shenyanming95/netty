@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.multipart;
 
 import io.netty.buffer.ByteBuf;
@@ -34,13 +19,46 @@ final class HttpPostBodyUtil {
      */
     public static final String DEFAULT_TEXT_CONTENT_TYPE = "text/plain";
 
+    private HttpPostBodyUtil() {
+    }
+
+    /**
+     * Find the first non whitespace
+     *
+     * @return the rank of the first non whitespace
+     */
+    static int findNonWhitespace(String sb, int offset) {
+        int result;
+        for (result = offset; result < sb.length(); result++) {
+            if (!Character.isWhitespace(sb.charAt(result))) {
+                break;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Find the end of String
+     *
+     * @return the rank of the end of string
+     */
+    static int findEndOfString(String sb) {
+        int result;
+        for (result = sb.length(); result > 0; result--) {
+            if (!Character.isWhitespace(sb.charAt(result - 1))) {
+                break;
+            }
+        }
+        return result;
+    }
+
     /**
      * Allowed mechanism for multipart
      * mechanism := "7bit"
-                  / "8bit"
-                  / "binary"
-       Not allowed: "quoted-printable"
-                  / "base64"
+     * / "8bit"
+     * / "binary"
+     * Not allowed: "quoted-printable"
+     * / "base64"
      */
     public enum TransferEncodingMechanism {
         /**
@@ -72,13 +90,10 @@ final class HttpPostBodyUtil {
         }
     }
 
-    private HttpPostBodyUtil() {
-    }
-
     /**
-    * This class intends to decrease the CPU in seeking ahead some bytes in
-    * HttpPostRequestDecoder
-    */
+     * This class intends to decrease the CPU in seeking ahead some bytes in
+     * HttpPostRequestDecoder
+     */
     static class SeekAheadOptimize {
         byte[] bytes;
         int readerIndex;
@@ -102,10 +117,9 @@ final class HttpPostBodyUtil {
         }
 
         /**
-        *
-        * @param minus this value will be used as (currentPos - minus) to set
-        * the current readerIndex in the buffer.
-        */
+         * @param minus this value will be used as (currentPos - minus) to set
+         *              the current readerIndex in the buffer.
+         */
         void setReadPosition(int minus) {
             pos -= minus;
             readerIndex = getReadPosition(pos);
@@ -113,41 +127,12 @@ final class HttpPostBodyUtil {
         }
 
         /**
-        *
-        * @param index raw index of the array (pos in general)
-        * @return the value equivalent of raw index to be used in readerIndex(value)
-        */
+         * @param index raw index of the array (pos in general)
+         * @return the value equivalent of raw index to be used in readerIndex(value)
+         */
         int getReadPosition(int index) {
             return index - origPos + readerIndex;
         }
-    }
-
-    /**
-     * Find the first non whitespace
-     * @return the rank of the first non whitespace
-     */
-    static int findNonWhitespace(String sb, int offset) {
-        int result;
-        for (result = offset; result < sb.length(); result ++) {
-            if (!Character.isWhitespace(sb.charAt(result))) {
-                break;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Find the end of String
-     * @return the rank of the end of string
-     */
-    static int findEndOfString(String sb) {
-        int result;
-        for (result = sb.length(); result > 0; result --) {
-            if (!Character.isWhitespace(sb.charAt(result - 1))) {
-                break;
-            }
-        }
-        return result;
     }
 
 }

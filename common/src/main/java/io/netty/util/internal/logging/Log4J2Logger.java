@@ -59,6 +59,23 @@ class Log4J2Logger extends ExtendedLoggerWrapper implements InternalLogger {
         }
     }
 
+    private static Level toLevel(InternalLogLevel level) {
+        switch (level) {
+            case INFO:
+                return Level.INFO;
+            case DEBUG:
+                return Level.DEBUG;
+            case WARN:
+                return Level.WARN;
+            case ERROR:
+                return Level.ERROR;
+            case TRACE:
+                return Level.TRACE;
+            default:
+                throw new Error();
+        }
+    }
+
     @Override
     public String name() {
         return getName();
@@ -122,22 +139,5 @@ class Log4J2Logger extends ExtendedLoggerWrapper implements InternalLogger {
     @Override
     public void log(InternalLogLevel level, Throwable t) {
         log(toLevel(level), EXCEPTION_MESSAGE, t);
-    }
-
-    private static Level toLevel(InternalLogLevel level) {
-        switch (level) {
-            case INFO:
-                return Level.INFO;
-            case DEBUG:
-                return Level.DEBUG;
-            case WARN:
-                return Level.WARN;
-            case ERROR:
-                return Level.ERROR;
-            case TRACE:
-                return Level.TRACE;
-            default:
-                throw new Error();
-        }
     }
 }

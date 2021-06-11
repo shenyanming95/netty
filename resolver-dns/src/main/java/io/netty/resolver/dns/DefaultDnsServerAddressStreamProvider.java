@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.resolver.dns;
 
 import io.netty.util.NetUtil;
@@ -37,13 +22,11 @@ import static io.netty.resolver.dns.DnsServerAddresses.sequential;
  * This may use the JDK's blocking DNS resolution to bootstrap the default DNS server addresses.
  */
 public final class DefaultDnsServerAddressStreamProvider implements DnsServerAddressStreamProvider {
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(DefaultDnsServerAddressStreamProvider.class);
     public static final DefaultDnsServerAddressStreamProvider INSTANCE = new DefaultDnsServerAddressStreamProvider();
-
+    static final int DNS_PORT = 53;
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultDnsServerAddressStreamProvider.class);
     private static final List<InetSocketAddress> DEFAULT_NAME_SERVER_LIST;
     private static final DnsServerAddresses DEFAULT_NAME_SERVERS;
-    static final int DNS_PORT = 53;
 
     static {
         final List<InetSocketAddress> defaultNameServers = new ArrayList<InetSocketAddress>(2);
@@ -62,9 +45,8 @@ public final class DefaultDnsServerAddressStreamProvider implements DnsServerAdd
                 Method nameservers = configClass.getMethod("nameservers");
                 Object instance = open.invoke(null);
 
-                @SuppressWarnings("unchecked")
-                final List<String> list = (List<String>) nameservers.invoke(instance);
-                for (String a: list) {
+                @SuppressWarnings("unchecked") final List<String> list = (List<String>) nameservers.invoke(instance);
+                for (String a : list) {
                     if (a != null) {
                         defaultNameServers.add(new InetSocketAddress(SocketUtils.addressByName(a), DNS_PORT));
                     }
@@ -77,29 +59,20 @@ public final class DefaultDnsServerAddressStreamProvider implements DnsServerAdd
 
         if (!defaultNameServers.isEmpty()) {
             if (logger.isDebugEnabled()) {
-                logger.debug(
-                        "Default DNS servers: {} (sun.net.dns.ResolverConfiguration)", defaultNameServers);
+                logger.debug("Default DNS servers: {} (sun.net.dns.ResolverConfiguration)", defaultNameServers);
             }
         } else {
             // Depending if IPv6 or IPv4 is used choose the correct DNS servers provided by google:
             // https://developers.google.com/speed/public-dns/docs/using
             // https://docs.oracle.com/javase/7/docs/api/java/net/doc-files/net-properties.html
-            if (NetUtil.isIpV6AddressesPreferred() ||
-                    (NetUtil.LOCALHOST instanceof Inet6Address && !NetUtil.isIpV4StackPreferred())) {
-                Collections.addAll(
-                        defaultNameServers,
-                        SocketUtils.socketAddress("2001:4860:4860::8888", DNS_PORT),
-                        SocketUtils.socketAddress("2001:4860:4860::8844", DNS_PORT));
+            if (NetUtil.isIpV6AddressesPreferred() || (NetUtil.LOCALHOST instanceof Inet6Address && !NetUtil.isIpV4StackPreferred())) {
+                Collections.addAll(defaultNameServers, SocketUtils.socketAddress("2001:4860:4860::8888", DNS_PORT), SocketUtils.socketAddress("2001:4860:4860::8844", DNS_PORT));
             } else {
-                Collections.addAll(
-                        defaultNameServers,
-                        SocketUtils.socketAddress("8.8.8.8", DNS_PORT),
-                        SocketUtils.socketAddress("8.8.4.4", DNS_PORT));
+                Collections.addAll(defaultNameServers, SocketUtils.socketAddress("8.8.8.8", DNS_PORT), SocketUtils.socketAddress("8.8.4.4", DNS_PORT));
             }
 
             if (logger.isWarnEnabled()) {
-                logger.warn(
-                        "Default DNS servers: {} (Google Public DNS as a fallback)", defaultNameServers);
+                logger.warn("Default DNS servers: {} (Google Public DNS as a fallback)", defaultNameServers);
             }
         }
 
@@ -108,11 +81,6 @@ public final class DefaultDnsServerAddressStreamProvider implements DnsServerAdd
     }
 
     private DefaultDnsServerAddressStreamProvider() {
-    }
-
-    @Override
-    public DnsServerAddressStream nameServerAddressStream(String hostname) {
-        return DEFAULT_NAME_SERVERS.stream();
     }
 
     /**
@@ -137,5 +105,10 @@ public final class DefaultDnsServerAddressStreamProvider implements DnsServerAdd
      */
     public static DnsServerAddresses defaultAddresses() {
         return DEFAULT_NAME_SERVERS;
+    }
+
+    @Override
+    public DnsServerAddressStream nameServerAddressStream(String hostname) {
+        return DEFAULT_NAME_SERVERS.stream();
     }
 }

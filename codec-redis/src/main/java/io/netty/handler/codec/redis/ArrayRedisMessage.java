@@ -30,6 +30,90 @@ import java.util.List;
 @UnstableApi
 public class ArrayRedisMessage extends AbstractReferenceCounted implements RedisMessage {
 
+    /**
+     * A predefined null array instance for {@link ArrayRedisMessage}.
+     */
+    public static final ArrayRedisMessage NULL_INSTANCE = new ArrayRedisMessage() {
+        @Override
+        public boolean isNull() {
+            return true;
+        }
+
+        @Override
+        public ArrayRedisMessage retain() {
+            return this;
+        }
+
+        @Override
+        public ArrayRedisMessage retain(int increment) {
+            return this;
+        }
+
+        @Override
+        public ArrayRedisMessage touch() {
+            return this;
+        }
+
+        @Override
+        public ArrayRedisMessage touch(Object hint) {
+            return this;
+        }
+
+        @Override
+        public boolean release() {
+            return false;
+        }
+
+        @Override
+        public boolean release(int decrement) {
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return "NullArrayRedisMessage";
+        }
+    };
+    /**
+     * A predefined empty array instance for {@link ArrayRedisMessage}.
+     */
+    public static final ArrayRedisMessage EMPTY_INSTANCE = new ArrayRedisMessage() {
+
+        @Override
+        public ArrayRedisMessage retain() {
+            return this;
+        }
+
+        @Override
+        public ArrayRedisMessage retain(int increment) {
+            return this;
+        }
+
+        @Override
+        public ArrayRedisMessage touch() {
+            return this;
+        }
+
+        @Override
+        public ArrayRedisMessage touch(Object hint) {
+            return this;
+        }
+
+        @Override
+        public boolean release() {
+            return false;
+        }
+
+        @Override
+        public boolean release(int decrement) {
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return "EmptyArrayRedisMessage";
+        }
+    };
     private final List<RedisMessage> children;
 
     private ArrayRedisMessage() {
@@ -81,97 +165,7 @@ public class ArrayRedisMessage extends AbstractReferenceCounted implements Redis
 
     @Override
     public String toString() {
-        return new StringBuilder(StringUtil.simpleClassName(this))
-                .append('[')
-                .append("children=")
-                .append(children.size())
-                .append(']').toString();
+        return new StringBuilder(StringUtil.simpleClassName(this)).append('[').append("children=").append(children.size()).append(']').toString();
     }
-
-    /**
-     * A predefined null array instance for {@link ArrayRedisMessage}.
-     */
-    public static final ArrayRedisMessage NULL_INSTANCE = new ArrayRedisMessage() {
-        @Override
-        public boolean isNull() {
-            return true;
-        }
-
-        @Override
-        public ArrayRedisMessage retain() {
-            return this;
-        }
-
-        @Override
-        public ArrayRedisMessage retain(int increment) {
-            return this;
-        }
-
-        @Override
-        public ArrayRedisMessage touch() {
-            return this;
-        }
-
-        @Override
-        public ArrayRedisMessage touch(Object hint) {
-            return this;
-        }
-
-        @Override
-        public boolean release() {
-            return false;
-        }
-
-        @Override
-        public boolean release(int decrement) {
-            return false;
-        }
-
-        @Override
-        public String toString() {
-            return "NullArrayRedisMessage";
-        }
-    };
-
-    /**
-     * A predefined empty array instance for {@link ArrayRedisMessage}.
-     */
-    public static final ArrayRedisMessage EMPTY_INSTANCE = new ArrayRedisMessage() {
-
-        @Override
-        public ArrayRedisMessage retain() {
-            return this;
-        }
-
-        @Override
-        public ArrayRedisMessage retain(int increment) {
-            return this;
-        }
-
-        @Override
-        public ArrayRedisMessage touch() {
-            return this;
-        }
-
-        @Override
-        public ArrayRedisMessage touch(Object hint) {
-            return this;
-        }
-
-        @Override
-        public boolean release() {
-            return false;
-        }
-
-        @Override
-        public boolean release(int decrement) {
-            return false;
-        }
-
-        @Override
-        public String toString() {
-            return "EmptyArrayRedisMessage";
-        }
-    };
 
 }

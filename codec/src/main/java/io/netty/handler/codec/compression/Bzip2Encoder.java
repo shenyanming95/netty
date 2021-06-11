@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.compression;
 
 import io.netty.buffer.ByteBuf;
@@ -26,47 +11,31 @@ import static io.netty.handler.codec.compression.Bzip2Constants.*;
 
 /**
  * Compresses a {@link ByteBuf} using the Bzip2 algorithm.
- *
+ * <p>
  * See <a href="http://en.wikipedia.org/wiki/Bzip2">Bzip2</a>.
  */
 public class Bzip2Encoder extends MessageToByteEncoder<ByteBuf> {
     /**
-     * Current state of stream.
-     */
-    private enum State {
-        INIT,
-        INIT_BLOCK,
-        WRITE_DATA,
-        CLOSE_BLOCK
-    }
-
-    private State currentState = State.INIT;
-
-    /**
      * A writer that provides bit-level writes.
      */
     private final Bzip2BitWriter writer = new Bzip2BitWriter();
-
     /**
      * The declared maximum block size of the stream (before final run-length decoding).
      */
     private final int streamBlockSize;
-
+    private State currentState = State.INIT;
     /**
      * The merged CRC of all blocks compressed so far.
      */
     private int streamCRC;
-
     /**
      * The compressor for the current block.
      */
     private Bzip2BlockCompressor blockCompressor;
-
     /**
      * (@code true} if the compressed stream has been finished, otherwise {@code false}.
      */
     private volatile boolean finished;
-
     /**
      * Used to interact with its {@link ChannelPipeline} and other handlers.
      */
@@ -81,15 +50,14 @@ public class Bzip2Encoder extends MessageToByteEncoder<ByteBuf> {
 
     /**
      * Creates a new bzip2 encoder with the specified {@code blockSizeMultiplier}.
-     * @param blockSizeMultiplier
-     *        The Bzip2 block size as a multiple of 100,000 bytes (minimum {@code 1}, maximum {@code 9}).
-     *        Larger block sizes require more memory for both compression and decompression,
-     *        but give better compression ratios. {@code 9} will usually be the best value to use.
+     *
+     * @param blockSizeMultiplier The Bzip2 block size as a multiple of 100,000 bytes (minimum {@code 1}, maximum {@code 9}).
+     *                            Larger block sizes require more memory for both compression and decompression,
+     *                            but give better compression ratios. {@code 9} will usually be the best value to use.
      */
     public Bzip2Encoder(final int blockSizeMultiplier) {
         if (blockSizeMultiplier < MIN_BLOCK_SIZE || blockSizeMultiplier > MAX_BLOCK_SIZE) {
-            throw new IllegalArgumentException(
-                    "blockSizeMultiplier: " + blockSizeMultiplier + " (expected: 1-9)");
+            throw new IllegalArgumentException("blockSizeMultiplier: " + blockSizeMultiplier + " (expected: 1-9)");
         }
         streamBlockSize = blockSizeMultiplier * BASE_BLOCK_SIZE;
     }
@@ -101,7 +69,7 @@ public class Bzip2Encoder extends MessageToByteEncoder<ByteBuf> {
             return;
         }
 
-        for (;;) {
+        for (; ; ) {
             switch (currentState) {
                 case INIT:
                     out.ensureWritable(4);
@@ -161,7 +129,7 @@ public class Bzip2Encoder extends MessageToByteEncoder<ByteBuf> {
 
     /**
      * Close this {@link Bzip2Encoder} and so finish the encoding.
-     *
+     * <p>
      * The returned {@link ChannelFuture} will be notified once the operation completes.
      */
     public ChannelFuture close() {
@@ -245,5 +213,12 @@ public class Bzip2Encoder extends MessageToByteEncoder<ByteBuf> {
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         this.ctx = ctx;
+    }
+
+    /**
+     * Current state of stream.
+     */
+    private enum State {
+        INIT, INIT_BLOCK, WRITE_DATA, CLOSE_BLOCK
     }
 }

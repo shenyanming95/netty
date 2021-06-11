@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.buffer.ByteBuf;
@@ -43,8 +28,7 @@ public class HttpResponseEncoder extends HttpObjectEncoder<HttpResponse> {
     protected void sanitizeHeadersBeforeEncode(HttpResponse msg, boolean isAlwaysEmpty) {
         if (isAlwaysEmpty) {
             HttpResponseStatus status = msg.status();
-            if (status.codeClass() == HttpStatusClass.INFORMATIONAL ||
-                    status.code() == HttpResponseStatus.NO_CONTENT.code()) {
+            if (status.codeClass() == HttpStatusClass.INFORMATIONAL || status.code() == HttpResponseStatus.NO_CONTENT.code()) {
 
                 // Stripping Content-Length:
                 // See https://tools.ietf.org/html/rfc7230#section-3.3.2
@@ -81,8 +65,6 @@ public class HttpResponseEncoder extends HttpObjectEncoder<HttpResponse> {
             }
             return true;
         }
-        return status.code() == HttpResponseStatus.NO_CONTENT.code() ||
-                status.code() == HttpResponseStatus.NOT_MODIFIED.code() ||
-                status.code() == HttpResponseStatus.RESET_CONTENT.code();
+        return status.code() == HttpResponseStatus.NO_CONTENT.code() || status.code() == HttpResponseStatus.NOT_MODIFIED.code() || status.code() == HttpResponseStatus.RESET_CONTENT.code();
     }
 }

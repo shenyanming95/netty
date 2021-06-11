@@ -39,8 +39,7 @@ import static java.lang.Math.min;
  */
 @UnstableApi
 public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowController {
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(DefaultHttp2RemoteFlowController.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultHttp2RemoteFlowController.class);
     private static final int MIN_WRITABLE_CHUNK = 32 * 1024;
     private final Http2Connection connection;
     private final Http2Connection.PropertyKey stateKey;
@@ -54,8 +53,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
         this(connection, (Listener) null);
     }
 
-    public DefaultHttp2RemoteFlowController(Http2Connection connection,
-                                            StreamByteDistributor streamByteDistributor) {
+    public DefaultHttp2RemoteFlowController(Http2Connection connection, StreamByteDistributor streamByteDistributor) {
         this(connection, streamByteDistributor, null);
     }
 
@@ -63,9 +61,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
         this(connection, new WeightedFairQueueByteDistributor(connection), listener);
     }
 
-    public DefaultHttp2RemoteFlowController(Http2Connection connection,
-                                            StreamByteDistributor streamByteDistributor,
-                                            final Listener listener) {
+    public DefaultHttp2RemoteFlowController(Http2Connection connection, StreamByteDistributor streamByteDistributor, final Listener listener) {
         this.connection = checkNotNull(connection, "connection");
         this.streamByteDistributor = checkNotNull(streamByteDistributor, "streamWriteDistributor");
 
@@ -289,6 +285,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
 
         /**
          * Determine if the stream associated with this object is writable.
+         *
          * @return {@code true} if the stream associated with this object is writable.
          */
         boolean isWritable() {
@@ -331,6 +328,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
 
         /**
          * Write the allocated bytes for this stream.
+         *
          * @return the number of bytes written for a stream or {@code -1} if no write occurred.
          */
         int writeAllocatedBytes(int allocated) {
@@ -401,8 +399,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
          */
         int incrementStreamWindow(int delta) throws Http2Exception {
             if (delta > 0 && Integer.MAX_VALUE - delta < window) {
-                throw streamError(stream.id(), FLOW_CONTROL_ERROR,
-                        "Window size overflow for stream: %d", stream.id());
+                throw streamError(stream.id(), FLOW_CONTROL_ERROR, "Window size overflow for stream: %d", stream.id());
             }
             window += delta;
 
@@ -461,6 +458,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
 
         /**
          * Clears the pending queue and writes errors for each remaining frame.
+         *
          * @param error the {@link Http2Error} to use.
          * @param cause the {@link Throwable} that caused this method to be invoked.
          */
@@ -474,8 +472,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
             FlowControlled frame = pendingWriteQueue.poll();
             if (frame != null) {
                 // Only create exception once and reuse to reduce overhead of filling in the stacktrace.
-                final Http2Exception exception = streamError(stream.id(), error, cause,
-                        "Stream closed before write could take place");
+                final Http2Exception exception = streamError(stream.id(), error, cause, "Stream closed before write could take place");
                 do {
                     writeError(frame, exception);
                     frame = pendingWriteQueue.poll();
@@ -545,19 +542,24 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
 
         /**
          * Called when the writability of the underlying channel changes.
+         *
          * @throws Http2Exception If a write occurs and an exception happens in the write operation.
          */
-        void channelWritabilityChange() throws Http2Exception { }
+        void channelWritabilityChange() throws Http2Exception {
+        }
 
         /**
          * Called when the state is cancelled.
+         *
          * @param state the state that was cancelled.
          */
-        void stateCancelled(FlowState state) { }
+        void stateCancelled(FlowState state) {
+        }
 
         /**
          * Set the initial window size for {@code state}.
-         * @param state the state to change the initial window size for.
+         *
+         * @param state             the state to change the initial window size for.
          * @param initialWindowSize the size of the window in bytes.
          */
         void windowSize(FlowState state, int initialWindowSize) {
@@ -566,6 +568,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
 
         /**
          * Increment the window size for a particular stream.
+         *
          * @param state the state associated with the stream whose window is being incremented.
          * @param delta The amount to increment by.
          * @throws Http2Exception If this operation overflows the window for {@code state}.
@@ -576,6 +579,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
 
         /**
          * Add a frame to be sent via flow control.
+         *
          * @param state The state associated with the stream which the {@code frame} is associated with.
          * @param frame the frame to enqueue.
          * @throws Http2Exception If a writability error occurs.
@@ -587,6 +591,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
         /**
          * Increment the total amount of pending bytes for all streams. When any stream's pending bytes changes
          * method should be called.
+         *
          * @param delta The amount to increment by.
          */
         final void incrementPendingBytes(int delta) {
@@ -598,6 +603,7 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
 
         /**
          * Determine if the stream associated with {@code state} is writable.
+         *
          * @param state The state which is associated with the stream to test writability for.
          * @return {@code true} if {@link FlowState#stream()} is writable. {@code false} otherwise.
          */
@@ -619,10 +625,8 @@ public class DefaultHttp2RemoteFlowController implements Http2RemoteFlowControll
                 int bytesToWrite = writableBytes();
                 // Make sure we always write at least once, regardless if we have bytesToWrite or not.
                 // This ensures that zero-length frames will always be written.
-                for (;;) {
-                    if (!streamByteDistributor.distribute(bytesToWrite, this) ||
-                        (bytesToWrite = writableBytes()) <= 0 ||
-                        !isChannelWritable0()) {
+                for (; ; ) {
+                    if (!streamByteDistributor.distribute(bytesToWrite, this) || (bytesToWrite = writableBytes()) <= 0 || !isChannelWritable0()) {
                         break;
                     }
                 }

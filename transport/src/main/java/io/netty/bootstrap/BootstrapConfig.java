@@ -50,8 +50,7 @@ public final class BootstrapConfig extends AbstractBootstrapConfig<Bootstrap, Ch
         buf.append(", resolver: ").append(resolver());
         SocketAddress remoteAddress = remoteAddress();
         if (remoteAddress != null) {
-            buf.append(", remoteAddress: ")
-                    .append(remoteAddress);
+            buf.append(", remoteAddress: ").append(remoteAddress);
         }
         return buf.append(')').toString();
     }

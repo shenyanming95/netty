@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.haproxy;
 
 import io.netty.buffer.ByteBuf;
@@ -60,50 +45,41 @@ public class HAProxyMessageDecoder extends ByteToMessageDecoder {
     /**
      * {@link ProtocolDetectionResult} for {@link HAProxyProtocolVersion#V1}.
      */
-    private static final ProtocolDetectionResult<HAProxyProtocolVersion> DETECTION_RESULT_V1 =
-            ProtocolDetectionResult.detected(HAProxyProtocolVersion.V1);
+    private static final ProtocolDetectionResult<HAProxyProtocolVersion> DETECTION_RESULT_V1 = ProtocolDetectionResult.detected(HAProxyProtocolVersion.V1);
 
     /**
      * {@link ProtocolDetectionResult} for {@link HAProxyProtocolVersion#V2}.
      */
-    private static final ProtocolDetectionResult<HAProxyProtocolVersion> DETECTION_RESULT_V2 =
-            ProtocolDetectionResult.detected(HAProxyProtocolVersion.V2);
-
-    /**
-     * Used to extract a header frame out of the {@link ByteBuf} and return it.
-     */
-    private HeaderExtractor headerExtractor;
-
-    /**
-     * {@code true} if we're discarding input because we're already over maxLength
-     */
-    private boolean discarding;
-
-    /**
-     * Number of discarded bytes
-     */
-    private int discardedBytes;
-
+    private static final ProtocolDetectionResult<HAProxyProtocolVersion> DETECTION_RESULT_V2 = ProtocolDetectionResult.detected(HAProxyProtocolVersion.V2);
     /**
      * Whether or not to throw an exception as soon as we exceed maxLength.
      */
     private final boolean failFast;
-
-    /**
-     * {@code true} if we're finished decoding the proxy protocol header
-     */
-    private boolean finished;
-
-    /**
-     * Protocol specification version
-     */
-    private int version = -1;
-
     /**
      * The latest v2 spec (2014/05/18) allows for additional data to be sent in the proxy protocol header beyond the
      * address information block so now we need a configurable max header size
      */
     private final int v2MaxHeaderSize;
+    /**
+     * Used to extract a header frame out of the {@link ByteBuf} and return it.
+     */
+    private HeaderExtractor headerExtractor;
+    /**
+     * {@code true} if we're discarding input because we're already over maxLength
+     */
+    private boolean discarding;
+    /**
+     * Number of discarded bytes
+     */
+    private int discardedBytes;
+    /**
+     * {@code true} if we're finished decoding the proxy protocol header
+     */
+    private boolean finished;
+    /**
+     * Protocol specification version
+     */
+    private int version = -1;
 
     /**
      * Creates a new decoder with no additional data (TLV) restrictions, and should throw an exception as soon as
@@ -144,7 +120,7 @@ public class HAProxyMessageDecoder extends ByteToMessageDecoder {
      * as we exceed maxLength.
      *
      * @param maxTlvSize maximum number of bytes allowed for additional data (Type-Length-Value vectors) in a v2 header
-     * @param failFast Whether or not to throw an exception as soon as we exceed maxLength
+     * @param failFast   Whether or not to throw an exception as soon as we exceed maxLength
      */
     public HAProxyMessageDecoder(int maxTlvSize, boolean failFast) {
         if (maxTlvSize < 1) {
@@ -217,6 +193,35 @@ public class HAProxyMessageDecoder extends ByteToMessageDecoder {
         return -1;  // Not found.
     }
 
+    /**
+     * Returns the {@link ProtocolDetectionResult} for the given {@link ByteBuf}.
+     */
+    public static ProtocolDetectionResult<HAProxyProtocolVersion> detectProtocol(ByteBuf buffer) {
+        if (buffer.readableBytes() < 12) {
+            return ProtocolDetectionResult.needsMoreData();
+        }
+
+        int idx = buffer.readerIndex();
+
+        if (match(BINARY_PREFIX, buffer, idx)) {
+            return DETECTION_RESULT_V2;
+        }
+        if (match(TEXT_PREFIX, buffer, idx)) {
+            return DETECTION_RESULT_V1;
+        }
+        return ProtocolDetectionResult.invalid();
+    }
+
+    private static boolean match(byte[] prefix, ByteBuf buffer, int idx) {
+        for (int i = 0; i < prefix.length; i++) {
+            final byte b = buffer.getByte(idx + i);
+            if (b != prefix[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public boolean isSingleDecode() {
         // ByteToMessageDecoder uses this method to optionally break out of the decoding loop after each unit of work.
@@ -266,10 +271,10 @@ public class HAProxyMessageDecoder extends ByteToMessageDecoder {
     /**
      * Create a frame out of the {@link ByteBuf} and return it.
      *
-     * @param ctx     the {@link ChannelHandlerContext} which this {@link HAProxyMessageDecoder} belongs to
-     * @param buffer  the {@link ByteBuf} from which to read data
+     * @param ctx    the {@link ChannelHandlerContext} which this {@link HAProxyMessageDecoder} belongs to
+     * @param buffer the {@link ByteBuf} from which to read data
      * @return frame  the {@link ByteBuf} which represent the frame or {@code null} if no frame could
-     *                be created
+     * be created
      */
     private ByteBuf decodeStruct(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
         if (headerExtractor == null) {
@@ -281,10 +286,10 @@ public class HAProxyMessageDecoder extends ByteToMessageDecoder {
     /**
      * Create a frame out of the {@link ByteBuf} and return it.
      *
-     * @param ctx     the {@link ChannelHandlerContext} which this {@link HAProxyMessageDecoder} belongs to
-     * @param buffer  the {@link ByteBuf} from which to read data
+     * @param ctx    the {@link ChannelHandlerContext} which this {@link HAProxyMessageDecoder} belongs to
+     * @param buffer the {@link ByteBuf} from which to read data
      * @return frame  the {@link ByteBuf} which represent the frame or {@code null} if no frame could
-     *                be created
+     * be created
      */
     private ByteBuf decodeLine(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
         if (headerExtractor == null) {
@@ -319,39 +324,12 @@ public class HAProxyMessageDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Returns the {@link ProtocolDetectionResult} for the given {@link ByteBuf}.
-     */
-    public static ProtocolDetectionResult<HAProxyProtocolVersion> detectProtocol(ByteBuf buffer) {
-        if (buffer.readableBytes() < 12) {
-            return ProtocolDetectionResult.needsMoreData();
-        }
-
-        int idx = buffer.readerIndex();
-
-        if (match(BINARY_PREFIX, buffer, idx)) {
-            return DETECTION_RESULT_V2;
-        }
-        if (match(TEXT_PREFIX, buffer, idx)) {
-            return DETECTION_RESULT_V1;
-        }
-        return ProtocolDetectionResult.invalid();
-    }
-
-    private static boolean match(byte[] prefix, ByteBuf buffer, int idx) {
-        for (int i = 0; i < prefix.length; i++) {
-            final byte b = buffer.getByte(idx + i);
-            if (b != prefix[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * HeaderExtractor create a header frame out of the {@link ByteBuf}.
      */
     private abstract class HeaderExtractor {
-        /** Header max size */
+        /**
+         * Header max size
+         */
         private final int maxHeaderSize;
 
         protected HeaderExtractor(int maxHeaderSize) {
@@ -361,10 +339,10 @@ public class HAProxyMessageDecoder extends ByteToMessageDecoder {
         /**
          * Create a frame out of the {@link ByteBuf} and return it.
          *
-         * @param ctx     the {@link ChannelHandlerContext} which this {@link HAProxyMessageDecoder} belongs to
-         * @param buffer  the {@link ByteBuf} from which to read data
+         * @param ctx    the {@link ChannelHandlerContext} which this {@link HAProxyMessageDecoder} belongs to
+         * @param buffer the {@link ByteBuf} from which to read data
          * @return frame  the {@link ByteBuf} which represent the frame or {@code null} if no frame could
-         *                be created
+         * be created
          * @throws Exception if exceed maxLength
          */
         public ByteBuf extract(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
@@ -422,7 +400,7 @@ public class HAProxyMessageDecoder extends ByteToMessageDecoder {
          * Get the length of the header delimiter.
          *
          * @param buffer the buffer where delimiter is located
-         * @param eoh index of delimiter
+         * @param eoh    index of delimiter
          * @return length of the delimiter
          */
         protected abstract int delimiterLength(ByteBuf buffer, int eoh);

@@ -40,8 +40,7 @@ import static java.lang.Math.min;
  */
 final class KQueueEventLoop extends SingleThreadEventLoop {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(KQueueEventLoop.class);
-    private static final AtomicIntegerFieldUpdater<KQueueEventLoop> WAKEN_UP_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(KQueueEventLoop.class, "wakenUp");
+    private static final AtomicIntegerFieldUpdater<KQueueEventLoop> WAKEN_UP_UPDATER = AtomicIntegerFieldUpdater.newUpdater(KQueueEventLoop.class, "wakenUp");
     private static final int KQUEUE_WAKE_UP_IDENT = 0;
 
     static {
@@ -67,11 +66,8 @@ final class KQueueEventLoop extends SingleThreadEventLoop {
     private volatile int wakenUp;
     private volatile int ioRatio = 50;
 
-    KQueueEventLoop(EventLoopGroup parent, Executor executor, int maxEvents,
-                    SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler,
-                    EventLoopTaskQueueFactory queueFactory) {
-        super(parent, executor, false, newTaskQueue(queueFactory), newTaskQueue(queueFactory),
-                rejectedExecutionHandler);
+    KQueueEventLoop(EventLoopGroup parent, Executor executor, int maxEvents, SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler, EventLoopTaskQueueFactory queueFactory) {
+        super(parent, executor, false, newTaskQueue(queueFactory), newTaskQueue(queueFactory), rejectedExecutionHandler);
         this.selectStrategy = ObjectUtil.checkNotNull(strategy, "strategy");
         this.kqueueFd = Native.newKQueue();
         if (maxEvents == 0) {
@@ -89,12 +85,28 @@ final class KQueueEventLoop extends SingleThreadEventLoop {
         }
     }
 
-    private static Queue<Runnable> newTaskQueue(
-            EventLoopTaskQueueFactory queueFactory) {
+    private static Queue<Runnable> newTaskQueue(EventLoopTaskQueueFactory queueFactory) {
         if (queueFactory == null) {
             return newTaskQueue0(DEFAULT_MAX_PENDING_TASKS);
         }
         return queueFactory.newTaskQueue(DEFAULT_MAX_PENDING_TASKS);
+    }
+
+    private static Queue<Runnable> newTaskQueue0(int maxPendingTasks) {
+        // This event loop never calls takeTask()
+        return maxPendingTasks == Integer.MAX_VALUE ? PlatformDependent.<Runnable>newMpscQueue() : PlatformDependent.<Runnable>newMpscQueue(maxPendingTasks);
+    }
+
+    private static void handleLoopException(Throwable t) {
+        logger.warn("Unexpected exception in the selector loop.", t);
+
+        // Prevent possible consecutive immediate failures that lead to
+        // excessive CPU consumption.
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // Ignore.
+        }
     }
 
     void add(AbstractKQueueChannel ch) {
@@ -183,8 +195,7 @@ final class KQueueEventLoop extends SingleThreadEventLoop {
             if (filter == Native.EVFILT_USER || (flags & Native.EV_ERROR) != 0) {
                 // EV_ERROR is returned if the FD is closed synchronously (which removes from kqueue) and then
                 // we later attempt to delete the filters from kqueue.
-                assert filter != Native.EVFILT_USER ||
-                        (filter == Native.EVFILT_USER && fd == KQUEUE_WAKE_UP_IDENT);
+                assert filter != Native.EVFILT_USER || (filter == Native.EVFILT_USER && fd == KQUEUE_WAKE_UP_IDENT);
                 continue;
             }
 
@@ -220,7 +231,7 @@ final class KQueueEventLoop extends SingleThreadEventLoop {
 
     @Override
     protected void run() {
-        for (;;) {
+        for (; ; ) {
             try {
                 int strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                 switch (strategy) {
@@ -315,12 +326,6 @@ final class KQueueEventLoop extends SingleThreadEventLoop {
         return newTaskQueue0(maxPendingTasks);
     }
 
-    private static Queue<Runnable> newTaskQueue0(int maxPendingTasks) {
-        // This event loop never calls takeTask()
-        return maxPendingTasks == Integer.MAX_VALUE ? PlatformDependent.<Runnable>newMpscQueue()
-                : PlatformDependent.<Runnable>newMpscQueue(maxPendingTasks);
-    }
-
     /**
      * Returns the percentage of the desired amount of time spent for I/O in the event loop.
      */
@@ -370,20 +375,8 @@ final class KQueueEventLoop extends SingleThreadEventLoop {
         // In the `close()` method, the channel is deleted from `channels` map.
         AbstractKQueueChannel[] localChannels = channels.values().toArray(new AbstractKQueueChannel[0]);
 
-        for (AbstractKQueueChannel ch: localChannels) {
+        for (AbstractKQueueChannel ch : localChannels) {
             ch.unsafe().close(ch.unsafe().voidPromise());
-        }
-    }
-
-    private static void handleLoopException(Throwable t) {
-        logger.warn("Unexpected exception in the selector loop.", t);
-
-        // Prevent possible consecutive immediate failures that lead to
-        // excessive CPU consumption.
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // Ignore.
         }
     }
 }

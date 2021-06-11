@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.unix;
 
 import io.netty.buffer.ByteBuf;
@@ -29,7 +14,7 @@ import static java.lang.Math.min;
 /**
  * Represent an array of struct array and so can be passed directly over via JNI without the need to do any more
  * array copies.
- *
+ * <p>
  * The buffers are written out directly into direct memory to match the struct iov. See also {@code man writev}.
  *
  * <pre>
@@ -38,14 +23,16 @@ import static java.lang.Math.min;
  *   size_t iov_len;
  * };
  * </pre>
- *
+ * <p>
  * See also
  * <a href="http://rkennke.wordpress.com/2007/07/30/efficient-jni-programming-iv-wrapping-native-data-objects/"
  * >Efficient JNI programming IV: Wrapping native data objects</a>.
  */
 public final class IovArray implements MessageProcessor {
 
-    /** The size of an address which should be 8 for 64 bits and 4 for 32 bits. */
+    /**
+     * The size of an address which should be 8 for 64 bits and 4 for 32 bits.
+     */
     private static final int ADDRESS_SIZE = Buffer.addressSize();
 
     /**
@@ -69,6 +56,10 @@ public final class IovArray implements MessageProcessor {
     public IovArray() {
         memory = Buffer.allocateDirectWithNativeOrder(CAPACITY);
         memoryAddress = Buffer.memoryAddress(memory);
+    }
+
+    private static int idx(int index) {
+        return IOV_SIZE * index;
     }
 
     public void clear() {
@@ -102,8 +93,7 @@ public final class IovArray implements MessageProcessor {
             ByteBuffer[] buffers = buf.nioBuffers(offset, len);
             for (ByteBuffer nioBuffer : buffers) {
                 final int remaining = nioBuffer.remaining();
-                if (remaining != 0 &&
-                        (!add(Buffer.memoryAddress(nioBuffer) + nioBuffer.position(), remaining) || count == IOV_MAX)) {
+                if (remaining != 0 && (!add(Buffer.memoryAddress(nioBuffer) + nioBuffer.position(), remaining) || count == IOV_MAX)) {
                     return false;
                 }
             }
@@ -175,6 +165,7 @@ public final class IovArray implements MessageProcessor {
      * <p>
      * In order to ensure some progress is made at least one {@link ByteBuf} will be accepted even if it's size exceeds
      * this value.
+     *
      * @param maxBytes the maximum amount of bytes that can be added to this {@link IovArray}.
      */
     public void maxBytes(long maxBytes) {
@@ -183,6 +174,7 @@ public final class IovArray implements MessageProcessor {
 
     /**
      * Get the maximum amount of bytes that can be added to this {@link IovArray}.
+     *
      * @return the maximum amount of bytes that can be added to this {@link IovArray}.
      */
     public long maxBytes() {
@@ -210,9 +202,5 @@ public final class IovArray implements MessageProcessor {
             return add(buffer, buffer.readerIndex(), buffer.readableBytes());
         }
         return false;
-    }
-
-    private static int idx(int index) {
-        return IOV_SIZE * index;
     }
 }

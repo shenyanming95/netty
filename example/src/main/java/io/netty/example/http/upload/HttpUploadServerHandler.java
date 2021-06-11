@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.http.upload;
 
 import io.netty.buffer.ByteBuf;
@@ -42,27 +27,22 @@ import static io.netty.buffer.Unpooled.copiedBuffer;
 public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObject> {
 
     private static final Logger logger = Logger.getLogger(HttpUploadServerHandler.class.getName());
-
-    private HttpRequest request;
-
-    private HttpData partialContent;
-
-    private final StringBuilder responseContent = new StringBuilder();
-
-    private static final HttpDataFactory factory =
-            new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE); // Disk if size exceed
-
-    private HttpPostRequestDecoder decoder;
+    private static final HttpDataFactory factory = new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE); // Disk if size exceed
 
     static {
         DiskFileUpload.deleteOnExitTemporaryFile = true; // should delete file
-                                                         // on exit (in normal
-                                                         // exit)
+        // on exit (in normal
+        // exit)
         DiskFileUpload.baseDirectory = null; // system temp directory
         DiskAttribute.deleteOnExitTemporaryFile = true; // should delete file on
-                                                        // exit (in normal exit)
+        // exit (in normal exit)
         DiskAttribute.baseDirectory = null; // system temp directory
     }
+
+    private final StringBuilder responseContent = new StringBuilder();
+    private HttpRequest request;
+    private HttpData partialContent;
+    private HttpPostRequestDecoder decoder;
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
@@ -111,8 +91,8 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 
             QueryStringDecoder decoderQuery = new QueryStringDecoder(request.uri());
             Map<String, List<String>> uriAttributes = decoderQuery.parameters();
-            for (Entry<String, List<String>> attr: uriAttributes.entrySet()) {
-                for (String attrVal: attr.getValue()) {
+            for (Entry<String, List<String>> attr : uriAttributes.entrySet()) {
+                for (String attrVal : attr.getValue()) {
                     responseContent.append("URI: " + attr.getKey() + '=' + attrVal + "\r\n");
                 }
             }
@@ -206,17 +186,14 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
                 if (partialContent == null) {
                     partialContent = (HttpData) data;
                     if (partialContent instanceof FileUpload) {
-                        builder.append("Start FileUpload: ")
-                            .append(((FileUpload) partialContent).getFilename()).append(" ");
+                        builder.append("Start FileUpload: ").append(((FileUpload) partialContent).getFilename()).append(" ");
                     } else {
-                        builder.append("Start Attribute: ")
-                            .append(partialContent.getName()).append(" ");
+                        builder.append("Start Attribute: ").append(partialContent.getName()).append(" ");
                     }
                     builder.append("(DefinedSize: ").append(partialContent.definedLength()).append(")");
                 }
                 if (partialContent.definedLength() > 0) {
-                    builder.append(" ").append(partialContent.length() * 100 / partialContent.definedLength())
-                        .append("% ");
+                    builder.append(" ").append(partialContent.length() * 100 / partialContent.definedLength()).append("% ");
                     logger.info(builder.toString());
                 } else {
                     builder.append(" ").append(partialContent.length()).append(" ");
@@ -238,20 +215,16 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
             } catch (IOException e1) {
                 // Error while reading data from File, only print name and error
                 e1.printStackTrace();
-                responseContent.append("\r\nBODY Attribute: " + attribute.getHttpDataType().name() + ": "
-                        + attribute.getName() + " Error while reading value: " + e1.getMessage() + "\r\n");
+                responseContent.append("\r\nBODY Attribute: " + attribute.getHttpDataType().name() + ": " + attribute.getName() + " Error while reading value: " + e1.getMessage() + "\r\n");
                 return;
             }
             if (value.length() > 100) {
-                responseContent.append("\r\nBODY Attribute: " + attribute.getHttpDataType().name() + ": "
-                        + attribute.getName() + " data too long\r\n");
+                responseContent.append("\r\nBODY Attribute: " + attribute.getHttpDataType().name() + ": " + attribute.getName() + " data too long\r\n");
             } else {
-                responseContent.append("\r\nBODY Attribute: " + attribute.getHttpDataType().name() + ": "
-                        + attribute + "\r\n");
+                responseContent.append("\r\nBODY Attribute: " + attribute.getHttpDataType().name() + ": " + attribute + "\r\n");
             }
         } else {
-            responseContent.append("\r\nBODY FileUpload: " + data.getHttpDataType().name() + ": " + data
-                    + "\r\n");
+            responseContent.append("\r\nBODY FileUpload: " + data.getHttpDataType().name() + ": " + data + "\r\n");
             if (data.getHttpDataType() == HttpDataType.FileUpload) {
                 FileUpload fileUpload = (FileUpload) data;
                 if (fileUpload.isCompleted()) {
@@ -293,8 +266,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
         boolean keepAlive = HttpUtil.isKeepAlive(request) && !forceClose;
 
         // Build the response object.
-        FullHttpResponse response = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
+        FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
         response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, buf.readableBytes());
 
@@ -353,8 +325,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
         responseContent.append("<table border=\"0\">");
         responseContent.append("<tr><td>Fill with value: <br> <input type=text name=\"info\" size=10></td></tr>");
         responseContent.append("<tr><td>Fill with value: <br> <input type=text name=\"secondinfo\" size=20>");
-        responseContent
-                .append("<tr><td>Fill with value: <br> <textarea name=\"thirdinfo\" cols=40 rows=10></textarea>");
+        responseContent.append("<tr><td>Fill with value: <br> <textarea name=\"thirdinfo\" cols=40 rows=10></textarea>");
         responseContent.append("</td></tr>");
         responseContent.append("<tr><td><INPUT TYPE=\"submit\" NAME=\"Send\" VALUE=\"Send\"></INPUT></td>");
         responseContent.append("<td><INPUT TYPE=\"reset\" NAME=\"Clear\" VALUE=\"Clear\" ></INPUT></td></tr>");
@@ -368,10 +339,8 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
         responseContent.append("<table border=\"0\">");
         responseContent.append("<tr><td>Fill with value: <br> <input type=text name=\"info\" size=10></td></tr>");
         responseContent.append("<tr><td>Fill with value: <br> <input type=text name=\"secondinfo\" size=20>");
-        responseContent
-                .append("<tr><td>Fill with value: <br> <textarea name=\"thirdinfo\" cols=40 rows=10></textarea>");
-        responseContent.append("<tr><td>Fill with file (only file name will be transmitted): <br> "
-                + "<input type=file name=\"myfile\">");
+        responseContent.append("<tr><td>Fill with value: <br> <textarea name=\"thirdinfo\" cols=40 rows=10></textarea>");
+        responseContent.append("<tr><td>Fill with file (only file name will be transmitted): <br> " + "<input type=file name=\"myfile\">");
         responseContent.append("</td></tr>");
         responseContent.append("<tr><td><INPUT TYPE=\"submit\" NAME=\"Send\" VALUE=\"Send\"></INPUT></td>");
         responseContent.append("<td><INPUT TYPE=\"reset\" NAME=\"Clear\" VALUE=\"Clear\" ></INPUT></td></tr>");
@@ -385,8 +354,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
         responseContent.append("<table border=\"0\">");
         responseContent.append("<tr><td>Fill with value: <br> <input type=text name=\"info\" size=10></td></tr>");
         responseContent.append("<tr><td>Fill with value: <br> <input type=text name=\"secondinfo\" size=20>");
-        responseContent
-                .append("<tr><td>Fill with value: <br> <textarea name=\"thirdinfo\" cols=40 rows=10></textarea>");
+        responseContent.append("<tr><td>Fill with value: <br> <textarea name=\"thirdinfo\" cols=40 rows=10></textarea>");
         responseContent.append("<tr><td>Fill with file: <br> <input type=file name=\"myfile\">");
         responseContent.append("</td></tr>");
         responseContent.append("<tr><td><INPUT TYPE=\"submit\" NAME=\"Send\" VALUE=\"Send\"></INPUT></td>");
@@ -399,8 +367,7 @@ public class HttpUploadServerHandler extends SimpleChannelInboundHandler<HttpObj
 
         ByteBuf buf = copiedBuffer(responseContent.toString(), CharsetUtil.UTF_8);
         // Build the response object.
-        FullHttpResponse response = new DefaultFullHttpResponse(
-                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
+        FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
 
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
         response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, buf.readableBytes());

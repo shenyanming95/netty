@@ -1,18 +1,3 @@
-/*
-* Copyright 2014 The Netty Project
-*
-* The Netty Project licenses this file to you under the Apache License,
-* version 2.0 (the "License"); you may not use this file except in compliance
-* with the License. You may obtain a copy of the License at:
-*
-*   http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-* License for the specific language governing permissions and limitations
-* under the License.
-*/
 package io.netty.util.internal;
 
 import io.netty.util.internal.logging.InternalLogger;
@@ -28,7 +13,7 @@ import java.security.PrivilegedAction;
 /**
  * Allows to free direct {@link ByteBuffer} by using Cleaner. This is encapsulated in an extra class to be able
  * to use {@link PlatformDependent0} on Android without problems.
- *
+ * <p>
  * For more details see <a href="https://github.com/netty/netty/issues/2604">#2604</a>.
  */
 final class CleanerJava6 implements Cleaner {
@@ -49,7 +34,7 @@ final class CleanerJava6 implements Cleaner {
                 @Override
                 public Object run() {
                     try {
-                        Field cleanerField =  direct.getClass().getDeclaredField("cleaner");
+                        Field cleanerField = direct.getClass().getDeclaredField("cleaner");
                         if (!PlatformDependent.hasUnsafe()) {
                             // We need to make it accessible if we do not use Unsafe as we will access it via
                             // reflection.
@@ -102,22 +87,6 @@ final class CleanerJava6 implements Cleaner {
         return CLEANER_FIELD_OFFSET != -1 || CLEANER_FIELD != null;
     }
 
-    @Override
-    public void freeDirectBuffer(ByteBuffer buffer) {
-        if (!buffer.isDirect()) {
-            return;
-        }
-        if (System.getSecurityManager() == null) {
-            try {
-                freeDirectBuffer0(buffer);
-            } catch (Throwable cause) {
-                PlatformDependent0.throwException(cause);
-            }
-        } else {
-            freeDirectBufferPrivileged(buffer);
-        }
-    }
-
     private static void freeDirectBufferPrivileged(final ByteBuffer buffer) {
         Throwable cause = AccessController.doPrivileged(new PrivilegedAction<Throwable>() {
             @Override
@@ -146,6 +115,22 @@ final class CleanerJava6 implements Cleaner {
         }
         if (cleaner != null) {
             CLEAN_METHOD.invoke(cleaner);
+        }
+    }
+
+    @Override
+    public void freeDirectBuffer(ByteBuffer buffer) {
+        if (!buffer.isDirect()) {
+            return;
+        }
+        if (System.getSecurityManager() == null) {
+            try {
+                freeDirectBuffer0(buffer);
+            } catch (Throwable cause) {
+                PlatformDependent0.throwException(cause);
+            }
+        } else {
+            freeDirectBufferPrivileged(buffer);
         }
     }
 }

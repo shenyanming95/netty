@@ -37,32 +37,13 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
      * Constant used to seed the hash code generation. Could be anything but this was borrowed from murmur3.
      */
     static final int HASH_CODE_SEED = 0xc2b2ae35;
-
-    private final HeaderEntry<K, V>[] entries;
     protected final HeaderEntry<K, V> head;
-
+    private final HeaderEntry<K, V>[] entries;
     private final byte hashMask;
     private final ValueConverter<V> valueConverter;
     private final NameValidator<K> nameValidator;
     private final HashingStrategy<K> hashingStrategy;
     int size;
-
-    public interface NameValidator<K> {
-        /**
-         * Verify that {@code name} is valid.
-         * @param name The name to validate.
-         * @throws RuntimeException if {@code name} is not valid.
-         */
-        void validateName(K name);
-
-        @SuppressWarnings("rawtypes")
-        NameValidator NOT_NULL = new NameValidator() {
-            @Override
-            public void validateName(Object name) {
-                checkNotNull(name, "name");
-            }
-        };
-    }
 
     @SuppressWarnings("unchecked")
     public DefaultHeaders(ValueConverter<V> valueConverter) {
@@ -79,22 +60,21 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
         this(nameHashingStrategy, valueConverter, NameValidator.NOT_NULL);
     }
 
-    public DefaultHeaders(HashingStrategy<K> nameHashingStrategy,
-            ValueConverter<V> valueConverter, NameValidator<K> nameValidator) {
+    public DefaultHeaders(HashingStrategy<K> nameHashingStrategy, ValueConverter<V> valueConverter, NameValidator<K> nameValidator) {
         this(nameHashingStrategy, valueConverter, nameValidator, 16);
     }
 
     /**
      * Create a new instance.
+     *
      * @param nameHashingStrategy Used to hash and equality compare names.
-     * @param valueConverter Used to convert values to/from native types.
-     * @param nameValidator Used to validate name elements.
-     * @param arraySizeHint A hint as to how large the hash data structure should be.
-     * The next positive power of two will be used. An upper bound may be enforced.
+     * @param valueConverter      Used to convert values to/from native types.
+     * @param nameValidator       Used to validate name elements.
+     * @param arraySizeHint       A hint as to how large the hash data structure should be.
+     *                            The next positive power of two will be used. An upper bound may be enforced.
      */
     @SuppressWarnings("unchecked")
-    public DefaultHeaders(HashingStrategy<K> nameHashingStrategy,
-            ValueConverter<V> valueConverter, NameValidator<K> nameValidator, int arraySizeHint) {
+    public DefaultHeaders(HashingStrategy<K> nameHashingStrategy, ValueConverter<V> valueConverter, NameValidator<K> nameValidator, int arraySizeHint) {
         this.valueConverter = checkNotNull(valueConverter, "valueConverter");
         this.nameValidator = checkNotNull(nameValidator, "nameValidator");
         this.hashingStrategy = checkNotNull(nameHashingStrategy, "nameHashingStrategy");
@@ -168,6 +148,7 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
 
     /**
      * Equivalent to {@link #getAll(Object)} but no intermediate list is generated.
+     *
      * @param name the name of the header to retrieve
      * @return an {@link Iterator} of header values corresponding to {@code name}.
      */
@@ -297,7 +278,7 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
         nameValidator.validateName(name);
         int h = hashingStrategy.hashCode(name);
         int i = index(h);
-        for (V v: values) {
+        for (V v : values) {
             add0(h, i, name, v);
         }
         return thisT();
@@ -308,7 +289,7 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
         nameValidator.validateName(name);
         int h = hashingStrategy.hashCode(name);
         int i = index(h);
-        for (V v: values) {
+        for (V v : values) {
             add0(h, i, name, v);
         }
         return thisT();
@@ -329,7 +310,7 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
 
     @Override
     public T addObject(K name, Object... values) {
-        for (Object value: values) {
+        for (Object value : values) {
             addObject(name, value);
         }
         return thisT();
@@ -391,12 +372,9 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
 
     protected void addImpl(Headers<? extends K, ? extends V, ?> headers) {
         if (headers instanceof DefaultHeaders) {
-            @SuppressWarnings("unchecked")
-            final DefaultHeaders<? extends K, ? extends V, T> defaultHeaders =
-                    (DefaultHeaders<? extends K, ? extends V, T>) headers;
+            @SuppressWarnings("unchecked") final DefaultHeaders<? extends K, ? extends V, T> defaultHeaders = (DefaultHeaders<? extends K, ? extends V, T>) headers;
             HeaderEntry<? extends K, ? extends V> e = defaultHeaders.head.after;
-            if (defaultHeaders.hashingStrategy == hashingStrategy &&
-                    defaultHeaders.nameValidator == nameValidator) {
+            if (defaultHeaders.hashingStrategy == hashingStrategy && defaultHeaders.nameValidator == nameValidator) {
                 // Fastest copy
                 while (e != defaultHeaders.head) {
                     add0(e.hash, index(e.hash), e.key, e.value);
@@ -437,7 +415,7 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
         int i = index(h);
 
         remove0(h, i, name);
-        for (V v: values) {
+        for (V v : values) {
             if (v == null) {
                 break;
             }
@@ -456,7 +434,7 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
         int i = index(h);
 
         remove0(h, i, name);
-        for (V v: values) {
+        for (V v : values) {
             if (v == null) {
                 break;
             }
@@ -481,7 +459,7 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
         int i = index(h);
 
         remove0(h, i, name);
-        for (Object v: values) {
+        for (Object v : values) {
             if (v == null) {
                 break;
             }
@@ -499,7 +477,7 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
         int i = index(h);
 
         remove0(h, i, name);
-        for (Object v: values) {
+        for (Object v : values) {
             if (v == null) {
                 break;
             }
@@ -898,7 +876,8 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
 
     /**
      * Test this object for equality against {@code h2}.
-     * @param h2 The object to check equality for.
+     *
+     * @param h2                   The object to check equality for.
      * @param valueHashingStrategy Defines how values will be compared for equality.
      * @return {@code true} if this object equals {@code h2} given {@code valueHashingStrategy}.
      * {@code false} otherwise.
@@ -930,6 +909,7 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
     /**
      * Generate a hash code for this object given a {@link HashingStrategy} to generate hash codes for
      * individual values.
+     *
      * @param valueHashingStrategy Defines how values will be hashed.
      */
     public final int hashCode(HashingStrategy<V> valueHashingStrategy) {
@@ -1027,87 +1007,27 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
      * Returns a deep copy of this instance.
      */
     public DefaultHeaders<K, V, T> copy() {
-        DefaultHeaders<K, V, T> copy = new DefaultHeaders<K, V, T>(
-                hashingStrategy, valueConverter, nameValidator, entries.length);
+        DefaultHeaders<K, V, T> copy = new DefaultHeaders<K, V, T>(hashingStrategy, valueConverter, nameValidator, entries.length);
         copy.addImpl(this);
         return copy;
     }
 
-    private final class HeaderIterator implements Iterator<Map.Entry<K, V>> {
-        private HeaderEntry<K, V> current = head;
-
-        @Override
-        public boolean hasNext() {
-            return current.after != head;
-        }
-
-        @Override
-        public Entry<K, V> next() {
-            current = current.after;
-
-            if (current == head) {
-                throw new NoSuchElementException();
+    public interface NameValidator<K> {
+        @SuppressWarnings("rawtypes")
+        NameValidator NOT_NULL = new NameValidator() {
+            @Override
+            public void validateName(Object name) {
+                checkNotNull(name, "name");
             }
+        };
 
-            return current;
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("read only");
-        }
-    }
-
-    private final class ValueIterator implements Iterator<V> {
-        private final K name;
-        private final int hash;
-        private HeaderEntry<K, V> removalPrevious;
-        private HeaderEntry<K, V> previous;
-        private HeaderEntry<K, V> next;
-
-        ValueIterator(K name) {
-            this.name = checkNotNull(name, "name");
-            hash = hashingStrategy.hashCode(name);
-            calculateNext(entries[index(hash)]);
-        }
-
-        @Override
-        public boolean hasNext() {
-            return next != null;
-        }
-
-        @Override
-        public V next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            if (previous != null) {
-                removalPrevious = previous;
-            }
-            previous = next;
-            calculateNext(next.next);
-            return previous.value;
-        }
-
-        @Override
-        public void remove() {
-            if (previous == null) {
-                throw new IllegalStateException();
-            }
-            removalPrevious = remove0(previous, removalPrevious);
-            previous = null;
-        }
-
-        private void calculateNext(HeaderEntry<K, V> entry) {
-            while (entry != null) {
-                if (entry.hash == hash && hashingStrategy.equals(name, entry.key)) {
-                    next = entry;
-                    return;
-                }
-                entry = entry.next;
-            }
-            next = null;
-        }
+        /**
+         * Verify that {@code name} is valid.
+         *
+         * @param name The name to validate.
+         * @throws RuntimeException if {@code name} is not valid.
+         */
+        void validateName(K name);
     }
 
     protected static class HeaderEntry<K, V> implements Map.Entry<K, V> {
@@ -1192,13 +1112,89 @@ public class DefaultHeaders<K, V, T extends Headers<K, V, T>> implements Headers
                 return false;
             }
             Map.Entry<?, ?> other = (Map.Entry<?, ?>) o;
-            return (getKey() == null ? other.getKey() == null : getKey().equals(other.getKey()))  &&
-                   (getValue() == null ? other.getValue() == null : getValue().equals(other.getValue()));
+            return (getKey() == null ? other.getKey() == null : getKey().equals(other.getKey())) && (getValue() == null ? other.getValue() == null : getValue().equals(other.getValue()));
         }
 
         @Override
         public int hashCode() {
             return (key == null ? 0 : key.hashCode()) ^ (value == null ? 0 : value.hashCode());
+        }
+    }
+
+    private final class HeaderIterator implements Iterator<Map.Entry<K, V>> {
+        private HeaderEntry<K, V> current = head;
+
+        @Override
+        public boolean hasNext() {
+            return current.after != head;
+        }
+
+        @Override
+        public Entry<K, V> next() {
+            current = current.after;
+
+            if (current == head) {
+                throw new NoSuchElementException();
+            }
+
+            return current;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("read only");
+        }
+    }
+
+    private final class ValueIterator implements Iterator<V> {
+        private final K name;
+        private final int hash;
+        private HeaderEntry<K, V> removalPrevious;
+        private HeaderEntry<K, V> previous;
+        private HeaderEntry<K, V> next;
+
+        ValueIterator(K name) {
+            this.name = checkNotNull(name, "name");
+            hash = hashingStrategy.hashCode(name);
+            calculateNext(entries[index(hash)]);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        @Override
+        public V next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            if (previous != null) {
+                removalPrevious = previous;
+            }
+            previous = next;
+            calculateNext(next.next);
+            return previous.value;
+        }
+
+        @Override
+        public void remove() {
+            if (previous == null) {
+                throw new IllegalStateException();
+            }
+            removalPrevious = remove0(previous, removalPrevious);
+            previous = null;
+        }
+
+        private void calculateNext(HeaderEntry<K, V> entry) {
+            while (entry != null) {
+                if (entry.hash == hash && hashingStrategy.equals(name, entry.key)) {
+                    next = entry;
+                    return;
+                }
+                entry = entry.next;
+            }
+            next = null;
         }
     }
 }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.socket.nio;
 
 import io.netty.channel.ChannelException;
@@ -43,29 +28,12 @@ import java.util.Map;
  * A {@link io.netty.channel.socket.ServerSocketChannel} implementation which uses
  * NIO selector based implementation to accept new connections.
  */
-public class NioServerSocketChannel extends AbstractNioMessageChannel
-                             implements io.netty.channel.socket.ServerSocketChannel {
+public class NioServerSocketChannel extends AbstractNioMessageChannel implements io.netty.channel.socket.ServerSocketChannel {
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioServerSocketChannel.class);
-
-    private static ServerSocketChannel newSocket(SelectorProvider provider) {
-        try {
-            /**
-             *  Use the {@link SelectorProvider} to open {@link SocketChannel} and so remove condition in
-             *  {@link SelectorProvider#provider()} which is called by each ServerSocketChannel.open() otherwise.
-             *
-             *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
-             */
-            return provider.openServerSocketChannel();
-        } catch (IOException e) {
-            throw new ChannelException(
-                    "Failed to open a server socket.", e);
-        }
-    }
-
     private final ServerSocketChannelConfig config;
 
     /**
@@ -93,6 +61,20 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         // javaChannel()返回的是上面newSocket()方法创建的nio的ServerSocketChannel;
         // javaChannel().socket()就是获取java.net.ServerSocket对象, 由此创建通道配置类
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
+    }
+
+    private static ServerSocketChannel newSocket(SelectorProvider provider) {
+        try {
+            /**
+             *  Use the {@link SelectorProvider} to open {@link SocketChannel} and so remove condition in
+             *  {@link SelectorProvider#provider()} which is called by each ServerSocketChannel.open() otherwise.
+             *
+             *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
+             */
+            return provider.openServerSocketChannel();
+        } catch (IOException e) {
+            throw new ChannelException("Failed to open a server socket.", e);
+        }
     }
 
     @Override
@@ -177,8 +159,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
     // Unnecessary stuff
     @Override
-    protected boolean doConnect(
-            SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
+    protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         throw new UnsupportedOperationException();
     }
 
@@ -205,6 +186,12 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     @Override
     protected final Object filterOutboundMessage(Object msg) throws Exception {
         throw new UnsupportedOperationException();
+    }
+
+    // Override just to to be able to call directly via unit tests.
+    @Override
+    protected boolean closeOnReadError(Throwable cause) {
+        return super.closeOnReadError(cause);
     }
 
     private final class NioServerSocketChannelConfig extends DefaultServerSocketChannelConfig {
@@ -244,11 +231,5 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         private ServerSocketChannel jdkChannel() {
             return ((NioServerSocketChannel) channel).javaChannel();
         }
-    }
-
-    // Override just to to be able to call directly via unit tests.
-    @Override
-    protected boolean closeOnReadError(Throwable cause) {
-        return super.closeOnReadError(cause);
     }
 }

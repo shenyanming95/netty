@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.cookie;
 
 import io.netty.handler.codec.http.HttpConstants;
@@ -28,6 +13,10 @@ final class CookieUtil {
 
     private static final BitSet VALID_COOKIE_ATTRIBUTE_VALUE_OCTETS = validCookieAttributeValueOctets();
 
+    private CookieUtil() {
+        // Unused
+    }
+
     // token = 1*<any CHAR except CTLs or separators>
     // separators = "(" | ")" | "<" | ">" | "@"
     // | "," | ";" | ":" | "\" | <">
@@ -38,8 +27,7 @@ final class CookieUtil {
         for (int i = 32; i < 127; i++) {
             bits.set(i);
         }
-        int[] separators = new int[]
-                { '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', '\t' };
+        int[] separators = new int[]{'(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', '\t'};
         for (int separator : separators) {
             bits.set(separator, false);
         }
@@ -175,9 +163,5 @@ final class CookieUtil {
             throw new IllegalArgumentException(name + " contains the prohibited characters: " + value.charAt(i));
         }
         return value;
-    }
-
-    private CookieUtil() {
-        // Unused
     }
 }

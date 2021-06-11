@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.http.websocketx.server;
 
 import io.netty.buffer.ByteBuf;
@@ -34,44 +19,6 @@ public class WebSocketIndexPageHandler extends SimpleChannelInboundHandler<FullH
 
     public WebSocketIndexPageHandler(String websocketPath) {
         this.websocketPath = websocketPath;
-    }
-
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
-        // Handle a bad request.
-        if (!req.decoderResult().isSuccess()) {
-            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), BAD_REQUEST,
-                                                                   ctx.alloc().buffer(0)));
-            return;
-        }
-
-        // Allow only GET methods.
-        if (!GET.equals(req.method())) {
-            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), FORBIDDEN,
-                                                                   ctx.alloc().buffer(0)));
-            return;
-        }
-
-        // Send the index page
-        if ("/".equals(req.uri()) || "/index.html".equals(req.uri())) {
-            String webSocketLocation = getWebSocketLocation(ctx.pipeline(), req, websocketPath);
-            ByteBuf content = WebSocketServerIndexPage.getContent(webSocketLocation);
-            FullHttpResponse res = new DefaultFullHttpResponse(req.protocolVersion(), OK, content);
-
-            res.headers().set(CONTENT_TYPE, "text/html; charset=UTF-8");
-            HttpUtil.setContentLength(res, content.readableBytes());
-
-            sendHttpResponse(ctx, req, res);
-        } else {
-            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), NOT_FOUND,
-                                                                   ctx.alloc().buffer(0)));
-        }
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
-        ctx.close();
     }
 
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
@@ -97,5 +44,40 @@ public class WebSocketIndexPageHandler extends SimpleChannelInboundHandler<FullH
             protocol = "wss";
         }
         return protocol + "://" + req.headers().get(HttpHeaderNames.HOST) + path;
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
+        // Handle a bad request.
+        if (!req.decoderResult().isSuccess()) {
+            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), BAD_REQUEST, ctx.alloc().buffer(0)));
+            return;
+        }
+
+        // Allow only GET methods.
+        if (!GET.equals(req.method())) {
+            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), FORBIDDEN, ctx.alloc().buffer(0)));
+            return;
+        }
+
+        // Send the index page
+        if ("/".equals(req.uri()) || "/index.html".equals(req.uri())) {
+            String webSocketLocation = getWebSocketLocation(ctx.pipeline(), req, websocketPath);
+            ByteBuf content = WebSocketServerIndexPage.getContent(webSocketLocation);
+            FullHttpResponse res = new DefaultFullHttpResponse(req.protocolVersion(), OK, content);
+
+            res.headers().set(CONTENT_TYPE, "text/html; charset=UTF-8");
+            HttpUtil.setContentLength(res, content.readableBytes());
+
+            sendHttpResponse(ctx, req, res);
+        } else {
+            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(req.protocolVersion(), NOT_FOUND, ctx.alloc().buffer(0)));
+        }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
+        ctx.close();
     }
 }

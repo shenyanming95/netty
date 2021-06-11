@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.buffer;
 
 import io.netty.util.internal.EmptyArrays;
@@ -45,14 +30,13 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
      * Creates a new heap buffer with a newly allocated byte array.
      *
      * @param initialCapacity the initial capacity of the underlying byte array
-     * @param maxCapacity the max capacity of the underlying byte array
+     * @param maxCapacity     the max capacity of the underlying byte array
      */
     public UnpooledHeapByteBuf(ByteBufAllocator alloc, int initialCapacity, int maxCapacity) {
         super(maxCapacity);
 
         if (initialCapacity > maxCapacity) {
-            throw new IllegalArgumentException(String.format(
-                    "initialCapacity(%d) > maxCapacity(%d)", initialCapacity, maxCapacity));
+            throw new IllegalArgumentException(String.format("initialCapacity(%d) > maxCapacity(%d)", initialCapacity, maxCapacity));
         }
 
         this.alloc = checkNotNull(alloc, "alloc");
@@ -64,7 +48,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
      * Creates a new heap buffer with an existing byte array.
      *
      * @param initialArray the initial underlying byte array
-     * @param maxCapacity the max capacity of the underlying byte array
+     * @param maxCapacity  the max capacity of the underlying byte array
      */
     protected UnpooledHeapByteBuf(ByteBufAllocator alloc, byte[] initialArray, int maxCapacity) {
         super(maxCapacity);
@@ -72,8 +56,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
         checkNotNull(alloc, "alloc");
         checkNotNull(initialArray, "initialArray");
         if (initialArray.length > maxCapacity) {
-            throw new IllegalArgumentException(String.format(
-                    "initialCapacity(%d) > maxCapacity(%d)", initialArray.length, maxCapacity));
+            throw new IllegalArgumentException(String.format("initialCapacity(%d) > maxCapacity(%d)", initialArray.length, maxCapacity));
         }
 
         this.alloc = alloc;
@@ -247,7 +230,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
         checkSrcIndex(index, length, srcIndex, src.capacity());
         if (src.hasMemoryAddress()) {
             PlatformDependent.copyMemory(src.memoryAddress() + srcIndex, array, index, length);
-        } else  if (src.hasArray()) {
+        } else if (src.hasArray()) {
             setBytes(index, src.array(), src.arrayOffset() + srcIndex, length);
         } else {
             src.getBytes(srcIndex, array, index, length);
@@ -308,7 +291,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
 
     @Override
     public ByteBuffer[] nioBuffers(int index, int length) {
-        return new ByteBuffer[] { nioBuffer(index, length) };
+        return new ByteBuffer[]{nioBuffer(index, length)};
     }
 
     @Override
@@ -458,7 +441,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
     }
 
     @Override
-    public ByteBuf setMedium(int index, int   value) {
+    public ByteBuf setMedium(int index, int value) {
         ensureAccessible();
         _setMedium(index, value);
         return this;
@@ -470,7 +453,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
     }
 
     @Override
-    public ByteBuf setMediumLE(int index, int   value) {
+    public ByteBuf setMediumLE(int index, int value) {
         ensureAccessible();
         _setMediumLE(index, value);
         return this;
@@ -482,7 +465,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
     }
 
     @Override
-    public ByteBuf setInt(int index, int   value) {
+    public ByteBuf setInt(int index, int value) {
         ensureAccessible();
         _setInt(index, value);
         return this;
@@ -494,7 +477,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
     }
 
     @Override
-    public ByteBuf setIntLE(int index, int   value) {
+    public ByteBuf setIntLE(int index, int value) {
         ensureAccessible();
         _setIntLE(index, value);
         return this;
@@ -506,7 +489,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
     }
 
     @Override
-    public ByteBuf setLong(int index, long  value) {
+    public ByteBuf setLong(int index, long value) {
         ensureAccessible();
         _setLong(index, value);
         return this;
@@ -518,7 +501,7 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
     }
 
     @Override
-    public ByteBuf setLongLE(int index, long  value) {
+    public ByteBuf setLongLE(int index, long value) {
         ensureAccessible();
         _setLongLE(index, value);
         return this;

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.sctp.oio;
 
 import com.sun.nio.sctp.Association;
@@ -40,18 +25,16 @@ import java.util.*;
 /**
  * {@link io.netty.channel.sctp.SctpChannel} implementation which use blocking mode and allows to read / write
  * {@link SctpMessage}s to the underlying {@link SctpChannel}.
- *
+ * <p>
  * Be aware that not all operations systems support SCTP. Please refer to the documentation of your operation system,
  * to understand what you need to do to use it. Also this feature is only supported on Java 7+.
  *
  * @deprecated use {@link io.netty.channel.sctp.nio.NioSctpChannel}.
  */
 @Deprecated
-public class OioSctpChannel extends AbstractOioMessageChannel
-        implements io.netty.channel.sctp.SctpChannel {
+public class OioSctpChannel extends AbstractOioMessageChannel implements io.netty.channel.sctp.SctpChannel {
 
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(OioSctpChannel.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(OioSctpChannel.class);
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(false);
     private static final String EXPECTED_TYPE = " (expected: " + StringUtil.simpleClassName(SctpMessage.class) + ')';
@@ -65,14 +48,6 @@ public class OioSctpChannel extends AbstractOioMessageChannel
 
     private final NotificationHandler<?> notificationHandler;
 
-    private static SctpChannel openChannel() {
-        try {
-            return SctpChannel.open();
-        } catch (IOException e) {
-            throw new ChannelException("Failed to open a sctp channel.", e);
-        }
-    }
-
     /**
      * Create a new instance with an new {@link SctpChannel}.
      */
@@ -83,7 +58,7 @@ public class OioSctpChannel extends AbstractOioMessageChannel
     /**
      * Create a new instance from the given {@link SctpChannel}.
      *
-     * @param ch    the {@link SctpChannel} which is used by this instance
+     * @param ch the {@link SctpChannel} which is used by this instance
      */
     public OioSctpChannel(SctpChannel ch) {
         this(null, ch);
@@ -92,9 +67,9 @@ public class OioSctpChannel extends AbstractOioMessageChannel
     /**
      * Create a new instance from the given {@link SctpChannel}.
      *
-     * @param parent    the parent {@link Channel} which was used to create this instance. This can be null if the
-     *                  {@link} has no parent as it was created by your self.
-     * @param ch        the {@link SctpChannel} which is used by this instance
+     * @param parent the parent {@link Channel} which was used to create this instance. This can be null if the
+     *               {@link} has no parent as it was created by your self.
+     * @param ch     the {@link SctpChannel} which is used by this instance
      */
     public OioSctpChannel(Channel parent, SctpChannel ch) {
         super(parent);
@@ -122,6 +97,24 @@ public class OioSctpChannel extends AbstractOioMessageChannel
                 } catch (IOException e) {
                     logger.warn("Failed to close a sctp channel.", e);
                 }
+            }
+        }
+    }
+
+    private static SctpChannel openChannel() {
+        try {
+            return SctpChannel.open();
+        } catch (IOException e) {
+            throw new ChannelException("Failed to open a sctp channel.", e);
+        }
+    }
+
+    private static void closeSelector(String selectorName, Selector selector) {
+        try {
+            selector.close();
+        } catch (IOException e) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("Failed to close a " + selectorName + " selector.", e);
             }
         }
     }
@@ -189,13 +182,12 @@ public class OioSctpChannel extends AbstractOioMessageChannel
 
             data.flip();
             allocHandle.lastBytesRead(data.remaining());
-            msgs.add(new SctpMessage(messageInfo,
-                    buffer.writerIndex(buffer.writerIndex() + allocHandle.lastBytesRead())));
+            msgs.add(new SctpMessage(messageInfo, buffer.writerIndex(buffer.writerIndex() + allocHandle.lastBytesRead())));
             free = false;
             ++readMessages;
         } catch (Throwable cause) {
             PlatformDependent.throwException(cause);
-        }  finally {
+        } finally {
             if (free) {
                 buffer.release();
             }
@@ -217,7 +209,7 @@ public class OioSctpChannel extends AbstractOioMessageChannel
             }
             Iterator<SelectionKey> writableKeysIt = writableKeys.iterator();
             int written = 0;
-            for (;;) {
+            for (; ; ) {
                 if (written == size) {
                     // all written
                     return;
@@ -248,7 +240,7 @@ public class OioSctpChannel extends AbstractOioMessageChannel
                 mi.unordered(packet.isUnordered());
 
                 ch.send(nioData, mi);
-                written ++;
+                written++;
                 in.remove();
 
                 if (!writableKeysIt.hasNext()) {
@@ -264,8 +256,7 @@ public class OioSctpChannel extends AbstractOioMessageChannel
             return msg;
         }
 
-        throw new UnsupportedOperationException(
-                "unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPE);
+        throw new UnsupportedOperationException("unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPE);
     }
 
     @Override
@@ -342,8 +333,7 @@ public class OioSctpChannel extends AbstractOioMessageChannel
     }
 
     @Override
-    protected void doConnect(SocketAddress remoteAddress,
-                             SocketAddress localAddress) throws Exception {
+    protected void doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         if (localAddress != null) {
             ch.bind(localAddress);
         }
@@ -351,16 +341,16 @@ public class OioSctpChannel extends AbstractOioMessageChannel
         boolean success = false;
         try {
             ch.connect(remoteAddress);
-            boolean  finishConnect = false;
+            boolean finishConnect = false;
             while (!finishConnect) {
                 if (connectSelector.select(SO_TIMEOUT) >= 0) {
                     final Set<SelectionKey> selectionKeys = connectSelector.selectedKeys();
                     for (SelectionKey key : selectionKeys) {
-                       if (key.isConnectable()) {
-                           selectionKeys.clear();
-                           finishConnect = true;
-                           break;
-                       }
+                        if (key.isConnectable()) {
+                            selectionKeys.clear();
+                            finishConnect = true;
+                            break;
+                        }
                     }
                     selectionKeys.clear();
                 }
@@ -384,16 +374,6 @@ public class OioSctpChannel extends AbstractOioMessageChannel
         closeSelector("write", writeSelector);
         closeSelector("connect", connectSelector);
         ch.close();
-    }
-
-    private static void closeSelector(String selectorName, Selector selector) {
-        try {
-            selector.close();
-        } catch (IOException e) {
-            if (logger.isWarnEnabled()) {
-                logger.warn("Failed to close a " + selectorName + " selector.", e);
-            }
-        }
     }
 
     @Override

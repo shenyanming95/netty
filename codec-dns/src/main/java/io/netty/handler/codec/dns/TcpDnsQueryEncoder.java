@@ -53,8 +53,7 @@ public final class TcpDnsQueryEncoder extends MessageToByteEncoder<DnsQuery> {
     }
 
     @Override
-    protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, @SuppressWarnings("unused") DnsQuery msg,
-                                     boolean preferDirect) {
+    protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, @SuppressWarnings("unused") DnsQuery msg, boolean preferDirect) {
         if (preferDirect) {
             return ctx.alloc().ioBuffer(1024);
         } else {

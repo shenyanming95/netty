@@ -42,11 +42,7 @@ public abstract class AbstractStringRedisMessage implements RedisMessage {
 
     @Override
     public String toString() {
-        return new StringBuilder(StringUtil.simpleClassName(this))
-                .append('[')
-                .append("content=")
-                .append(content)
-                .append(']').toString();
+        return new StringBuilder(StringUtil.simpleClassName(this)).append('[').append("content=").append(content).append(']').toString();
     }
 
 }

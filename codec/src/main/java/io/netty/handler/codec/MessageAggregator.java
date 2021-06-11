@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec;
 
 import io.netty.buffer.ByteBuf;
@@ -45,8 +30,7 @@ import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
  * @param <C> the type of the content message (must be a subtype of {@link ByteBufHolder})
  * @param <O> the type of the aggregated message (must be a subtype of {@code S} and {@link ByteBufHolder})
  */
-public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends ByteBufHolder>
-        extends MessageToMessageDecoder<I> {
+public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends ByteBufHolder> extends MessageToMessageDecoder<I> {
 
     private static final int DEFAULT_MAX_COMPOSITEBUFFER_COMPONENTS = 1024;
 
@@ -63,10 +47,9 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
     /**
      * Creates a new instance.
      *
-     * @param maxContentLength
-     *        the maximum length of the aggregated content.
-     *        If the length of the aggregated content exceeds this value,
-     *        {@link #handleOversizedMessage(ChannelHandlerContext, Object)} will be called.
+     * @param maxContentLength the maximum length of the aggregated content.
+     *                         If the length of the aggregated content exceeds this value,
+     *                         {@link #handleOversizedMessage(ChannelHandlerContext, Object)} will be called.
      */
     protected MessageAggregator(int maxContentLength) {
         validateMaxContentLength(maxContentLength);
@@ -83,6 +66,12 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
         checkPositiveOrZero(maxContentLength, "maxContentLength");
     }
 
+    private static void appendPartialContent(CompositeByteBuf content, ByteBuf partialContent) {
+        if (partialContent.isReadable()) {
+            content.addComponent(true, partialContent.retain());
+        }
+    }
+
     @Override
     public boolean acceptInboundMessage(Object msg) throws Exception {
         // No need to match last and full types because they are subset of first and middle types.
@@ -90,8 +79,7 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
             return false;
         }
 
-        @SuppressWarnings("unchecked")
-        I in = (I) msg;
+        @SuppressWarnings("unchecked") I in = (I) msg;
 
         if (isAggregated(in)) {
             return false;
@@ -172,16 +160,13 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
      */
     public final void setMaxCumulationBufferComponents(int maxCumulationBufferComponents) {
         if (maxCumulationBufferComponents < 2) {
-            throw new IllegalArgumentException(
-                    "maxCumulationBufferComponents: " + maxCumulationBufferComponents +
-                    " (expected: >= 2)");
+            throw new IllegalArgumentException("maxCumulationBufferComponents: " + maxCumulationBufferComponents + " (expected: >= 2)");
         }
 
         if (ctx == null) {
             this.maxCumulationBufferComponents = maxCumulationBufferComponents;
         } else {
-            throw new IllegalStateException(
-                    "decoder properties cannot be changed once the decoder is added to a pipeline.");
+            throw new IllegalStateException("decoder properties cannot be changed once the decoder is added to a pipeline.");
         }
     }
 
@@ -212,8 +197,7 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
                 throw new MessageAggregationException();
             }
 
-            @SuppressWarnings("unchecked")
-            S m = (S) msg;
+            @SuppressWarnings("unchecked") S m = (S) msg;
 
             // Send the continue response if necessary (e.g. 'Expect: 100-continue' header)
             // Check before content length. Failing an expectation may result in a different response being sent.
@@ -279,13 +263,11 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
             // Merge the received chunk into the content of the current message.
             CompositeByteBuf content = (CompositeByteBuf) currentMessage.content();
 
-            @SuppressWarnings("unchecked")
-            final C m = (C) msg;
+            @SuppressWarnings("unchecked") final C m = (C) msg;
             // Handle oversized message.
             if (content.readableBytes() > maxContentLength - m.content().readableBytes()) {
                 // By convention, full message type extends first message type.
-                @SuppressWarnings("unchecked")
-                S s = (S) currentMessage;
+                @SuppressWarnings("unchecked") S s = (S) currentMessage;
                 invokeHandleOversizedMessage(ctx, s);
                 return;
             }
@@ -301,8 +283,7 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
                 DecoderResult decoderResult = ((DecoderResultProvider) m).decoderResult();
                 if (!decoderResult.isSuccess()) {
                     if (currentMessage instanceof DecoderResultProvider) {
-                        ((DecoderResultProvider) currentMessage).setDecoderResult(
-                                DecoderResult.failure(decoderResult.cause()));
+                        ((DecoderResultProvider) currentMessage).setDecoderResult(DecoderResult.failure(decoderResult.cause()));
                     }
                     last = true;
                 } else {
@@ -324,16 +305,11 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
         }
     }
 
-    private static void appendPartialContent(CompositeByteBuf content, ByteBuf partialContent) {
-        if (partialContent.isReadable()) {
-            content.addComponent(true, partialContent.retain());
-        }
-    }
-
     /**
      * Determine if the message {@code start}'s content length is known, and if it greater than
      * {@code maxContentLength}.
-     * @param start The message which may indicate the content length.
+     *
+     * @param start            The message which may indicate the content length.
      * @param maxContentLength The maximum allowed content length.
      * @return {@code true} if the message {@code start}'s content length is known, and if it greater than
      * {@code maxContentLength}. {@code false} otherwise.
@@ -346,12 +322,12 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
      *
      * @return the 'continue response', or {@code null} if there's no message to send
      */
-    protected abstract Object newContinueResponse(S start, int maxContentLength, ChannelPipeline pipeline)
-            throws Exception;
+    protected abstract Object newContinueResponse(S start, int maxContentLength, ChannelPipeline pipeline) throws Exception;
 
     /**
      * Determine if the channel should be closed after the result of
      * {@link #newContinueResponse(Object, int, ChannelPipeline)} is written.
+     *
      * @param msg The return value from {@link #newContinueResponse(Object, int, ChannelPipeline)}.
      * @return {@code true} if the channel should be closed after the result of
      * {@link #newContinueResponse(Object, int, ChannelPipeline)} is written. {@code false} otherwise.
@@ -381,7 +357,8 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
      * aggregated message already, so that you don't need to.  Use this method to transfer the additional information
      * that the content message provides to {@code aggregated}.
      */
-    protected void aggregate(O aggregated, C content) throws Exception { }
+    protected void aggregate(O aggregated, C content) throws Exception {
+    }
 
     private void finishAggregation0(O aggregated) throws Exception {
         aggregating = false;
@@ -391,7 +368,8 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
     /**
      * Invoked when the specified {@code aggregated} message is about to be passed to the next handler in the pipeline.
      */
-    protected void finishAggregation(O aggregated) throws Exception { }
+    protected void finishAggregation(O aggregated) throws Exception {
+    }
 
     private void invokeHandleOversizedMessage(ChannelHandlerContext ctx, S oversized) throws Exception {
         handlingOversizedMessage = true;
@@ -408,12 +386,11 @@ public abstract class MessageAggregator<I, S, C extends ByteBufHolder, O extends
      * Invoked when an incoming request exceeds the maximum content length.  The default behvaior is to trigger an
      * {@code exceptionCaught()} event with a {@link TooLongFrameException}.
      *
-     * @param ctx the {@link ChannelHandlerContext}
+     * @param ctx       the {@link ChannelHandlerContext}
      * @param oversized the accumulated message up to this point, whose type is {@code S} or {@code O}
      */
     protected void handleOversizedMessage(ChannelHandlerContext ctx, S oversized) throws Exception {
-        ctx.fireExceptionCaught(
-                new TooLongFrameException("content length exceeded " + maxContentLength() + " bytes."));
+        ctx.fireExceptionCaught(new TooLongFrameException("content length exceeded " + maxContentLength() + " bytes."));
     }
 
     @Override

@@ -1,18 +1,3 @@
-/*
- * Copyright 2020 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.internal.tcnative.SSLSessionCache;
@@ -29,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 class OpenSslSessionCache implements SSLSessionCache {
     private static final int DEFAULT_CACHE_SIZE;
+
     static {
         // Respect the same system property as the JDK implementation to make it easy to switch between implementations.
         int cacheSize = SystemPropertyUtil.getInt("javax.net.ssl.sessionCacheSize", 20480);
@@ -40,13 +26,12 @@ class OpenSslSessionCache implements SSLSessionCache {
     }
 
     private final OpenSslEngineMap engineMap;
+    private final AtomicInteger maximumCacheSize = new AtomicInteger(DEFAULT_CACHE_SIZE);
+    private final Map<OpenSslSessionId, OpenSslSession> sessions = new LinkedHashMap<OpenSslSessionId, OpenSslSession>() {
 
-    private final Map<OpenSslSessionId, OpenSslSession> sessions =
-            new LinkedHashMap<OpenSslSessionId, OpenSslSession>() {
+        private static final long serialVersionUID = -7773696788135734448L;
 
-                private static final long serialVersionUID = -7773696788135734448L;
-
-                @Override
+        @Override
         protected boolean removeEldestEntry(Map.Entry<OpenSslSessionId, OpenSslSession> eldest) {
             int maxSize = maximumCacheSize.get();
             if (maxSize >= 0 && this.size() > maxSize) {
@@ -58,9 +43,6 @@ class OpenSslSessionCache implements SSLSessionCache {
             return false;
         }
     };
-
-    private final AtomicInteger maximumCacheSize = new AtomicInteger(DEFAULT_CACHE_SIZE);
-
     // Let's use the same default value as OpenSSL does.
     // See https://www.openssl.org/docs/man1.1.1/man3/SSL_get_default_timeout.html
     private volatile int sessionTimeout = 300;
@@ -70,12 +52,12 @@ class OpenSslSessionCache implements SSLSessionCache {
         this.engineMap = engineMap;
     }
 
-    void setSessionTimeout(int seconds) {
-        sessionTimeout = seconds;
-    }
-
     int getSessionTimeout() {
         return sessionTimeout;
+    }
+
+    void setSessionTimeout(int seconds) {
+        sessionTimeout = seconds;
     }
 
     /**
@@ -93,7 +75,12 @@ class OpenSslSessionCache implements SSLSessionCache {
      *
      * @param session the session to remove.
      */
-    protected void sessionRemoved(OpenSslSession session) { }
+    protected void sessionRemoved(OpenSslSession session) {
+    }
+
+    final int getSessionCacheSize() {
+        return maximumCacheSize.get();
+    }
 
     final void setSessionCacheSize(int size) {
         long oldSize = maximumCacheSize.getAndSet(size);
@@ -103,14 +90,7 @@ class OpenSslSessionCache implements SSLSessionCache {
         }
     }
 
-    final int getSessionCacheSize() {
-        return maximumCacheSize.get();
-    }
-
-    DefaultOpenSslSession newOpenSslSession(long sslSession, OpenSslSessionContext context, String peerHost,
-                                            int peerPort, String protocol, String cipher,
-                                            OpenSslJavaxX509Certificate[] peerCertificateChain,
-                                            long creationTime) {
+    DefaultOpenSslSession newOpenSslSession(long sslSession, OpenSslSessionContext context, String peerHost, int peerPort, String protocol, String cipher, OpenSslJavaxX509Certificate[] peerCertificateChain, long creationTime) {
         if (sslSession != -1) {
             synchronized (this) {
                 if (!io.netty.internal.tcnative.SSLSession.upRef(sslSession)) {
@@ -118,8 +98,7 @@ class OpenSslSessionCache implements SSLSessionCache {
                 }
             }
         }
-        return new DefaultOpenSslSession(context, peerHost, peerPort, sslSession, protocol, cipher,
-                peerCertificateChain, creationTime, context.getSessionTimeout() * 1000L);
+        return new DefaultOpenSslSession(context, peerHost, peerPort, sslSession, protocol, cipher, peerCertificateChain, creationTime, context.getSessionTimeout() * 1000L);
     }
 
     private void expungeInvalidSessions() {
@@ -226,7 +205,7 @@ class OpenSslSessionCache implements SSLSessionCache {
 
     final synchronized List<byte[]> getIds() {
         List<byte[]> ids = new ArrayList<byte[]>(sessions.size());
-        for (OpenSslSession session: sessions.values()) {
+        for (OpenSslSession session : sessions.values()) {
             if (session.isValid()) {
                 ids.add(session.getId());
             }
@@ -238,7 +217,7 @@ class OpenSslSessionCache implements SSLSessionCache {
         final OpenSslSession[] sessionsArray = sessions.values().toArray(new OpenSslSession[0]);
         sessions.clear();
 
-        for (OpenSslSession session: sessionsArray) {
+        for (OpenSslSession session : sessionsArray) {
             sessionRemoved(session);
             session.release();
         }

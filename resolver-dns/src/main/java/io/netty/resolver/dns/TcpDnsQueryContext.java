@@ -26,8 +26,7 @@ final class TcpDnsQueryContext extends DnsQueryContext {
 
     private final Channel channel;
 
-    TcpDnsQueryContext(DnsNameResolver parent, Channel channel, InetSocketAddress nameServerAddr, DnsQuestion question,
-                       DnsRecord[] additionals, Promise<AddressedEnvelope<DnsResponse, InetSocketAddress>> promise) {
+    TcpDnsQueryContext(DnsNameResolver parent, Channel channel, InetSocketAddress nameServerAddr, DnsQuestion question, DnsRecord[] additionals, Promise<AddressedEnvelope<DnsResponse, InetSocketAddress>> promise) {
         super(parent, nameServerAddr, question, additionals, promise);
         this.channel = channel;
     }

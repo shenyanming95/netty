@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.epoll;
 
 import io.netty.buffer.ByteBufAllocator;
@@ -23,8 +8,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
 
-public final class EpollServerSocketChannelConfig extends EpollServerChannelConfig
-        implements ServerSocketChannelConfig {
+public final class EpollServerSocketChannelConfig extends EpollServerChannelConfig implements ServerSocketChannelConfig {
 
     EpollServerSocketChannelConfig(EpollServerSocketChannel channel) {
         super(channel);
@@ -37,8 +21,7 @@ public final class EpollServerSocketChannelConfig extends EpollServerChannelConf
 
     @Override
     public Map<ChannelOption<?>, Object> getOptions() {
-        return getOptions(super.getOptions(), EpollChannelOption.SO_REUSEPORT, EpollChannelOption.IP_FREEBIND,
-            EpollChannelOption.IP_TRANSPARENT, EpollChannelOption.TCP_DEFER_ACCEPT);
+        return getOptions(super.getOptions(), EpollChannelOption.SO_REUSEPORT, EpollChannelOption.IP_FREEBIND, EpollChannelOption.IP_TRANSPARENT, EpollChannelOption.TCP_DEFER_ACCEPT);
     }
 
     @SuppressWarnings("unchecked")
@@ -70,8 +53,7 @@ public final class EpollServerSocketChannelConfig extends EpollServerChannelConf
         } else if (option == EpollChannelOption.IP_TRANSPARENT) {
             setIpTransparent((Boolean) value);
         } else if (option == EpollChannelOption.TCP_MD5SIG) {
-            @SuppressWarnings("unchecked")
-            final Map<InetAddress, byte[]> m = (Map<InetAddress, byte[]>) value;
+            @SuppressWarnings("unchecked") final Map<InetAddress, byte[]> m = (Map<InetAddress, byte[]>) value;
             setTcpMd5Sig(m);
         } else if (option == EpollChannelOption.TCP_DEFER_ACCEPT) {
             setTcpDeferAccept((Integer) value);
@@ -196,7 +178,7 @@ public final class EpollServerSocketChannelConfig extends EpollServerChannelConf
     /**
      * Set the SO_REUSEPORT option on the underlying Channel. This will allow to bind multiple
      * {@link EpollSocketChannel}s to the same port and so accept connections with multiple threads.
-     *
+     * <p>
      * Be aware this method needs be called before {@link EpollSocketChannel#bind(java.net.SocketAddress)} to have
      * any affect.
      */
@@ -260,23 +242,23 @@ public final class EpollServerSocketChannelConfig extends EpollServerChannelConf
     }
 
     /**
-     * Set the {@code TCP_DEFER_ACCEPT} option on the socket. See {@code man 7 tcp} for more details.
+     * Returns a positive value if <a href="http://linux.die.net/man/7/tcp">TCP_DEFER_ACCEPT</a> is enabled.
      */
-    public EpollServerSocketChannelConfig setTcpDeferAccept(int deferAccept) {
+    public int getTcpDeferAccept() {
         try {
-            ((EpollServerSocketChannel) channel).socket.setTcpDeferAccept(deferAccept);
-            return this;
+            return ((EpollServerSocketChannel) channel).socket.getTcpDeferAccept();
         } catch (IOException e) {
             throw new ChannelException(e);
         }
     }
 
     /**
-     * Returns a positive value if <a href="http://linux.die.net/man/7/tcp">TCP_DEFER_ACCEPT</a> is enabled.
+     * Set the {@code TCP_DEFER_ACCEPT} option on the socket. See {@code man 7 tcp} for more details.
      */
-    public int getTcpDeferAccept() {
+    public EpollServerSocketChannelConfig setTcpDeferAccept(int deferAccept) {
         try {
-            return ((EpollServerSocketChannel) channel).socket.getTcpDeferAccept();
+            ((EpollServerSocketChannel) channel).socket.setTcpDeferAccept(deferAccept);
+            return this;
         } catch (IOException e) {
             throw new ChannelException(e);
         }

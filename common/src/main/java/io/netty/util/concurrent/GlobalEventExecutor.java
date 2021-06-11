@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.concurrent;
 
 import io.netty.util.internal.ObjectUtil;
@@ -33,15 +18,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public final class GlobalEventExecutor extends AbstractScheduledEventExecutor implements OrderedEventExecutor {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(GlobalEventExecutor.class);
-
-    private static final long SCHEDULE_QUIET_PERIOD_INTERVAL = TimeUnit.SECONDS.toNanos(1);
-
     public static final GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
-
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(GlobalEventExecutor.class);
+    private static final long SCHEDULE_QUIET_PERIOD_INTERVAL = TimeUnit.SECONDS.toNanos(1);
     final BlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
-    final ScheduledFutureTask<Void> quietPeriodTask = new ScheduledFutureTask<Void>(
-            this, Executors.<Void>callable(new Runnable() {
+    final ScheduledFutureTask<Void> quietPeriodTask = new ScheduledFutureTask<Void>(this, Executors.<Void>callable(new Runnable() {
         @Override
         public void run() {
             // NOOP
@@ -55,14 +36,12 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
     final ThreadFactory threadFactory;
     private final TaskRunner taskRunner = new TaskRunner();
     private final AtomicBoolean started = new AtomicBoolean();
-    volatile Thread thread;
-
     private final Future<?> terminationFuture = new FailedFuture<Object>(this, new UnsupportedOperationException());
+    volatile Thread thread;
 
     private GlobalEventExecutor() {
         scheduledTaskQueue().add(quietPeriodTask);
-        threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
-                DefaultThreadFactory.toPoolName(getClass()), false, Thread.NORM_PRIORITY, null), this);
+        threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(DefaultThreadFactory.toPoolName(getClass()), false, Thread.NORM_PRIORITY, null), this);
     }
 
     /**
@@ -72,7 +51,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
      */
     Runnable takeTask() {
         BlockingQueue<Runnable> taskQueue = this.taskQueue;
-        for (;;) {
+        for (; ; ) {
             ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
             if (scheduledTask == null) {
                 Runnable task = null;
@@ -231,7 +210,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
     final class TaskRunner implements Runnable {
         @Override
         public void run() {
-            for (;;) {
+            for (; ; ) {
                 Runnable task = takeTask();
                 if (task != null) {
                     try {

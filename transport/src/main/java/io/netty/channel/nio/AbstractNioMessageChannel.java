@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.nio;
 
 import io.netty.channel.*;
@@ -58,88 +43,12 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
         super.doBeginRead();
     }
 
-    private final class NioMessageUnsafe extends AbstractNioUnsafe {
-
-        /**
-         * 用来保存当前 ServerSocketChannel 接收到的客户端连接通道
-         */
-        private final List<Object> readBuf = new ArrayList<Object>();
-
-        @Override
-        public void read() {
-            assert eventLoop().inEventLoop();
-            final ChannelConfig config = config();
-            final ChannelPipeline pipeline = pipeline();
-            final RecvByteBufAllocator.Handle allocHandle = unsafe().recvBufAllocHandle();
-            allocHandle.reset(config);
-
-            boolean closed = false;
-            Throwable exception = null;
-            try {
-                try {
-                    do {
-                        // 读取数据, 其返回值如果大于1, 说明成功创建了一个连接
-                        int localRead = doReadMessages(readBuf);
-                        if (localRead == 0) {
-                            break;
-                        }
-                        if (localRead < 0) {
-                            closed = true;
-                            break;
-                        }
-                        // 统计读取次数
-                        allocHandle.incMessagesRead(localRead);
-
-                        // do..while循环, 调用 allocHandle.continueReading() 判断是否需要继续读
-                    } while (allocHandle.continueReading());
-                } catch (Throwable t) {
-                    exception = t;
-                }
-                // 跳出do..while循环, 拿到的 readBuf 主要是与客户端连接的通道对象
-                int size = readBuf.size();
-                // 触发管道的 ChannelRead 事件
-                for (int i = 0; i < size; i ++) {
-                    readPending = false;
-                    // 在创建连接的时候, 客户端的通道都是交由
-                    // io.netty.bootstrap.ServerBootstrap.ServerBootstrapAcceptor 来处理
-                    pipeline.fireChannelRead(readBuf.get(i));
-                }
-                readBuf.clear();
-                allocHandle.readComplete();
-                pipeline.fireChannelReadComplete();
-
-                if (exception != null) {
-                    closed = closeOnReadError(exception);
-
-                    pipeline.fireExceptionCaught(exception);
-                }
-
-                if (closed) {
-                    inputShutdown = true;
-                    if (isOpen()) {
-                        close(voidPromise());
-                    }
-                }
-            } finally {
-                // Check if there is a readPending which was not processed yet.
-                // This could be for two reasons:
-                // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
-                // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
-                //
-                // See https://github.com/netty/netty/issues/2254
-                if (!readPending && !config.isAutoRead()) {
-                    removeReadOp();
-                }
-            }
-        }
-    }
-
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
         final SelectionKey key = selectionKey();
         final int interestOps = key.interestOps();
 
-        for (;;) {
+        for (; ; ) {
             Object msg = in.current();
             if (msg == null) {
                 // Wrote all messages.
@@ -210,4 +119,80 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
      * @return {@code true} if and only if the message has been written
      */
     protected abstract boolean doWriteMessage(Object msg, ChannelOutboundBuffer in) throws Exception;
+
+    private final class NioMessageUnsafe extends AbstractNioUnsafe {
+
+        /**
+         * 用来保存当前 ServerSocketChannel 接收到的客户端连接通道
+         */
+        private final List<Object> readBuf = new ArrayList<Object>();
+
+        @Override
+        public void read() {
+            assert eventLoop().inEventLoop();
+            final ChannelConfig config = config();
+            final ChannelPipeline pipeline = pipeline();
+            final RecvByteBufAllocator.Handle allocHandle = unsafe().recvBufAllocHandle();
+            allocHandle.reset(config);
+
+            boolean closed = false;
+            Throwable exception = null;
+            try {
+                try {
+                    do {
+                        // 读取数据, 其返回值如果大于1, 说明成功创建了一个连接
+                        int localRead = doReadMessages(readBuf);
+                        if (localRead == 0) {
+                            break;
+                        }
+                        if (localRead < 0) {
+                            closed = true;
+                            break;
+                        }
+                        // 统计读取次数
+                        allocHandle.incMessagesRead(localRead);
+
+                        // do..while循环, 调用 allocHandle.continueReading() 判断是否需要继续读
+                    } while (allocHandle.continueReading());
+                } catch (Throwable t) {
+                    exception = t;
+                }
+                // 跳出do..while循环, 拿到的 readBuf 主要是与客户端连接的通道对象
+                int size = readBuf.size();
+                // 触发管道的 ChannelRead 事件
+                for (int i = 0; i < size; i++) {
+                    readPending = false;
+                    // 在创建连接的时候, 客户端的通道都是交由
+                    // io.netty.bootstrap.ServerBootstrap.ServerBootstrapAcceptor 来处理
+                    pipeline.fireChannelRead(readBuf.get(i));
+                }
+                readBuf.clear();
+                allocHandle.readComplete();
+                pipeline.fireChannelReadComplete();
+
+                if (exception != null) {
+                    closed = closeOnReadError(exception);
+
+                    pipeline.fireExceptionCaught(exception);
+                }
+
+                if (closed) {
+                    inputShutdown = true;
+                    if (isOpen()) {
+                        close(voidPromise());
+                    }
+                }
+            } finally {
+                // Check if there is a readPending which was not processed yet.
+                // This could be for two reasons:
+                // * The user called Channel.read() or ChannelHandlerContext.read() in channelRead(...) method
+                // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
+                //
+                // See https://github.com/netty/netty/issues/2254
+                if (!readPending && !config.isAutoRead()) {
+                    removeReadOp();
+                }
+            }
+        }
+    }
 }

@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.handler.proxy;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -32,11 +16,9 @@ public final class Socks5ProxyHandler extends ProxyHandler {
     private static final String PROTOCOL = "socks5";
     private static final String AUTH_PASSWORD = "password";
 
-    private static final Socks5InitialRequest INIT_REQUEST_NO_AUTH =
-            new DefaultSocks5InitialRequest(Collections.singletonList(Socks5AuthMethod.NO_AUTH));
+    private static final Socks5InitialRequest INIT_REQUEST_NO_AUTH = new DefaultSocks5InitialRequest(Collections.singletonList(Socks5AuthMethod.NO_AUTH));
 
-    private static final Socks5InitialRequest INIT_REQUEST_PASSWORD =
-            new DefaultSocks5InitialRequest(Arrays.asList(Socks5AuthMethod.NO_AUTH, Socks5AuthMethod.PASSWORD));
+    private static final Socks5InitialRequest INIT_REQUEST_PASSWORD = new DefaultSocks5InitialRequest(Arrays.asList(Socks5AuthMethod.NO_AUTH, Socks5AuthMethod.PASSWORD));
 
     private final String username;
     private final String password;
@@ -67,7 +49,7 @@ public final class Socks5ProxyHandler extends ProxyHandler {
 
     @Override
     public String authScheme() {
-        return socksAuthMethod() == Socks5AuthMethod.PASSWORD? AUTH_PASSWORD : AUTH_NONE;
+        return socksAuthMethod() == Socks5AuthMethod.PASSWORD ? AUTH_PASSWORD : AUTH_NONE;
     }
 
     public String username() {
@@ -107,7 +89,7 @@ public final class Socks5ProxyHandler extends ProxyHandler {
 
     @Override
     protected Object newInitialMessage(ChannelHandlerContext ctx) throws Exception {
-        return socksAuthMethod() == Socks5AuthMethod.PASSWORD? INIT_REQUEST_PASSWORD : INIT_REQUEST_NO_AUTH;
+        return socksAuthMethod() == Socks5AuthMethod.PASSWORD ? INIT_REQUEST_PASSWORD : INIT_REQUEST_NO_AUTH;
     }
 
     @Override
@@ -126,8 +108,7 @@ public final class Socks5ProxyHandler extends ProxyHandler {
             } else if (authMethod == Socks5AuthMethod.PASSWORD) {
                 // In case of password authentication, send an authentication request.
                 ctx.pipeline().replace(decoderName, decoderName, new Socks5PasswordAuthResponseDecoder());
-                sendToProxyServer(new DefaultSocks5PasswordAuthRequest(
-                        username != null? username : "", password != null? password : ""));
+                sendToProxyServer(new DefaultSocks5PasswordAuthRequest(username != null ? username : "", password != null ? password : ""));
             } else {
                 // Should never reach here.
                 throw new Error();
@@ -180,8 +161,7 @@ public final class Socks5ProxyHandler extends ProxyHandler {
             } else if (NetUtil.isValidIpV6Address(rhost)) {
                 addrType = Socks5AddressType.IPv6;
             } else {
-                throw new ProxyConnectException(
-                        exceptionMessage("unknown address type: " + StringUtil.simpleClassName(rhost)));
+                throw new ProxyConnectException(exceptionMessage("unknown address type: " + StringUtil.simpleClassName(rhost)));
             }
         }
 

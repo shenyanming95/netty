@@ -32,6 +32,10 @@ import org.openjdk.jmh.annotations.*;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 public class HttpObjectEncoderBenchmark extends AbstractMicrobenchmark {
+    @Param({"true", "false"})
+    public boolean pooledAllocator;
+    @Param({"true", "false"})
+    public boolean voidPromise;
     private HttpRequestEncoder encoder;
     private FullHttpRequest fullRequest;
     private LastHttpContent lastContent;
@@ -39,12 +43,6 @@ public class HttpObjectEncoderBenchmark extends AbstractMicrobenchmark {
     private HttpRequest chunkedRequest;
     private ByteBuf content;
     private ChannelHandlerContext context;
-
-    @Param({ "true", "false" })
-    public boolean pooledAllocator;
-
-    @Param({ "true", "false" })
-    public boolean voidPromise;
 
     @Setup(Level.Trial)
     public void setup() {
@@ -57,16 +55,13 @@ public class HttpObjectEncoderBenchmark extends AbstractMicrobenchmark {
         HttpHeaders headersWithContentLength = new DefaultHttpHeaders(false);
         headersWithContentLength.add(HttpHeaderNames.CONTENT_LENGTH, testContent.readableBytes());
 
-        fullRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/index", testContent,
-                headersWithContentLength, EmptyHttpHeaders.INSTANCE);
-        contentLengthRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/index",
-                headersWithContentLength);
+        fullRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/index", testContent, headersWithContentLength, EmptyHttpHeaders.INSTANCE);
+        contentLengthRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/index", headersWithContentLength);
         chunkedRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/index", headersWithChunked);
         lastContent = new DefaultLastHttpContent(testContent, false);
 
         encoder = new HttpRequestEncoder();
-        context = new EmbeddedChannelWriteReleaseHandlerContext(pooledAllocator ? PooledByteBufAllocator.DEFAULT :
-                UnpooledByteBufAllocator.DEFAULT, encoder) {
+        context = new EmbeddedChannelWriteReleaseHandlerContext(pooledAllocator ? PooledByteBufAllocator.DEFAULT : UnpooledByteBufAllocator.DEFAULT, encoder) {
             @Override
             protected void handleException(Throwable t) {
                 handleUnexpectedException(t);

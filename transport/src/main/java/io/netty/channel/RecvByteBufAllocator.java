@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel;
 
 import io.netty.buffer.ByteBuf;
@@ -57,12 +42,14 @@ public interface RecvByteBufAllocator {
          * This may be used by {@link #continueReading()} to determine if the read operation should complete.
          * </p>
          * This is only ever a hint and may be ignored by the implementation.
+         *
          * @param config The channel configuration which may impact this object's behavior.
          */
         void reset(ChannelConfig config);
 
         /**
          * Increment the number of messages that have been read for the current read loop.
+         *
          * @param numMessages The amount to increment by.
          */
         void incMessagesRead(int numMessages);
@@ -70,33 +57,38 @@ public interface RecvByteBufAllocator {
         /**
          * Set the bytes that have been read for the last read operation.
          * This may be used to increment the number of bytes that have been read.
+         *
          * @param bytes The number of bytes from the previous read operation. This may be negative if an read error
-         * occurs. If a negative value is seen it is expected to be return on the next call to
-         * {@link #lastBytesRead()}. A negative value will signal a termination condition enforced externally
-         * to this class and is not required to be enforced in {@link #continueReading()}.
+         *              occurs. If a negative value is seen it is expected to be return on the next call to
+         *              {@link #lastBytesRead()}. A negative value will signal a termination condition enforced externally
+         *              to this class and is not required to be enforced in {@link #continueReading()}.
          */
         void lastBytesRead(int bytes);
 
         /**
          * Get the amount of bytes for the previous read operation.
+         *
          * @return The amount of bytes for the previous read operation.
          */
         int lastBytesRead();
 
         /**
          * Set how many bytes the read operation will (or did) attempt to read.
+         *
          * @param bytes How many bytes the read operation will (or did) attempt to read.
          */
         void attemptedBytesRead(int bytes);
 
         /**
          * Get how many bytes the read operation will (or did) attempt to read.
+         *
          * @return How many bytes the read operation will (or did) attempt to read.
          */
         int attemptedBytesRead();
 
         /**
          * Determine if the current read loop should continue.
+         *
          * @return {@code true} if the read loop should continue reading. {@code false} if the read loop is complete.
          */
         boolean continueReading();
@@ -112,6 +104,7 @@ public interface RecvByteBufAllocator {
     interface ExtendedHandle extends Handle {
         /**
          * Same as {@link Handle#continueReading()} except "more data" is determined by the supplier parameter.
+         *
          * @param maybeMoreDataSupplier A supplier that determines if there maybe more data to read.
          */
         boolean continueReading(UncheckedBooleanSupplier maybeMoreDataSupplier);
@@ -129,6 +122,7 @@ public interface RecvByteBufAllocator {
 
         /**
          * Get the {@link Handle} which all methods will be delegated to.
+         *
          * @return the {@link Handle} which all methods will be delegated to.
          */
         protected final Handle delegate() {

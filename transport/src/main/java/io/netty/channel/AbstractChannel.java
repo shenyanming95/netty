@@ -1,24 +1,8 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.socket.ChannelOutputShutdownEvent;
 import io.netty.channel.socket.ChannelOutputShutdownException;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.DefaultAttributeMap;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.internal.ObjectUtil;
@@ -55,15 +39,16 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     private boolean closeInitiated;
     private Throwable initialCloseCause;
 
-    /** Cache for the string representation of this channel */
+    /**
+     * Cache for the string representation of this channel
+     */
     private boolean strValActive;
     private String strVal;
 
     /**
      * Creates a new instance.
      *
-     * @param parent
-     *        the parent of this channel. {@code null} if there's no parent.
+     * @param parent the parent of this channel. {@code null} if there's no parent.
      */
     protected AbstractChannel(Channel parent) {
         // Channel是io.netty.channel.Channel类型, 当创建服务端通道时此值为null
@@ -79,8 +64,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     /**
      * Creates a new instance.
      *
-     * @param parent
-     *        the parent of this channel. {@code null} if there's no parent.
+     * @param parent the parent of this channel. {@code null} if there's no parent.
      */
     protected AbstractChannel(Channel parent, ChannelId id) {
         this.parent = parent;
@@ -380,29 +364,13 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         SocketAddress remoteAddr = remoteAddress();
         SocketAddress localAddr = localAddress();
         if (remoteAddr != null) {
-            StringBuilder buf = new StringBuilder(96)
-                .append("[id: 0x")
-                .append(id.asShortText())
-                .append(", L:")
-                .append(localAddr)
-                .append(active? " - " : " ! ")
-                .append("R:")
-                .append(remoteAddr)
-                .append(']');
+            StringBuilder buf = new StringBuilder(96).append("[id: 0x").append(id.asShortText()).append(", L:").append(localAddr).append(active ? " - " : " ! ").append("R:").append(remoteAddr).append(']');
             strVal = buf.toString();
         } else if (localAddr != null) {
-            StringBuilder buf = new StringBuilder(64)
-                .append("[id: 0x")
-                .append(id.asShortText())
-                .append(", L:")
-                .append(localAddr)
-                .append(']');
+            StringBuilder buf = new StringBuilder(64).append("[id: 0x").append(id.asShortText()).append(", L:").append(localAddr).append(']');
             strVal = buf.toString();
         } else {
-            StringBuilder buf = new StringBuilder(16)
-                .append("[id: 0x")
-                .append(id.asShortText())
-                .append(']');
+            StringBuilder buf = new StringBuilder(16).append("[id: 0x").append(id.asShortText()).append(']');
             strVal = buf.toString();
         }
 
@@ -413,6 +381,161 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     @Override
     public final ChannelPromise voidPromise() {
         return pipeline.voidPromise();
+    }
+
+    /**
+     * Return {@code true} if the given {@link EventLoop} is compatible with this instance.
+     */
+    protected abstract boolean isCompatible(EventLoop loop);
+
+    /**
+     * Returns the {@link SocketAddress} which is bound locally.
+     */
+    protected abstract SocketAddress localAddress0();
+
+    /**
+     * Return the {@link SocketAddress} which the {@link Channel} is connected to.
+     */
+    protected abstract SocketAddress remoteAddress0();
+
+    /**
+     * Is called after the {@link Channel} is registered with its {@link EventLoop} as part of the register process.
+     * <p>
+     * Sub-classes may override this method
+     */
+    protected void doRegister() throws Exception {
+        // NOOP
+    }
+
+    /**
+     * Bind the {@link Channel} to the {@link SocketAddress}
+     */
+    protected abstract void doBind(SocketAddress localAddress) throws Exception;
+
+    /**
+     * Disconnect this {@link Channel} from its remote peer
+     */
+    protected abstract void doDisconnect() throws Exception;
+
+    /**
+     * Close the {@link Channel}
+     */
+    protected abstract void doClose() throws Exception;
+
+    /**
+     * Called when conditions justify shutting down the output portion of the channel. This may happen if a write
+     * operation throws an exception.
+     */
+    @UnstableApi
+    protected void doShutdownOutput() throws Exception {
+        doClose();
+    }
+
+    /**
+     * Deregister the {@link Channel} from its {@link EventLoop}.
+     * <p>
+     * Sub-classes may override this method
+     */
+    protected void doDeregister() throws Exception {
+        // NOOP
+    }
+
+    /**
+     * Schedule a read operation.
+     */
+    protected abstract void doBeginRead() throws Exception;
+
+    /**
+     * Flush the content of the given buffer to the remote peer.
+     */
+    protected abstract void doWrite(ChannelOutboundBuffer in) throws Exception;
+
+    /**
+     * Invoked when a new message is added to a {@link ChannelOutboundBuffer} of this {@link AbstractChannel}, so that
+     * the {@link Channel} implementation converts the message to another. (e.g. heap buffer -> direct buffer)
+     */
+    protected Object filterOutboundMessage(Object msg) throws Exception {
+        return msg;
+    }
+
+    protected void validateFileRegion(DefaultFileRegion region, long position) throws IOException {
+        DefaultFileRegion.validate(region, position);
+    }
+
+    static final class CloseFuture extends DefaultChannelPromise {
+
+        CloseFuture(AbstractChannel ch) {
+            super(ch);
+        }
+
+        @Override
+        public ChannelPromise setSuccess() {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public ChannelPromise setFailure(Throwable cause) {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public boolean trySuccess() {
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public boolean tryFailure(Throwable cause) {
+            throw new IllegalStateException();
+        }
+
+        boolean setClosed() {
+            return super.trySuccess();
+        }
+    }
+
+    private static final class AnnotatedConnectException extends ConnectException {
+
+        private static final long serialVersionUID = 3901958112696433556L;
+
+        AnnotatedConnectException(ConnectException exception, SocketAddress remoteAddress) {
+            super(exception.getMessage() + ": " + remoteAddress);
+            initCause(exception);
+        }
+
+        @Override
+        public Throwable fillInStackTrace() {
+            return this;
+        }
+    }
+
+    private static final class AnnotatedNoRouteToHostException extends NoRouteToHostException {
+
+        private static final long serialVersionUID = -6801433937592080623L;
+
+        AnnotatedNoRouteToHostException(NoRouteToHostException exception, SocketAddress remoteAddress) {
+            super(exception.getMessage() + ": " + remoteAddress);
+            initCause(exception);
+        }
+
+        @Override
+        public Throwable fillInStackTrace() {
+            return this;
+        }
+    }
+
+    private static final class AnnotatedSocketException extends SocketException {
+
+        private static final long serialVersionUID = 3896743275010454039L;
+
+        AnnotatedSocketException(SocketException exception, SocketAddress remoteAddress) {
+            super(exception.getMessage() + ": " + remoteAddress);
+            initCause(exception);
+        }
+
+        @Override
+        public Throwable fillInStackTrace() {
+            return this;
+        }
     }
 
     /**
@@ -427,7 +550,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
         private RecvByteBufAllocator.Handle recvHandle;
         private boolean inFlush0;
-        /** true if the channel has never been registered, false otherwise */
+        /**
+         * true if the channel has never been registered, false otherwise
+         */
         private boolean neverRegistered = true;
 
         private void assertEventLoop() {
@@ -467,8 +592,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
             if (!isCompatible(eventLoop)) {
                 // 判断当前EventLoop是否兼容, 在这里即当前EventLoop是否为NioEventLoop类型
-                promise.setFailure(
-                        new IllegalStateException("incompatible event loop type: " + eventLoop.getClass().getName()));
+                promise.setFailure(new IllegalStateException("incompatible event loop type: " + eventLoop.getClass().getName()));
                 return;
             }
             // AbstractChannel.this的意思就是获取AbstractChannel的具体实现子类, 即
@@ -491,9 +615,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     });
                 } catch (Throwable t) {
                     // 若任务提交失败
-                    logger.warn(
-                            "Force-closing a channel whose registration task was not accepted by an event loop: {}",
-                            AbstractChannel.this, t);
+                    logger.warn("Force-closing a channel whose registration task was not accepted by an event loop: {}", AbstractChannel.this, t);
                     //调用javaChannel()方法获取nio通道将其关闭
                     closeForcibly();
                     //设值CloseFuture, 通知它旗下的监听器, 已关闭通道
@@ -564,16 +686,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
 
             // See: https://github.com/netty/netty/issues/576
-            if (Boolean.TRUE.equals(config().getOption(ChannelOption.SO_BROADCAST)) &&
-                localAddress instanceof InetSocketAddress &&
-                !((InetSocketAddress) localAddress).getAddress().isAnyLocalAddress() &&
-                !PlatformDependent.isWindows() && !PlatformDependent.maybeSuperUser()) {
+            if (Boolean.TRUE.equals(config().getOption(ChannelOption.SO_BROADCAST)) && localAddress instanceof InetSocketAddress && !((InetSocketAddress) localAddress).getAddress().isAnyLocalAddress() && !PlatformDependent.isWindows() && !PlatformDependent.maybeSuperUser()) {
                 // Warn a user about the fact that a non-root user can't receive a
                 // broadcast packet on *nix if the socket is bound on non-wildcard address.
-                logger.warn(
-                        "A non-root user can't receive a broadcast packet if the socket " +
-                        "is not bound to a wildcard address; binding to a non-wildcard " +
-                        "address (" + localAddress + ") anyway as requested.");
+                logger.warn("A non-root user can't receive a broadcast packet if the socket " + "is not bound to a wildcard address; binding to a non-wildcard " + "address (" + localAddress + ") anyway as requested.");
             }
             // 记录 Channel 是否激活
             boolean wasActive = isActive();
@@ -654,6 +770,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         /**
          * Shutdown the output portion of the corresponding {@link Channel}.
          * For example this will clean up the {@link ChannelOutboundBuffer} and not allow any more writes.
+         *
          * @param cause The cause which may provide rational for the shutdown.
          */
         private void shutdownOutput(final ChannelPromise promise, Throwable cause) {
@@ -668,9 +785,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
             this.outboundBuffer = null; // Disallow adding any messages and flushes to outboundBuffer.
 
-            final Throwable shutdownCause = cause == null ?
-                    new ChannelOutputShutdownException("Channel output shutdown") :
-                    new ChannelOutputShutdownException("Channel output shutdown", cause);
+            final Throwable shutdownCause = cause == null ? new ChannelOutputShutdownException("Channel output shutdown") : new ChannelOutputShutdownException("Channel output shutdown", cause);
             Executor closeExecutor = prepareToClose();
             if (closeExecutor != null) {
                 closeExecutor.execute(new Runnable() {
@@ -706,15 +821,13 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
         }
 
-        private void closeOutboundBufferForShutdown(
-                ChannelPipeline pipeline, ChannelOutboundBuffer buffer, Throwable cause) {
+        private void closeOutboundBufferForShutdown(ChannelPipeline pipeline, ChannelOutboundBuffer buffer, Throwable cause) {
             buffer.failFlushed(cause, false);
             buffer.close(cause, true);
             pipeline.fireUserEventTriggered(ChannelOutputShutdownEvent.INSTANCE);
         }
 
-        private void close(final ChannelPromise promise, final Throwable cause,
-                           final ClosedChannelException closeCause, final boolean notify) {
+        private void close(final ChannelPromise promise, final Throwable cause, final ClosedChannelException closeCause, final boolean notify) {
             if (!promise.setUncancellable()) {
                 return;
             }
@@ -1094,161 +1207,6 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
          */
         protected Executor prepareToClose() {
             return null;
-        }
-    }
-
-    /**
-     * Return {@code true} if the given {@link EventLoop} is compatible with this instance.
-     */
-    protected abstract boolean isCompatible(EventLoop loop);
-
-    /**
-     * Returns the {@link SocketAddress} which is bound locally.
-     */
-    protected abstract SocketAddress localAddress0();
-
-    /**
-     * Return the {@link SocketAddress} which the {@link Channel} is connected to.
-     */
-    protected abstract SocketAddress remoteAddress0();
-
-    /**
-     * Is called after the {@link Channel} is registered with its {@link EventLoop} as part of the register process.
-     *
-     * Sub-classes may override this method
-     */
-    protected void doRegister() throws Exception {
-        // NOOP
-    }
-
-    /**
-     * Bind the {@link Channel} to the {@link SocketAddress}
-     */
-    protected abstract void doBind(SocketAddress localAddress) throws Exception;
-
-    /**
-     * Disconnect this {@link Channel} from its remote peer
-     */
-    protected abstract void doDisconnect() throws Exception;
-
-    /**
-     * Close the {@link Channel}
-     */
-    protected abstract void doClose() throws Exception;
-
-    /**
-     * Called when conditions justify shutting down the output portion of the channel. This may happen if a write
-     * operation throws an exception.
-     */
-    @UnstableApi
-    protected void doShutdownOutput() throws Exception {
-        doClose();
-    }
-
-    /**
-     * Deregister the {@link Channel} from its {@link EventLoop}.
-     *
-     * Sub-classes may override this method
-     */
-    protected void doDeregister() throws Exception {
-        // NOOP
-    }
-
-    /**
-     * Schedule a read operation.
-     */
-    protected abstract void doBeginRead() throws Exception;
-
-    /**
-     * Flush the content of the given buffer to the remote peer.
-     */
-    protected abstract void doWrite(ChannelOutboundBuffer in) throws Exception;
-
-    /**
-     * Invoked when a new message is added to a {@link ChannelOutboundBuffer} of this {@link AbstractChannel}, so that
-     * the {@link Channel} implementation converts the message to another. (e.g. heap buffer -> direct buffer)
-     */
-    protected Object filterOutboundMessage(Object msg) throws Exception {
-        return msg;
-    }
-
-    protected void validateFileRegion(DefaultFileRegion region, long position) throws IOException {
-        DefaultFileRegion.validate(region, position);
-    }
-
-    static final class CloseFuture extends DefaultChannelPromise {
-
-        CloseFuture(AbstractChannel ch) {
-            super(ch);
-        }
-
-        @Override
-        public ChannelPromise setSuccess() {
-            throw new IllegalStateException();
-        }
-
-        @Override
-        public ChannelPromise setFailure(Throwable cause) {
-            throw new IllegalStateException();
-        }
-
-        @Override
-        public boolean trySuccess() {
-            throw new IllegalStateException();
-        }
-
-        @Override
-        public boolean tryFailure(Throwable cause) {
-            throw new IllegalStateException();
-        }
-
-        boolean setClosed() {
-            return super.trySuccess();
-        }
-    }
-
-    private static final class AnnotatedConnectException extends ConnectException {
-
-        private static final long serialVersionUID = 3901958112696433556L;
-
-        AnnotatedConnectException(ConnectException exception, SocketAddress remoteAddress) {
-            super(exception.getMessage() + ": " + remoteAddress);
-            initCause(exception);
-        }
-
-        @Override
-        public Throwable fillInStackTrace() {
-            return this;
-        }
-    }
-
-    private static final class AnnotatedNoRouteToHostException extends NoRouteToHostException {
-
-        private static final long serialVersionUID = -6801433937592080623L;
-
-        AnnotatedNoRouteToHostException(NoRouteToHostException exception, SocketAddress remoteAddress) {
-            super(exception.getMessage() + ": " + remoteAddress);
-            initCause(exception);
-        }
-
-        @Override
-        public Throwable fillInStackTrace() {
-            return this;
-        }
-    }
-
-    private static final class AnnotatedSocketException extends SocketException {
-
-        private static final long serialVersionUID = 3896743275010454039L;
-
-        AnnotatedSocketException(SocketException exception, SocketAddress remoteAddress) {
-            super(exception.getMessage() + ": " + remoteAddress);
-            initCause(exception);
-        }
-
-        @Override
-        public Throwable fillInStackTrace() {
-            return this;
         }
     }
 }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.internal;
 
 import io.netty.util.internal.logging.InternalLogger;
@@ -36,6 +21,11 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 @SuppressJava6Requirement(reason = "Unsafe access is guarded")
 final class PlatformDependent0 {
 
+    static final Unsafe UNSAFE;
+    // constants borrowed from murmur3
+    static final int HASH_CODE_ASCII_SEED = 0xc2b2ae35;
+    static final int HASH_CODE_C1 = 0xcc9e2d51;
+    static final int HASH_CODE_C2 = 0x1b873593;
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PlatformDependent0.class);
     private static final long ADDRESS_FIELD_OFFSET;
     private static final long BYTE_ARRAY_BASE_OFFSET;
@@ -48,23 +38,12 @@ final class PlatformDependent0 {
     private static final Method ALLOCATE_ARRAY_METHOD;
     private static final int JAVA_VERSION = javaVersion0();
     private static final boolean IS_ANDROID = isAndroid0();
-
     private static final Throwable UNSAFE_UNAVAILABILITY_CAUSE;
     private static final Object INTERNAL_UNSAFE;
     private static final boolean IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = explicitTryReflectionSetAccessible0();
-
     // See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/
     // ImageInfo.java
-    private static final boolean RUNNING_IN_NATIVE_IMAGE = SystemPropertyUtil.contains(
-            "org.graalvm.nativeimage.imagecode");
-
-    static final Unsafe UNSAFE;
-
-    // constants borrowed from murmur3
-    static final int HASH_CODE_ASCII_SEED = 0xc2b2ae35;
-    static final int HASH_CODE_C1 = 0xcc9e2d51;
-    static final int HASH_CODE_C2 = 0x1b873593;
-
+    private static final boolean RUNNING_IN_NATIVE_IMAGE = SystemPropertyUtil.contains("org.graalvm.nativeimage.imagecode");
     /**
      * Limits the number of bytes to copy per {@link Unsafe#copyMemory(long, long, long)} to allow safepoint polling
      * during a large copy.
@@ -139,8 +118,7 @@ final class PlatformDependent0 {
                     @Override
                     public Object run() {
                         try {
-                            finalUnsafe.getClass().getDeclaredMethod(
-                                    "copyMemory", Object.class, long.class, Object.class, long.class, long.class);
+                            finalUnsafe.getClass().getDeclaredMethod("copyMemory", Object.class, long.class, Object.class, long.class, long.class);
                             return null;
                         } catch (NoSuchMethodException e) {
                             return e;
@@ -228,25 +206,23 @@ final class PlatformDependent0 {
             Constructor<?> directBufferConstructor;
             long address = -1;
             try {
-                final Object maybeDirectBufferConstructor =
-                        AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                            @Override
-                            public Object run() {
-                                try {
-                                    final Constructor<?> constructor =
-                                            direct.getClass().getDeclaredConstructor(long.class, int.class);
-                                    Throwable cause = ReflectionUtil.trySetAccessible(constructor, true);
-                                    if (cause != null) {
-                                        return cause;
-                                    }
-                                    return constructor;
-                                } catch (NoSuchMethodException e) {
-                                    return e;
-                                } catch (SecurityException e) {
-                                    return e;
-                                }
+                final Object maybeDirectBufferConstructor = AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                    @Override
+                    public Object run() {
+                        try {
+                            final Constructor<?> constructor = direct.getClass().getDeclaredConstructor(long.class, int.class);
+                            Throwable cause = ReflectionUtil.trySetAccessible(constructor, true);
+                            if (cause != null) {
+                                return cause;
                             }
-                        });
+                            return constructor;
+                        } catch (NoSuchMethodException e) {
+                            return e;
+                        } catch (SecurityException e) {
+                            return e;
+                        }
+                    }
+                });
 
                 if (maybeDirectBufferConstructor instanceof Constructor<?>) {
                     address = UNSAFE.allocateMemory(1);
@@ -263,9 +239,7 @@ final class PlatformDependent0 {
                         directBufferConstructor = null;
                     }
                 } else {
-                    logger.debug(
-                            "direct buffer constructor: unavailable",
-                            (Throwable) maybeDirectBufferConstructor);
+                    logger.debug("direct buffer constructor: unavailable", (Throwable) maybeDirectBufferConstructor);
                     directBufferConstructor = null;
                 }
             } finally {
@@ -285,8 +259,7 @@ final class PlatformDependent0 {
                 @Override
                 public Object run() {
                     try {
-                        Class<?> bitsClass =
-                                Class.forName("java.nio.Bits", false, getSystemClassLoader());
+                        Class<?> bitsClass = Class.forName("java.nio.Bits", false, getSystemClassLoader());
                         int version = javaVersion();
                         if (unsafeStaticFieldOffsetSupported() && version >= 9) {
                             // Java9/10 use all lowercase and later versions all uppercase.
@@ -346,8 +319,7 @@ final class PlatformDependent0 {
                         try {
                             // Java9 has jdk.internal.misc.Unsafe and not all methods are propagated to
                             // sun.misc.Unsafe
-                            Class<?> internalUnsafeClass = getClassLoader(PlatformDependent0.class)
-                                    .loadClass("jdk.internal.misc.Unsafe");
+                            Class<?> internalUnsafeClass = getClassLoader(PlatformDependent0.class).loadClass("jdk.internal.misc.Unsafe");
                             Method method = internalUnsafeClass.getDeclaredMethod("getUnsafe");
                             return method.invoke(null);
                         } catch (Throwable e) {
@@ -362,8 +334,7 @@ final class PlatformDependent0 {
                         @Override
                         public Object run() {
                             try {
-                                return finalInternalUnsafe.getClass().getDeclaredMethod(
-                                        "allocateUninitializedArray", Class.class, int.class);
+                                return finalInternalUnsafe.getClass().getDeclaredMethod("allocateUninitializedArray", Class.class, int.class);
                             } catch (NoSuchMethodException e) {
                                 return e;
                             } catch (SecurityException e) {
@@ -387,8 +358,7 @@ final class PlatformDependent0 {
                 }
 
                 if (maybeException instanceof Throwable) {
-                    logger.debug("jdk.internal.misc.Unsafe.allocateUninitializedArray(int): unavailable",
-                            (Throwable) maybeException);
+                    logger.debug("jdk.internal.misc.Unsafe.allocateUninitializedArray(int): unavailable", (Throwable) maybeException);
                 } else {
                     logger.debug("jdk.internal.misc.Unsafe.allocateUninitializedArray(int): available");
                 }
@@ -400,8 +370,10 @@ final class PlatformDependent0 {
 
         INTERNAL_UNSAFE = internalUnsafe;
 
-        logger.debug("java.nio.DirectByteBuffer.<init>(long, int): {}",
-                DIRECT_BUFFER_CONSTRUCTOR != null ? "available" : "unavailable");
+        logger.debug("java.nio.DirectByteBuffer.<init>(long, int): {}", DIRECT_BUFFER_CONSTRUCTOR != null ? "available" : "unavailable");
+    }
+
+    private PlatformDependent0() {
     }
 
     private static boolean unsafeStaticFieldOffsetSupported() {
@@ -636,8 +608,7 @@ final class PlatformDependent0 {
         }
     }
 
-    private static void copyMemoryWithSafePointPolling(
-            Object src, long srcOffset, Object dst, long dstOffset, long length) {
+    private static void copyMemoryWithSafePointPolling(Object src, long srcOffset, Object dst, long dstOffset, long length) {
         while (length > 0) {
             long size = Math.min(length, UNSAFE_COPY_THRESHOLD);
             UNSAFE.copyMemory(src, srcOffset, dst, dstOffset, size);
@@ -676,12 +647,9 @@ final class PlatformDependent0 {
         }
         final long baseOffset2 = baseOffset1 + diff;
         if (remainingBytes >= 2) {
-            return UNSAFE.getChar(bytes1, baseOffset1) == UNSAFE.getChar(bytes2, baseOffset2) &&
-                    (remainingBytes == 2 ||
-                    UNSAFE.getByte(bytes1, baseOffset1 + 2) == UNSAFE.getByte(bytes2, baseOffset2 + 2));
+            return UNSAFE.getChar(bytes1, baseOffset1) == UNSAFE.getChar(bytes2, baseOffset2) && (remainingBytes == 2 || UNSAFE.getByte(bytes1, baseOffset1 + 2) == UNSAFE.getByte(bytes2, baseOffset2 + 2));
         }
-        return remainingBytes == 0 ||
-                UNSAFE.getByte(bytes1, baseOffset1) == UNSAFE.getByte(bytes2, baseOffset2);
+        return remainingBytes == 0 || UNSAFE.getByte(bytes1, baseOffset1) == UNSAFE.getByte(bytes2, baseOffset2);
     }
 
     static int equalsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
@@ -729,8 +697,7 @@ final class PlatformDependent0 {
             }
         }
         if (remainingBytes >= 2) {
-            return UNSAFE.getChar(bytes, baseOffset) == 0 &&
-                    (remainingBytes == 2 || bytes[startPos + 2] == 0);
+            return UNSAFE.getChar(bytes, baseOffset) == 0 && (remainingBytes == 2 || bytes[startPos + 2] == 0);
         }
         return bytes[startPos] == 0;
     }
@@ -906,8 +873,5 @@ final class PlatformDependent0 {
         } else {
             return version[0];
         }
-    }
-
-    private PlatformDependent0() {
     }
 }

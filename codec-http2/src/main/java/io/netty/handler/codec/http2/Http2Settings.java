@@ -48,6 +48,49 @@ public final class Http2Settings extends CharObjectHashMap<Long> {
         super(initialCapacity);
     }
 
+    private static void verifyStandardSetting(int key, Long value) {
+        checkNotNull(value, "value");
+        switch (key) {
+            case SETTINGS_HEADER_TABLE_SIZE:
+                if (value < MIN_HEADER_TABLE_SIZE || value > MAX_HEADER_TABLE_SIZE) {
+                    throw new IllegalArgumentException("Setting HEADER_TABLE_SIZE is invalid: " + value);
+                }
+                break;
+            case SETTINGS_ENABLE_PUSH:
+                if (value != 0L && value != 1L) {
+                    throw new IllegalArgumentException("Setting ENABLE_PUSH is invalid: " + value);
+                }
+                break;
+            case SETTINGS_MAX_CONCURRENT_STREAMS:
+                if (value < MIN_CONCURRENT_STREAMS || value > MAX_CONCURRENT_STREAMS) {
+                    throw new IllegalArgumentException("Setting MAX_CONCURRENT_STREAMS is invalid: " + value);
+                }
+                break;
+            case SETTINGS_INITIAL_WINDOW_SIZE:
+                if (value < MIN_INITIAL_WINDOW_SIZE || value > MAX_INITIAL_WINDOW_SIZE) {
+                    throw new IllegalArgumentException("Setting INITIAL_WINDOW_SIZE is invalid: " + value);
+                }
+                break;
+            case SETTINGS_MAX_FRAME_SIZE:
+                if (!isMaxFrameSizeValid(value.intValue())) {
+                    throw new IllegalArgumentException("Setting MAX_FRAME_SIZE is invalid: " + value);
+                }
+                break;
+            case SETTINGS_MAX_HEADER_LIST_SIZE:
+                if (value < MIN_HEADER_LIST_SIZE || value > MAX_HEADER_LIST_SIZE) {
+                    throw new IllegalArgumentException("Setting MAX_HEADER_LIST_SIZE is invalid: " + value);
+                }
+                break;
+            default:
+                // Non-standard HTTP/2 setting - don't do validation.
+                break;
+        }
+    }
+
+    public static Http2Settings defaultSettings() {
+        return new Http2Settings().maxHeaderListSize(DEFAULT_HEADER_LIST_SIZE);
+    }
+
     /**
      * Adds the given setting key/value pair. For standard settings defined by the HTTP/2 spec, performs
      * validation on the values.
@@ -186,47 +229,6 @@ public final class Http2Settings extends CharObjectHashMap<Long> {
         return value.intValue();
     }
 
-    private static void verifyStandardSetting(int key, Long value) {
-        checkNotNull(value, "value");
-        switch (key) {
-            case SETTINGS_HEADER_TABLE_SIZE:
-                if (value < MIN_HEADER_TABLE_SIZE || value > MAX_HEADER_TABLE_SIZE) {
-                    throw new IllegalArgumentException("Setting HEADER_TABLE_SIZE is invalid: " + value);
-                }
-                break;
-            case SETTINGS_ENABLE_PUSH:
-                if (value != 0L && value != 1L) {
-                    throw new IllegalArgumentException("Setting ENABLE_PUSH is invalid: " + value);
-                }
-                break;
-            case SETTINGS_MAX_CONCURRENT_STREAMS:
-                if (value < MIN_CONCURRENT_STREAMS || value > MAX_CONCURRENT_STREAMS) {
-                    throw new IllegalArgumentException(
-                            "Setting MAX_CONCURRENT_STREAMS is invalid: " + value);
-                }
-                break;
-            case SETTINGS_INITIAL_WINDOW_SIZE:
-                if (value < MIN_INITIAL_WINDOW_SIZE || value > MAX_INITIAL_WINDOW_SIZE) {
-                    throw new IllegalArgumentException("Setting INITIAL_WINDOW_SIZE is invalid: "
-                            + value);
-                }
-                break;
-            case SETTINGS_MAX_FRAME_SIZE:
-                if (!isMaxFrameSizeValid(value.intValue())) {
-                    throw new IllegalArgumentException("Setting MAX_FRAME_SIZE is invalid: " + value);
-                }
-                break;
-            case SETTINGS_MAX_HEADER_LIST_SIZE:
-                if (value < MIN_HEADER_LIST_SIZE || value > MAX_HEADER_LIST_SIZE) {
-                    throw new IllegalArgumentException("Setting MAX_HEADER_LIST_SIZE is invalid: " + value);
-                }
-                break;
-            default:
-                // Non-standard HTTP/2 setting - don't do validation.
-                break;
-        }
-    }
-
     @Override
     protected String keyToString(char key) {
         switch (key) {
@@ -246,9 +248,5 @@ public final class Http2Settings extends CharObjectHashMap<Long> {
                 // Unknown keys.
                 return super.keyToString(key);
         }
-    }
-
-    public static Http2Settings defaultSettings() {
-        return new Http2Settings().maxHeaderListSize(DEFAULT_HEADER_LIST_SIZE);
     }
 }

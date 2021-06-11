@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.buffer.ByteBuf;
@@ -55,19 +40,28 @@ import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT_ENCODING;
  */
 public abstract class HttpContentEncoder extends MessageToMessageCodec<HttpRequest, HttpObject> {
 
-    private enum State {
-        PASS_THROUGH,
-        AWAIT_HEADERS,
-        AWAIT_CONTENT
-    }
-
     private static final CharSequence ZERO_LENGTH_HEAD = "HEAD";
     private static final CharSequence ZERO_LENGTH_CONNECT = "CONNECT";
     private static final int CONTINUE_CODE = HttpResponseStatus.CONTINUE.code();
-
     private final Queue<CharSequence> acceptEncodingQueue = new ArrayDeque<CharSequence>();
     private EmbeddedChannel encoder;
     private State state = State.AWAIT_HEADERS;
+
+    private static boolean isPassthru(HttpVersion version, int code, CharSequence httpMethod) {
+        return code < 200 || code == 204 || code == 304 || (httpMethod == ZERO_LENGTH_HEAD || (httpMethod == ZERO_LENGTH_CONNECT && code == 200)) || version == HttpVersion.HTTP_1_0;
+    }
+
+    private static void ensureHeaders(HttpObject msg) {
+        if (!(msg instanceof HttpResponse)) {
+            throw new IllegalStateException("unexpected message type: " + msg.getClass().getName() + " (expected: " + HttpResponse.class.getSimpleName() + ')');
+        }
+    }
+
+    private static void ensureContent(HttpObject msg) {
+        if (!(msg instanceof HttpContent)) {
+            throw new IllegalStateException("unexpected message type: " + msg.getClass().getName() + " (expected: " + HttpContent.class.getSimpleName() + ')');
+        }
+    }
 
     @Override
     public boolean acceptOutboundMessage(Object msg) throws Exception {
@@ -79,16 +73,16 @@ public abstract class HttpContentEncoder extends MessageToMessageCodec<HttpReque
         CharSequence acceptEncoding;
         List<String> acceptEncodingHeaders = msg.headers().getAll(ACCEPT_ENCODING);
         switch (acceptEncodingHeaders.size()) {
-        case 0:
-            acceptEncoding = HttpContentDecoder.IDENTITY;
-            break;
-        case 1:
-            acceptEncoding = acceptEncodingHeaders.get(0);
-            break;
-        default:
-            // Multiple message-header fields https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-            acceptEncoding = StringUtil.join(",", acceptEncodingHeaders);
-            break;
+            case 0:
+                acceptEncoding = HttpContentDecoder.IDENTITY;
+                break;
+            case 1:
+                acceptEncoding = acceptEncodingHeaders.get(0);
+                break;
+            default:
+                // Multiple message-header fields https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+                acceptEncoding = StringUtil.join(",", acceptEncodingHeaders);
+                break;
         }
 
         HttpMethod method = msg.method();
@@ -241,28 +235,6 @@ public abstract class HttpContentEncoder extends MessageToMessageCodec<HttpReque
         }
     }
 
-    private static boolean isPassthru(HttpVersion version, int code, CharSequence httpMethod) {
-        return code < 200 || code == 204 || code == 304 ||
-               (httpMethod == ZERO_LENGTH_HEAD || (httpMethod == ZERO_LENGTH_CONNECT && code == 200)) ||
-                version == HttpVersion.HTTP_1_0;
-    }
-
-    private static void ensureHeaders(HttpObject msg) {
-        if (!(msg instanceof HttpResponse)) {
-            throw new IllegalStateException(
-                    "unexpected message type: " +
-                    msg.getClass().getName() + " (expected: " + HttpResponse.class.getSimpleName() + ')');
-        }
-    }
-
-    private static void ensureContent(HttpObject msg) {
-        if (!(msg instanceof HttpContent)) {
-            throw new IllegalStateException(
-                    "unexpected message type: " +
-                    msg.getClass().getName() + " (expected: " + HttpContent.class.getSimpleName() + ')');
-        }
-    }
-
     private boolean encodeContent(HttpContent c, List<Object> out) {
         ByteBuf content = c.content();
 
@@ -288,16 +260,13 @@ public abstract class HttpContentEncoder extends MessageToMessageCodec<HttpReque
     /**
      * Prepare to encode the HTTP message content.
      *
-     * @param httpResponse
-     *        the http response
-     * @param acceptEncoding
-     *        the value of the {@code "Accept-Encoding"} header
-     *
+     * @param httpResponse   the http response
+     * @param acceptEncoding the value of the {@code "Accept-Encoding"} header
      * @return the result of preparation, which is composed of the determined
-     *         target content encoding and a new {@link EmbeddedChannel} that
-     *         encodes the content into the target content encoding.
-     *         {@code null} if {@code acceptEncoding} is unsupported or rejected
-     *         and thus the content should be handled as-is (i.e. no encoding).
+     * target content encoding and a new {@link EmbeddedChannel} that
+     * encodes the content into the target content encoding.
+     * {@code null} if {@code acceptEncoding} is unsupported or rejected
+     * and thus the content should be handled as-is (i.e. no encoding).
      */
     protected abstract Result beginEncode(HttpResponse httpResponse, String acceptEncoding) throws Exception;
 
@@ -345,7 +314,7 @@ public abstract class HttpContentEncoder extends MessageToMessageCodec<HttpReque
     }
 
     private void fetchEncoderOutput(List<Object> out) {
-        for (;;) {
+        for (; ; ) {
             ByteBuf buf = encoder.readOutbound();
             if (buf == null) {
                 break;
@@ -356,6 +325,10 @@ public abstract class HttpContentEncoder extends MessageToMessageCodec<HttpReque
             }
             out.add(new DefaultHttpContent(buf));
         }
+    }
+
+    private enum State {
+        PASS_THROUGH, AWAIT_HEADERS, AWAIT_CONTENT
     }
 
     public static final class Result {

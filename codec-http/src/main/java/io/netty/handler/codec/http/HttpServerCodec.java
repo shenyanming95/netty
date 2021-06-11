@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.buffer.ByteBuf;
@@ -31,10 +16,11 @@ import static io.netty.handler.codec.http.HttpObjectDecoder.*;
  *
  * @see HttpClientCodec
  */
-public final class HttpServerCodec extends CombinedChannelDuplexHandler<HttpRequestDecoder, HttpResponseEncoder>
-        implements HttpServerUpgradeHandler.SourceCodec {
+public final class HttpServerCodec extends CombinedChannelDuplexHandler<HttpRequestDecoder, HttpResponseEncoder> implements HttpServerUpgradeHandler.SourceCodec {
 
-    /** A queue that is used for correlating a request and a response. */
+    /**
+     * A queue that is used for correlating a request and a response.
+     */
     private final Queue<HttpMethod> queue = new ArrayDeque<HttpMethod>();
 
     /**
@@ -50,37 +36,28 @@ public final class HttpServerCodec extends CombinedChannelDuplexHandler<HttpRequ
      * Creates a new instance with the specified decoder options.
      */
     public HttpServerCodec(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize) {
-        init(new HttpServerRequestDecoder(maxInitialLineLength, maxHeaderSize, maxChunkSize),
-                new HttpServerResponseEncoder());
+        init(new HttpServerRequestDecoder(maxInitialLineLength, maxHeaderSize, maxChunkSize), new HttpServerResponseEncoder());
     }
 
     /**
      * Creates a new instance with the specified decoder options.
      */
     public HttpServerCodec(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders) {
-        init(new HttpServerRequestDecoder(maxInitialLineLength, maxHeaderSize, maxChunkSize, validateHeaders),
-                new HttpServerResponseEncoder());
+        init(new HttpServerRequestDecoder(maxInitialLineLength, maxHeaderSize, maxChunkSize, validateHeaders), new HttpServerResponseEncoder());
     }
 
     /**
      * Creates a new instance with the specified decoder options.
      */
-    public HttpServerCodec(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders,
-                           int initialBufferSize) {
-        init(
-          new HttpServerRequestDecoder(maxInitialLineLength, maxHeaderSize, maxChunkSize,
-                  validateHeaders, initialBufferSize),
-          new HttpServerResponseEncoder());
+    public HttpServerCodec(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders, int initialBufferSize) {
+        init(new HttpServerRequestDecoder(maxInitialLineLength, maxHeaderSize, maxChunkSize, validateHeaders, initialBufferSize), new HttpServerResponseEncoder());
     }
 
     /**
      * Creates a new instance with the specified decoder options.
      */
-    public HttpServerCodec(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders,
-                           int initialBufferSize, boolean allowDuplicateContentLengths) {
-        init(new HttpServerRequestDecoder(maxInitialLineLength, maxHeaderSize, maxChunkSize, validateHeaders,
-                                          initialBufferSize, allowDuplicateContentLengths),
-             new HttpServerResponseEncoder());
+    public HttpServerCodec(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders, int initialBufferSize, boolean allowDuplicateContentLengths) {
+        init(new HttpServerRequestDecoder(maxInitialLineLength, maxHeaderSize, maxChunkSize, validateHeaders, initialBufferSize, allowDuplicateContentLengths), new HttpServerResponseEncoder());
     }
 
     /**
@@ -98,21 +75,18 @@ public final class HttpServerCodec extends CombinedChannelDuplexHandler<HttpRequ
             super(maxInitialLineLength, maxHeaderSize, maxChunkSize);
         }
 
-        HttpServerRequestDecoder(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize,
-                                        boolean validateHeaders) {
+        HttpServerRequestDecoder(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders) {
             super(maxInitialLineLength, maxHeaderSize, maxChunkSize, validateHeaders);
         }
 
         HttpServerRequestDecoder(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize,
 
-                                        boolean validateHeaders, int initialBufferSize) {
+                                 boolean validateHeaders, int initialBufferSize) {
             super(maxInitialLineLength, maxHeaderSize, maxChunkSize, validateHeaders, initialBufferSize);
         }
 
-        HttpServerRequestDecoder(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize,
-                                 boolean validateHeaders, int initialBufferSize, boolean allowDuplicateContentLengths) {
-            super(maxInitialLineLength, maxHeaderSize, maxChunkSize, validateHeaders, initialBufferSize,
-                  allowDuplicateContentLengths);
+        HttpServerRequestDecoder(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders, int initialBufferSize, boolean allowDuplicateContentLengths) {
+            super(maxInitialLineLength, maxHeaderSize, maxChunkSize, validateHeaders, initialBufferSize, allowDuplicateContentLengths);
         }
 
         @Override
@@ -135,8 +109,7 @@ public final class HttpServerCodec extends CombinedChannelDuplexHandler<HttpRequ
 
         @Override
         protected void sanitizeHeadersBeforeEncode(HttpResponse msg, boolean isAlwaysEmpty) {
-            if (!isAlwaysEmpty && HttpMethod.CONNECT.equals(method)
-                    && msg.status().codeClass() == HttpStatusClass.SUCCESS) {
+            if (!isAlwaysEmpty && HttpMethod.CONNECT.equals(method) && msg.status().codeClass() == HttpStatusClass.SUCCESS) {
                 // Stripping Transfer-Encoding:
                 // See https://tools.ietf.org/html/rfc7230#section-3.3.1
                 msg.headers().remove(HttpHeaderNames.TRANSFER_ENCODING);

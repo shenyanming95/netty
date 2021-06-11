@@ -38,13 +38,17 @@ public class RoundRobinInetAddressResolver extends InetNameResolver {
     private final NameResolver<InetAddress> nameResolver;
 
     /**
-     * @param executor the {@link EventExecutor} which is used to notify the listeners of the {@link Future} returned by
-     * {@link #resolve(String)}
+     * @param executor     the {@link EventExecutor} which is used to notify the listeners of the {@link Future} returned by
+     *                     {@link #resolve(String)}
      * @param nameResolver the {@link NameResolver} used for name resolution
      */
     public RoundRobinInetAddressResolver(EventExecutor executor, NameResolver<InetAddress> nameResolver) {
         super(executor);
         this.nameResolver = nameResolver;
+    }
+
+    private static int randomIndex(int numAddresses) {
+        return numAddresses == 1 ? 0 : PlatformDependent.threadLocalRandom().nextInt(numAddresses);
     }
 
     @Override
@@ -93,10 +97,6 @@ public class RoundRobinInetAddressResolver extends InetNameResolver {
                 }
             }
         });
-    }
-
-    private static int randomIndex(int numAddresses) {
-        return numAddresses == 1 ? 0 : PlatformDependent.threadLocalRandom().nextInt(numAddresses);
     }
 
     @Override

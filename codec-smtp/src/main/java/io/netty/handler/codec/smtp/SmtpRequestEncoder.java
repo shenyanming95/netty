@@ -33,10 +33,36 @@ import java.util.RandomAccess;
 public final class SmtpRequestEncoder extends MessageToMessageEncoder<Object> {
     private static final int CRLF_SHORT = ('\r' << 8) | '\n';
     private static final byte SP = ' ';
-    private static final ByteBuf DOT_CRLF_BUFFER = Unpooled.unreleasableBuffer(
-            Unpooled.directBuffer(3).writeByte('.').writeByte('\r').writeByte('\n'));
+    private static final ByteBuf DOT_CRLF_BUFFER = Unpooled.unreleasableBuffer(Unpooled.directBuffer(3).writeByte('.').writeByte('\r').writeByte('\n'));
 
     private boolean contentExpected;
+
+    private static void writeParameters(List<CharSequence> parameters, ByteBuf out, boolean commandNotEmpty) {
+        if (parameters.isEmpty()) {
+            return;
+        }
+        if (commandNotEmpty) {
+            out.writeByte(SP);
+        }
+        if (parameters instanceof RandomAccess) {
+            final int sizeMinusOne = parameters.size() - 1;
+            for (int i = 0; i < sizeMinusOne; i++) {
+                ByteBufUtil.writeAscii(out, parameters.get(i));
+                out.writeByte(SP);
+            }
+            ByteBufUtil.writeAscii(out, parameters.get(sizeMinusOne));
+        } else {
+            final Iterator<CharSequence> params = parameters.iterator();
+            for (; ; ) {
+                ByteBufUtil.writeAscii(out, params.next());
+                if (params.hasNext()) {
+                    out.writeByte(SP);
+                } else {
+                    break;
+                }
+            }
+        }
+    }
 
     @Override
     public boolean acceptOutboundMessage(Object msg) throws Exception {
@@ -82,33 +108,6 @@ public final class SmtpRequestEncoder extends MessageToMessageEncoder<Object> {
             if (msg instanceof LastSmtpContent) {
                 out.add(DOT_CRLF_BUFFER.retainedDuplicate());
                 contentExpected = false;
-            }
-        }
-    }
-
-    private static void writeParameters(List<CharSequence> parameters, ByteBuf out, boolean commandNotEmpty) {
-        if (parameters.isEmpty()) {
-            return;
-        }
-        if (commandNotEmpty) {
-            out.writeByte(SP);
-        }
-        if (parameters instanceof RandomAccess) {
-            final int sizeMinusOne = parameters.size() - 1;
-            for (int i = 0; i < sizeMinusOne; i++) {
-                ByteBufUtil.writeAscii(out, parameters.get(i));
-                out.writeByte(SP);
-            }
-            ByteBufUtil.writeAscii(out, parameters.get(sizeMinusOne));
-        } else {
-            final Iterator<CharSequence> params = parameters.iterator();
-            for (;;) {
-                ByteBufUtil.writeAscii(out, params.next());
-                if (params.hasNext()) {
-                    out.writeByte(SP);
-                } else {
-                    break;
-                }
             }
         }
     }

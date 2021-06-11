@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbench.util;
 
 import io.netty.util.ResourceLeakDetector;
@@ -28,13 +13,7 @@ public class ResourceLeakDetectorRecordBenchmark extends AbstractMicrobenchmark 
             return "BenchmarkHint";
         }
     };
-
-    @Param({ "8", "16" })
-    private int recordTimes;
-    private ResourceLeakDetector.Level level;
-
-    ResourceLeakDetector<Object> detector = new ResourceLeakDetector<Object>(
-            Object.class, 1, Integer.MAX_VALUE) {
+    ResourceLeakDetector<Object> detector = new ResourceLeakDetector<Object>(Object.class, 1, Integer.MAX_VALUE) {
         @Override
         protected void reportTracedLeak(String resourceType, String records) {
             // noop
@@ -50,6 +29,9 @@ public class ResourceLeakDetectorRecordBenchmark extends AbstractMicrobenchmark 
             // noop
         }
     };
+    @Param({"8", "16"})
+    private int recordTimes;
+    private ResourceLeakDetector.Level level;
 
     @Setup(Level.Trial)
     public void setup() {
@@ -65,7 +47,7 @@ public class ResourceLeakDetectorRecordBenchmark extends AbstractMicrobenchmark 
     @Benchmark
     public boolean record() {
         ResourceLeakTracker<Object> tracker = detector.track(TRACKED);
-        for (int i = 0 ; i < recordTimes; i++) {
+        for (int i = 0; i < recordTimes; i++) {
             tracker.record();
         }
         return tracker.close(TRACKED);
@@ -74,7 +56,7 @@ public class ResourceLeakDetectorRecordBenchmark extends AbstractMicrobenchmark 
     @Benchmark
     public boolean recordWithHint() {
         ResourceLeakTracker<Object> tracker = detector.track(TRACKED);
-        for (int i = 0 ; i < recordTimes; i++) {
+        for (int i = 0; i < recordTimes; i++) {
             tracker.record(HINT);
         }
         return tracker.close(TRACKED);

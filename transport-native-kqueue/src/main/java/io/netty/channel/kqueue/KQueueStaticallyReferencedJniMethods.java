@@ -27,23 +27,35 @@ package io.netty.channel.kqueue;
  * Static members which call JNI methods must not be declared in this class!
  */
 final class KQueueStaticallyReferencedJniMethods {
-    private KQueueStaticallyReferencedJniMethods() { }
+    private KQueueStaticallyReferencedJniMethods() {
+    }
 
     static native short evAdd();
+
     static native short evEnable();
+
     static native short evDisable();
+
     static native short evDelete();
+
     static native short evClear();
+
     static native short evEOF();
+
     static native short evError();
 
     // data/hint fflags for EVFILT_SOCK, shared with userspace.
     static native short noteReadClosed();
+
     static native short noteConnReset();
+
     static native short noteDisconnected();
 
     static native short evfiltRead();
+
     static native short evfiltWrite();
+
     static native short evfiltUser();
+
     static native short evfiltSock();
 }

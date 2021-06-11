@@ -20,13 +20,6 @@ package io.netty.util;
  */
 public interface BooleanSupplier {
     /**
-     * Gets a boolean value.
-     * @return a boolean value.
-     * @throws Exception If an exception occurs.
-     */
-    boolean get() throws Exception;
-
-    /**
      * A supplier which always returns {@code false} and never throws.
      */
     BooleanSupplier FALSE_SUPPLIER = new BooleanSupplier() {
@@ -35,7 +28,6 @@ public interface BooleanSupplier {
             return false;
         }
     };
-
     /**
      * A supplier which always returns {@code true} and never throws.
      */
@@ -45,4 +37,12 @@ public interface BooleanSupplier {
             return true;
         }
     };
+
+    /**
+     * Gets a boolean value.
+     *
+     * @return a boolean value.
+     * @throws Exception If an exception occurs.
+     */
+    boolean get() throws Exception;
 }

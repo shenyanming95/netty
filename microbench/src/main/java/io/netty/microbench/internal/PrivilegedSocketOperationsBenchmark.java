@@ -29,32 +29,6 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.SECONDS)
 public class PrivilegedSocketOperationsBenchmark extends AbstractMicrobenchmark {
 
-    @State(Scope.Benchmark)
-    public static class SecurityManagerInstalled {
-
-        @Setup
-        public void setup() throws IOException, NoSuchAlgorithmException, URISyntaxException {
-            final URI policyFile = PrivilegedSocketOperationsBenchmark.class.getResource("/jmh-security.policy")
-                    .toURI();
-            Policy.setPolicy(Policy.getInstance("JavaPolicy", new URIParameter(policyFile)));
-            System.setSecurityManager(new SecurityManager());
-        }
-
-        @TearDown
-        public void tearDown() throws IOException {
-            System.setSecurityManager(null);
-        }
-    }
-
-    @State(Scope.Benchmark)
-    public static class SecurityManagerEmpty {
-
-        @Setup
-        public void setup() throws IOException, NoSuchAlgorithmException, URISyntaxException {
-            System.setSecurityManager(null);
-        }
-    }
-
     @Benchmark
     public ServerSocketChannel testWithSMNoPrivileged(final SecurityManagerInstalled sm) throws IOException {
         final ServerSocketChannel ssc = ServerSocketChannel.open();
@@ -68,17 +42,16 @@ public class PrivilegedSocketOperationsBenchmark extends AbstractMicrobenchmark 
     @Benchmark
     public ServerSocketChannel testWithSM(final SecurityManagerInstalled sm) throws IOException {
         try {
-            final ServerSocketChannel ssc = AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<ServerSocketChannel>() {
-                        @Override
-                        public ServerSocketChannel run() throws Exception {
-                            final ServerSocketChannel ssc = ServerSocketChannel.open();
-                            ssc.socket().bind(null);
-                            ssc.configureBlocking(false);
-                            ssc.accept();
-                            return ssc;
-                        }
-                    });
+            final ServerSocketChannel ssc = AccessController.doPrivileged(new PrivilegedExceptionAction<ServerSocketChannel>() {
+                @Override
+                public ServerSocketChannel run() throws Exception {
+                    final ServerSocketChannel ssc = ServerSocketChannel.open();
+                    ssc.socket().bind(null);
+                    ssc.configureBlocking(false);
+                    ssc.accept();
+                    return ssc;
+                }
+            });
             ssc.close();
             return ssc;
         } catch (final PrivilegedActionException e) {
@@ -90,17 +63,16 @@ public class PrivilegedSocketOperationsBenchmark extends AbstractMicrobenchmark 
     public ServerSocketChannel testWithSMWithNullCheck(final SecurityManagerInstalled sm) throws IOException {
         if (System.getSecurityManager() != null) {
             try {
-                final ServerSocketChannel ssc = AccessController.doPrivileged(
-                        new PrivilegedExceptionAction<ServerSocketChannel>() {
-                            @Override
-                            public ServerSocketChannel run() throws Exception {
-                                final ServerSocketChannel ssc = ServerSocketChannel.open();
-                                ssc.socket().bind(null);
-                                ssc.configureBlocking(false);
-                                ssc.accept();
-                                return ssc;
-                            }
-                        });
+                final ServerSocketChannel ssc = AccessController.doPrivileged(new PrivilegedExceptionAction<ServerSocketChannel>() {
+                    @Override
+                    public ServerSocketChannel run() throws Exception {
+                        final ServerSocketChannel ssc = ServerSocketChannel.open();
+                        ssc.socket().bind(null);
+                        ssc.configureBlocking(false);
+                        ssc.accept();
+                        return ssc;
+                    }
+                });
                 ssc.close();
                 return ssc;
             } catch (final PrivilegedActionException e) {
@@ -130,17 +102,16 @@ public class PrivilegedSocketOperationsBenchmark extends AbstractMicrobenchmark 
     @Benchmark
     public ServerSocketChannel testWithoutSM(final SecurityManagerEmpty sm) throws IOException {
         try {
-            final ServerSocketChannel ssc = AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<ServerSocketChannel>() {
-                        @Override
-                        public ServerSocketChannel run() throws Exception {
-                            final ServerSocketChannel ssc = ServerSocketChannel.open();
-                            ssc.socket().bind(null);
-                            ssc.configureBlocking(false);
-                            ssc.accept();
-                            return ssc;
-                        }
-                    });
+            final ServerSocketChannel ssc = AccessController.doPrivileged(new PrivilegedExceptionAction<ServerSocketChannel>() {
+                @Override
+                public ServerSocketChannel run() throws Exception {
+                    final ServerSocketChannel ssc = ServerSocketChannel.open();
+                    ssc.socket().bind(null);
+                    ssc.configureBlocking(false);
+                    ssc.accept();
+                    return ssc;
+                }
+            });
             ssc.close();
             return ssc;
         } catch (final PrivilegedActionException e) {
@@ -153,17 +124,16 @@ public class PrivilegedSocketOperationsBenchmark extends AbstractMicrobenchmark 
         if (System.getSecurityManager() != null) {
             // this should never happen during benchmarking, but we write the correct code here
             try {
-                final ServerSocketChannel ssc = AccessController.doPrivileged(
-                        new PrivilegedExceptionAction<ServerSocketChannel>() {
-                            @Override
-                            public ServerSocketChannel run() throws Exception {
-                                final ServerSocketChannel ssc = ServerSocketChannel.open();
-                                ssc.socket().bind(null);
-                                ssc.configureBlocking(false);
-                                ssc.accept();
-                                return ssc;
-                            }
-                        });
+                final ServerSocketChannel ssc = AccessController.doPrivileged(new PrivilegedExceptionAction<ServerSocketChannel>() {
+                    @Override
+                    public ServerSocketChannel run() throws Exception {
+                        final ServerSocketChannel ssc = ServerSocketChannel.open();
+                        ssc.socket().bind(null);
+                        ssc.configureBlocking(false);
+                        ssc.accept();
+                        return ssc;
+                    }
+                });
                 ssc.close();
                 return ssc;
             } catch (final PrivilegedActionException e) {
@@ -176,6 +146,31 @@ public class PrivilegedSocketOperationsBenchmark extends AbstractMicrobenchmark 
             ssc.accept();
             ssc.close();
             return ssc;
+        }
+    }
+
+    @State(Scope.Benchmark)
+    public static class SecurityManagerInstalled {
+
+        @Setup
+        public void setup() throws IOException, NoSuchAlgorithmException, URISyntaxException {
+            final URI policyFile = PrivilegedSocketOperationsBenchmark.class.getResource("/jmh-security.policy").toURI();
+            Policy.setPolicy(Policy.getInstance("JavaPolicy", new URIParameter(policyFile)));
+            System.setSecurityManager(new SecurityManager());
+        }
+
+        @TearDown
+        public void tearDown() throws IOException {
+            System.setSecurityManager(null);
+        }
+    }
+
+    @State(Scope.Benchmark)
+    public static class SecurityManagerEmpty {
+
+        @Setup
+        public void setup() throws IOException, NoSuchAlgorithmException, URISyntaxException {
+            System.setSecurityManager(null);
         }
     }
 }

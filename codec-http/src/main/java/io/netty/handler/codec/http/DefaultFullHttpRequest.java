@@ -1,18 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.buffer.ByteBuf;
@@ -45,15 +30,13 @@ public class DefaultFullHttpRequest extends DefaultHttpRequest implements FullHt
         this(httpVersion, method, uri, Unpooled.buffer(0), validateHeaders);
     }
 
-    public DefaultFullHttpRequest(HttpVersion httpVersion, HttpMethod method, String uri,
-                                  ByteBuf content, boolean validateHeaders) {
+    public DefaultFullHttpRequest(HttpVersion httpVersion, HttpMethod method, String uri, ByteBuf content, boolean validateHeaders) {
         super(httpVersion, method, uri, validateHeaders);
         this.content = checkNotNull(content, "content");
         trailingHeader = new DefaultHttpHeaders(validateHeaders);
     }
 
-    public DefaultFullHttpRequest(HttpVersion httpVersion, HttpMethod method, String uri,
-            ByteBuf content, HttpHeaders headers, HttpHeaders trailingHeader) {
+    public DefaultFullHttpRequest(HttpVersion httpVersion, HttpMethod method, String uri, ByteBuf content, HttpHeaders headers, HttpHeaders trailingHeader) {
         super(httpVersion, method, uri, headers);
         this.content = checkNotNull(content, "content");
         this.trailingHeader = checkNotNull(trailingHeader, "trailingHeader");
@@ -143,8 +126,7 @@ public class DefaultFullHttpRequest extends DefaultHttpRequest implements FullHt
 
     @Override
     public FullHttpRequest replace(ByteBuf content) {
-        FullHttpRequest request = new DefaultFullHttpRequest(protocolVersion(), method(), uri(), content,
-                headers().copy(), trailingHeaders().copy());
+        FullHttpRequest request = new DefaultFullHttpRequest(protocolVersion(), method(), uri(), content, headers().copy(), trailingHeaders().copy());
         request.setDecoderResult(decoderResult());
         return request;
     }
@@ -178,9 +160,7 @@ public class DefaultFullHttpRequest extends DefaultHttpRequest implements FullHt
 
         DefaultFullHttpRequest other = (DefaultFullHttpRequest) o;
 
-        return super.equals(other) &&
-               content().equals(other.content()) &&
-               trailingHeaders().equals(other.trailingHeaders());
+        return super.equals(other) && content().equals(other.content()) && trailingHeaders().equals(other.trailingHeaders());
     }
 
     @Override

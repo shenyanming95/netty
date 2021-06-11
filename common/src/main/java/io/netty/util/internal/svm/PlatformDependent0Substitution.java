@@ -21,13 +21,10 @@ import com.oracle.svm.core.annotate.TargetClass;
 
 @TargetClass(className = "io.netty.util.internal.PlatformDependent0")
 final class PlatformDependent0Substitution {
+    @Alias
+    @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.FieldOffset, declClassName = "java.nio.Buffer", name = "address")
+    private static long ADDRESS_FIELD_OFFSET;
+
     private PlatformDependent0Substitution() {
     }
-
-    @Alias
-    @RecomputeFieldValue(
-        kind = RecomputeFieldValue.Kind.FieldOffset,
-        declClassName = "java.nio.Buffer",
-        name = "address")
-    private static long ADDRESS_FIELD_OFFSET;
 }

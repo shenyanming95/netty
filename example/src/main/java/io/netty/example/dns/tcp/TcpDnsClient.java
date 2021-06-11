@@ -1,18 +1,3 @@
-/*
- * Copyright 2020 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.dns.tcp;
 
 import io.netty.bootstrap.Bootstrap;
@@ -54,32 +39,27 @@ public final class TcpDnsClient {
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
-            b.group(group)
-                    .channel(NioSocketChannel.class)
-                    .handler(new ChannelInitializer<SocketChannel>() {
+            b.group(group).channel(NioSocketChannel.class).handler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) {
+                    ChannelPipeline p = ch.pipeline();
+                    p.addLast(new TcpDnsQueryEncoder()).addLast(new TcpDnsResponseDecoder()).addLast(new SimpleChannelInboundHandler<DefaultDnsResponse>() {
                         @Override
-                        protected void initChannel(SocketChannel ch) {
-                            ChannelPipeline p = ch.pipeline();
-                            p.addLast(new TcpDnsQueryEncoder())
-                                    .addLast(new TcpDnsResponseDecoder())
-                                    .addLast(new SimpleChannelInboundHandler<DefaultDnsResponse>() {
-                                        @Override
-                                        protected void channelRead0(ChannelHandlerContext ctx, DefaultDnsResponse msg) {
-                                            try {
-                                                handleQueryResp(msg);
-                                            } finally {
-                                                ctx.close();
-                                            }
-                                        }
-                                    });
+                        protected void channelRead0(ChannelHandlerContext ctx, DefaultDnsResponse msg) {
+                            try {
+                                handleQueryResp(msg);
+                            } finally {
+                                ctx.close();
+                            }
                         }
                     });
+                }
+            });
 
             final Channel ch = b.connect(DNS_SERVER_HOST, DNS_SERVER_PORT).sync().channel();
 
             int randomID = new Random().nextInt(60000 - 1000) + 1000;
-            DnsQuery query = new DefaultDnsQuery(randomID, DnsOpCode.QUERY)
-                    .setRecord(DnsSection.QUESTION, new DefaultDnsQuestion(QUERY_DOMAIN, DnsRecordType.A));
+            DnsQuery query = new DefaultDnsQuery(randomID, DnsOpCode.QUERY).setRecord(DnsSection.QUESTION, new DefaultDnsQuestion(QUERY_DOMAIN, DnsRecordType.A));
             ch.writeAndFlush(query).sync();
             boolean success = ch.closeFuture().await(10, TimeUnit.SECONDS);
             if (!success) {

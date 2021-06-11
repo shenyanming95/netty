@@ -39,24 +39,18 @@ public class QueryStringDecoderBenchmark extends AbstractMicrobenchmark {
     @Benchmark
     public Map<String, List<String>> onlyDecoding() {
         // ほげ=ぼけ&ねこ=いぬ
-        return new QueryStringDecoder("%E3%81%BB%E3%81%92=%E3%81%BC%E3%81%91&%E3%81%AD%E3%81%93=%E3%81%84%E3%81%AC",
-                                      false)
-                .parameters();
+        return new QueryStringDecoder("%E3%81%BB%E3%81%92=%E3%81%BC%E3%81%91&%E3%81%AD%E3%81%93=%E3%81%84%E3%81%AC", false).parameters();
     }
 
     @Benchmark
     public Map<String, List<String>> mixedDecoding() {
         // foo=bar&ほげ=ぼけ&cat=dog&ねこ=いぬ
-        return new QueryStringDecoder("foo=bar%E3%81%BB%E3%81%92=%E3%81%BC%E3%81%91&cat=dog&" +
-                                      "&%E3%81%AD%E3%81%93=%E3%81%84%E3%81%AC", false)
-                .parameters();
+        return new QueryStringDecoder("foo=bar%E3%81%BB%E3%81%92=%E3%81%BC%E3%81%91&cat=dog&" + "&%E3%81%AD%E3%81%93=%E3%81%84%E3%81%AC", false).parameters();
     }
 
     @Benchmark
     public Map<String, List<String>> nonStandardDecoding() {
         // ほげ=ぼけ&ねこ=いぬ in Shift-JIS
-        return new QueryStringDecoder("%82%D9%82%B0=%82%DA%82%AF&%82%CB%82%B1=%82%A2%82%CA",
-                                      SHIFT_JIS, false)
-                .parameters();
+        return new QueryStringDecoder("%82%D9%82%B0=%82%DA%82%AF&%82%CB%82%B1=%82%A2%82%CA", SHIFT_JIS, false).parameters();
     }
 }

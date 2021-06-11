@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.socket.nio;
 
 import io.netty.buffer.ByteBuf;
@@ -39,56 +24,15 @@ import java.util.*;
  * @see AddressedEnvelope
  * @see DatagramPacket
  */
-public final class NioDatagramChannel
-        extends AbstractNioMessageChannel implements io.netty.channel.socket.DatagramChannel {
+public final class NioDatagramChannel extends AbstractNioMessageChannel implements io.netty.channel.socket.DatagramChannel {
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(true);
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
-    private static final String EXPECTED_TYPES =
-            " (expected: " + StringUtil.simpleClassName(DatagramPacket.class) + ", " +
-            StringUtil.simpleClassName(AddressedEnvelope.class) + '<' +
-            StringUtil.simpleClassName(ByteBuf.class) + ", " +
-            StringUtil.simpleClassName(SocketAddress.class) + ">, " +
-            StringUtil.simpleClassName(ByteBuf.class) + ')';
+    private static final String EXPECTED_TYPES = " (expected: " + StringUtil.simpleClassName(DatagramPacket.class) + ", " + StringUtil.simpleClassName(AddressedEnvelope.class) + '<' + StringUtil.simpleClassName(ByteBuf.class) + ", " + StringUtil.simpleClassName(SocketAddress.class) + ">, " + StringUtil.simpleClassName(ByteBuf.class) + ')';
 
     private final DatagramChannelConfig config;
 
     private Map<InetAddress, List<MembershipKey>> memberships;
-
-    private static DatagramChannel newSocket(SelectorProvider provider) {
-        try {
-            /**
-             *  Use the {@link SelectorProvider} to open {@link SocketChannel} and so remove condition in
-             *  {@link SelectorProvider#provider()} which is called by each DatagramChannel.open() otherwise.
-             *
-             *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
-             */
-            return provider.openDatagramChannel();
-        } catch (IOException e) {
-            throw new ChannelException("Failed to open a socket.", e);
-        }
-    }
-
-    @SuppressJava6Requirement(reason = "Usage guarded by java version check")
-    private static DatagramChannel newSocket(SelectorProvider provider, InternetProtocolFamily ipFamily) {
-        if (ipFamily == null) {
-            return newSocket(provider);
-        }
-
-        checkJavaVersion();
-
-        try {
-            return provider.openDatagramChannel(ProtocolFamilyConverter.convert(ipFamily));
-        } catch (IOException e) {
-            throw new ChannelException("Failed to open a socket.", e);
-        }
-    }
-
-    private static void checkJavaVersion() {
-        if (PlatformDependent.javaVersion() < 7) {
-            throw new UnsupportedOperationException("Only supported on java 7+.");
-        }
-    }
 
     /**
      * Create a new instance which will use the Operation Systems default {@link InternetProtocolFamily}.
@@ -130,6 +74,49 @@ public final class NioDatagramChannel
         config = new NioDatagramChannelConfig(this, socket);
     }
 
+    private static DatagramChannel newSocket(SelectorProvider provider) {
+        try {
+            /**
+             *  Use the {@link SelectorProvider} to open {@link SocketChannel} and so remove condition in
+             *  {@link SelectorProvider#provider()} which is called by each DatagramChannel.open() otherwise.
+             *
+             *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
+             */
+            return provider.openDatagramChannel();
+        } catch (IOException e) {
+            throw new ChannelException("Failed to open a socket.", e);
+        }
+    }
+
+    @SuppressJava6Requirement(reason = "Usage guarded by java version check")
+    private static DatagramChannel newSocket(SelectorProvider provider, InternetProtocolFamily ipFamily) {
+        if (ipFamily == null) {
+            return newSocket(provider);
+        }
+
+        checkJavaVersion();
+
+        try {
+            return provider.openDatagramChannel(ProtocolFamilyConverter.convert(ipFamily));
+        } catch (IOException e) {
+            throw new ChannelException("Failed to open a socket.", e);
+        }
+    }
+
+    private static void checkJavaVersion() {
+        if (PlatformDependent.javaVersion() < 7) {
+            throw new UnsupportedOperationException("Only supported on java 7+.");
+        }
+    }
+
+    /**
+     * Checks if the specified buffer is a direct buffer and is composed of a single NIO buffer.
+     * (We check this because otherwise we need to make it a non-composite buffer.)
+     */
+    private static boolean isSingleDirectBuffer(ByteBuf buf) {
+        return buf.isDirect() && buf.nioBufferCount() == 1;
+    }
+
     @Override
     public ChannelMetadata metadata() {
         return METADATA;
@@ -144,9 +131,7 @@ public final class NioDatagramChannel
     @SuppressWarnings("deprecation")
     public boolean isActive() {
         DatagramChannel ch = javaChannel();
-        return ch.isOpen() && (
-                config.getOption(ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION) && isRegistered()
-                || ch.socket().isBound());
+        return ch.isOpen() && (config.getOption(ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION) && isRegistered() || ch.socket().isBound());
     }
 
     @Override
@@ -183,8 +168,7 @@ public final class NioDatagramChannel
     }
 
     @Override
-    protected boolean doConnect(SocketAddress remoteAddress,
-            SocketAddress localAddress) throws Exception {
+    protected boolean doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         if (localAddress != null) {
             doBind0(localAddress);
         }
@@ -234,14 +218,13 @@ public final class NioDatagramChannel
             }
 
             allocHandle.lastBytesRead(nioData.position() - pos);
-            buf.add(new DatagramPacket(data.writerIndex(data.writerIndex() + allocHandle.lastBytesRead()),
-                    localAddress(), remoteAddress));
+            buf.add(new DatagramPacket(data.writerIndex(data.writerIndex() + allocHandle.lastBytesRead()), localAddress(), remoteAddress));
             free = false;
             return 1;
         } catch (Throwable cause) {
             PlatformDependent.throwException(cause);
             return -1;
-        }  finally {
+        } finally {
             if (free) {
                 data.release();
             }
@@ -253,8 +236,7 @@ public final class NioDatagramChannel
         final SocketAddress remoteAddress;
         final ByteBuf data;
         if (msg instanceof AddressedEnvelope) {
-            @SuppressWarnings("unchecked")
-            AddressedEnvelope<ByteBuf, SocketAddress> envelope = (AddressedEnvelope<ByteBuf, SocketAddress>) msg;
+            @SuppressWarnings("unchecked") AddressedEnvelope<ByteBuf, SocketAddress> envelope = (AddressedEnvelope<ByteBuf, SocketAddress>) msg;
             remoteAddress = envelope.recipient();
             data = envelope.content();
         } else {
@@ -267,8 +249,7 @@ public final class NioDatagramChannel
             return true;
         }
 
-        final ByteBuffer nioData = data.nioBufferCount() == 1 ? data.internalNioBuffer(data.readerIndex(), dataLen)
-                                                              : data.nioBuffer(data.readerIndex(), dataLen);
+        final ByteBuffer nioData = data.nioBufferCount() == 1 ? data.internalNioBuffer(data.readerIndex(), dataLen) : data.nioBuffer(data.readerIndex(), dataLen);
         final int writtenBytes;
         if (remoteAddress != null) {
             writtenBytes = javaChannel().send(nioData, remoteAddress);
@@ -298,8 +279,7 @@ public final class NioDatagramChannel
         }
 
         if (msg instanceof AddressedEnvelope) {
-            @SuppressWarnings("unchecked")
-            AddressedEnvelope<Object, SocketAddress> e = (AddressedEnvelope<Object, SocketAddress>) msg;
+            @SuppressWarnings("unchecked") AddressedEnvelope<Object, SocketAddress> e = (AddressedEnvelope<Object, SocketAddress>) msg;
             if (e.content() instanceof ByteBuf) {
                 ByteBuf content = (ByteBuf) e.content();
                 if (isSingleDirectBuffer(content)) {
@@ -309,16 +289,7 @@ public final class NioDatagramChannel
             }
         }
 
-        throw new UnsupportedOperationException(
-                "unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
-    }
-
-    /**
-     * Checks if the specified buffer is a direct buffer and is composed of a single NIO buffer.
-     * (We check this because otherwise we need to make it a non-composite buffer.)
-     */
-    private static boolean isSingleDirectBuffer(ByteBuf buf) {
-        return buf.isDirect() && buf.nioBufferCount() == 1;
+        throw new UnsupportedOperationException("unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
     }
 
     @Override
@@ -347,10 +318,7 @@ public final class NioDatagramChannel
     @Override
     public ChannelFuture joinGroup(InetAddress multicastAddress, ChannelPromise promise) {
         try {
-            return joinGroup(
-                    multicastAddress,
-                    NetworkInterface.getByInetAddress(localAddress().getAddress()),
-                    null, promise);
+            return joinGroup(multicastAddress, NetworkInterface.getByInetAddress(localAddress().getAddress()), null, promise);
         } catch (SocketException e) {
             promise.setFailure(e);
         }
@@ -358,29 +326,23 @@ public final class NioDatagramChannel
     }
 
     @Override
-    public ChannelFuture joinGroup(
-            InetSocketAddress multicastAddress, NetworkInterface networkInterface) {
+    public ChannelFuture joinGroup(InetSocketAddress multicastAddress, NetworkInterface networkInterface) {
         return joinGroup(multicastAddress, networkInterface, newPromise());
     }
 
     @Override
-    public ChannelFuture joinGroup(
-            InetSocketAddress multicastAddress, NetworkInterface networkInterface,
-            ChannelPromise promise) {
+    public ChannelFuture joinGroup(InetSocketAddress multicastAddress, NetworkInterface networkInterface, ChannelPromise promise) {
         return joinGroup(multicastAddress.getAddress(), networkInterface, null, promise);
     }
 
     @Override
-    public ChannelFuture joinGroup(
-            InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source) {
+    public ChannelFuture joinGroup(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source) {
         return joinGroup(multicastAddress, networkInterface, source, newPromise());
     }
 
     @SuppressJava6Requirement(reason = "Usage guarded by java version check")
     @Override
-    public ChannelFuture joinGroup(
-            InetAddress multicastAddress, NetworkInterface networkInterface,
-            InetAddress source, ChannelPromise promise) {
+    public ChannelFuture joinGroup(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source, ChannelPromise promise) {
 
         checkJavaVersion();
 
@@ -425,8 +387,7 @@ public final class NioDatagramChannel
     @Override
     public ChannelFuture leaveGroup(InetAddress multicastAddress, ChannelPromise promise) {
         try {
-            return leaveGroup(
-                    multicastAddress, NetworkInterface.getByInetAddress(localAddress().getAddress()), null, promise);
+            return leaveGroup(multicastAddress, NetworkInterface.getByInetAddress(localAddress().getAddress()), null, promise);
         } catch (SocketException e) {
             promise.setFailure(e);
         }
@@ -434,29 +395,23 @@ public final class NioDatagramChannel
     }
 
     @Override
-    public ChannelFuture leaveGroup(
-            InetSocketAddress multicastAddress, NetworkInterface networkInterface) {
+    public ChannelFuture leaveGroup(InetSocketAddress multicastAddress, NetworkInterface networkInterface) {
         return leaveGroup(multicastAddress, networkInterface, newPromise());
     }
 
     @Override
-    public ChannelFuture leaveGroup(
-            InetSocketAddress multicastAddress,
-            NetworkInterface networkInterface, ChannelPromise promise) {
+    public ChannelFuture leaveGroup(InetSocketAddress multicastAddress, NetworkInterface networkInterface, ChannelPromise promise) {
         return leaveGroup(multicastAddress.getAddress(), networkInterface, null, promise);
     }
 
     @Override
-    public ChannelFuture leaveGroup(
-            InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source) {
+    public ChannelFuture leaveGroup(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source) {
         return leaveGroup(multicastAddress, networkInterface, source, newPromise());
     }
 
     @SuppressJava6Requirement(reason = "Usage guarded by java version check")
     @Override
-    public ChannelFuture leaveGroup(
-            InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source,
-            ChannelPromise promise) {
+    public ChannelFuture leaveGroup(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source, ChannelPromise promise) {
         checkJavaVersion();
 
         ObjectUtil.checkNotNull(multicastAddress, "multicastAddress");
@@ -471,11 +426,10 @@ public final class NioDatagramChannel
                     while (keyIt.hasNext()) {
                         MembershipKey key = keyIt.next();
                         if (networkInterface.equals(key.networkInterface())) {
-                           if (source == null && key.sourceAddress() == null ||
-                               source != null && source.equals(key.sourceAddress())) {
-                               key.drop();
-                               keyIt.remove();
-                           }
+                            if (source == null && key.sourceAddress() == null || source != null && source.equals(key.sourceAddress())) {
+                                key.drop();
+                                keyIt.remove();
+                            }
                         }
                     }
                     if (keys.isEmpty()) {
@@ -493,9 +447,7 @@ public final class NioDatagramChannel
      * Block the given sourceToBlock address for the given multicastAddress on the given networkInterface
      */
     @Override
-    public ChannelFuture block(
-            InetAddress multicastAddress, NetworkInterface networkInterface,
-            InetAddress sourceToBlock) {
+    public ChannelFuture block(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress sourceToBlock) {
         return block(multicastAddress, networkInterface, sourceToBlock, newPromise());
     }
 
@@ -504,9 +456,7 @@ public final class NioDatagramChannel
      */
     @SuppressJava6Requirement(reason = "Usage guarded by java version check")
     @Override
-    public ChannelFuture block(
-            InetAddress multicastAddress, NetworkInterface networkInterface,
-            InetAddress sourceToBlock, ChannelPromise promise) {
+    public ChannelFuture block(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress sourceToBlock, ChannelPromise promise) {
         checkJavaVersion();
 
         ObjectUtil.checkNotNull(multicastAddress, "multicastAddress");
@@ -516,7 +466,7 @@ public final class NioDatagramChannel
         synchronized (this) {
             if (memberships != null) {
                 List<MembershipKey> keys = memberships.get(multicastAddress);
-                for (MembershipKey key: keys) {
+                for (MembershipKey key : keys) {
                     if (networkInterface.equals(key.networkInterface())) {
                         try {
                             key.block(sourceToBlock);
@@ -533,7 +483,6 @@ public final class NioDatagramChannel
 
     /**
      * Block the given sourceToBlock address for the given multicastAddress
-     *
      */
     @Override
     public ChannelFuture block(InetAddress multicastAddress, InetAddress sourceToBlock) {
@@ -542,16 +491,11 @@ public final class NioDatagramChannel
 
     /**
      * Block the given sourceToBlock address for the given multicastAddress
-     *
      */
     @Override
-    public ChannelFuture block(
-            InetAddress multicastAddress, InetAddress sourceToBlock, ChannelPromise promise) {
+    public ChannelFuture block(InetAddress multicastAddress, InetAddress sourceToBlock, ChannelPromise promise) {
         try {
-            return block(
-                    multicastAddress,
-                    NetworkInterface.getByInetAddress(localAddress().getAddress()),
-                    sourceToBlock, promise);
+            return block(multicastAddress, NetworkInterface.getByInetAddress(localAddress().getAddress()), sourceToBlock, promise);
         } catch (SocketException e) {
             promise.setFailure(e);
         }

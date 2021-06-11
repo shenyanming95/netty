@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.epoll;
 
 import io.netty.buffer.ByteBuf;
@@ -23,15 +8,14 @@ import io.netty.channel.unix.PreferredDirectByteBufAllocator;
 import io.netty.util.UncheckedBooleanSupplier;
 
 class EpollRecvByteAllocatorHandle extends DelegatingHandle implements ExtendedHandle {
-    private final PreferredDirectByteBufAllocator preferredDirectByteBufAllocator =
-            new PreferredDirectByteBufAllocator();
+    private final PreferredDirectByteBufAllocator preferredDirectByteBufAllocator = new PreferredDirectByteBufAllocator();
+    private boolean isEdgeTriggered;
     private final UncheckedBooleanSupplier defaultMaybeMoreDataSupplier = new UncheckedBooleanSupplier() {
         @Override
         public boolean get() {
             return maybeMoreDataToRead();
         }
     };
-    private boolean isEdgeTriggered;
     private boolean receivedRdHup;
 
     EpollRecvByteAllocatorHandle(ExtendedHandle handle) {
@@ -56,8 +40,7 @@ class EpollRecvByteAllocatorHandle extends DelegatingHandle implements ExtendedH
          *
          * It is assumed RDHUP is handled externally by checking {@link #isReceivedRdHup()}.
          */
-        return (isEdgeTriggered && lastBytesRead() > 0) ||
-               (!isEdgeTriggered && lastBytesRead() == attemptedBytesRead());
+        return (isEdgeTriggered && lastBytesRead() > 0) || (!isEdgeTriggered && lastBytesRead() == attemptedBytesRead());
     }
 
     final void edgeTriggered(boolean edgeTriggered) {

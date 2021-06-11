@@ -25,9 +25,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.SECONDS)
 public class ClientCookieDecoderBenchmark {
 
-    private static final String COOKIE_STRING =
-            "__Host-user_session_same_site=fgfMsM59vJTpZg88nxqKkIhgOt0ADF8LX8wjMMbtcb4IJMufWCnCcXORhbo9QMuyiybdtx; " +
-                    "path=/; expires=Mon, 28 Nov 2016 13:56:01 GMT; secure; HttpOnly";
+    private static final String COOKIE_STRING = "__Host-user_session_same_site=fgfMsM59vJTpZg88nxqKkIhgOt0ADF8LX8wjMMbtcb4IJMufWCnCcXORhbo9QMuyiybdtx; " + "path=/; expires=Mon, 28 Nov 2016 13:56:01 GMT; secure; HttpOnly";
 
     @Benchmark
     public Cookie decodeCookieWithRfc1123ExpiresField() {

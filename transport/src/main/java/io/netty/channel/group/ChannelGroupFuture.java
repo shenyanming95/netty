@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.group;
 
 import io.netty.channel.Channel;
@@ -44,7 +29,7 @@ import java.util.Iterator;
  * operation have been completed.
  *
  * <h3>Prefer {@link #addListener(GenericFutureListener)} to {@link #await()}</h3>
- *
+ * <p>
  * It is recommended to prefer {@link #addListener(GenericFutureListener)} to
  * {@link #await()} wherever possible to get notified when I/O operations are
  * done and to do any follow-up tasks.
@@ -114,7 +99,7 @@ public interface ChannelGroupFuture extends Future<Void>, Iterable<ChannelFuture
      * is associated with the specified {@link Channel}.
      *
      * @return the matching {@link ChannelFuture} if found.
-     *         {@code null} otherwise.
+     * {@code null} otherwise.
      */
     ChannelFuture find(Channel channel);
 

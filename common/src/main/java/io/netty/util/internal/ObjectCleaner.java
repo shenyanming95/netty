@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.internal;
 
 import io.netty.util.concurrent.FastThreadLocalThread;
@@ -32,11 +17,9 @@ import static java.lang.Math.max;
  * anymore.
  */
 public final class ObjectCleaner {
-    private static final int REFERENCE_QUEUE_POLL_TIMEOUT_MS =
-            max(500, getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
-
     // Package-private for testing
     static final String CLEANER_THREAD_NAME = ObjectCleaner.class.getSimpleName() + "Thread";
+    private static final int REFERENCE_QUEUE_POLL_TIMEOUT_MS = max(500, getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
     // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
     private static final Set<AutomaticCleanerReference> LIVE_SET = new ConcurrentSet<AutomaticCleanerReference>();
     private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<Object>();
@@ -45,7 +28,7 @@ public final class ObjectCleaner {
         @Override
         public void run() {
             boolean interrupted = false;
-            for (;;) {
+            for (; ; ) {
                 // Keep on processing as long as the LIVE_SET is not empty and once it becomes empty
                 // See if we can let this thread complete.
                 while (!LIVE_SET.isEmpty()) {
@@ -84,16 +67,19 @@ public final class ObjectCleaner {
         }
     };
 
+    private ObjectCleaner() {
+        // Only contains a static method.
+    }
+
     /**
      * Register the given {@link Object} for which the {@link Runnable} will be executed once there are no references
      * to the object anymore.
-     *
+     * <p>
      * This should only be used if there are no other ways to execute some cleanup once the Object is not reachable
      * anymore because it is not a cheap way to handle the cleanup.
      */
     public static void register(Object object, Runnable cleanupTask) {
-        AutomaticCleanerReference reference = new AutomaticCleanerReference(object,
-                ObjectUtil.checkNotNull(cleanupTask, "cleanupTask"));
+        AutomaticCleanerReference reference = new AutomaticCleanerReference(object, ObjectUtil.checkNotNull(cleanupTask, "cleanupTask"));
         // Its important to add the reference to the LIVE_SET before we access CLEANER_RUNNING to ensure correct
         // behavior in multi-threaded environments.
         LIVE_SET.add(reference);
@@ -125,10 +111,6 @@ public final class ObjectCleaner {
 
     public static int getLiveSetCount() {
         return LIVE_SET.size();
-    }
-
-    private ObjectCleaner() {
-        // Only contains a static method.
     }
 
     private static final class AutomaticCleanerReference extends WeakReference<Object> {

@@ -41,71 +41,6 @@ public final class ReadOnlyHttp2Headers implements Http2Headers {
     private final AsciiString[] pseudoHeaders;
     private final AsciiString[] otherHeaders;
 
-    /**
-     * Used to create read only object designed to represent trailers.
-     * <p>
-     * If this is used for a purpose other than trailers you may violate the header serialization ordering defined by
-     * <a href="https://tools.ietf.org/html/rfc7540#section-8.1.2.1">RFC 7540, 8.1.2.1</a>.
-     * @param validateHeaders {@code true} will run validation on each header name/value pair to ensure protocol
-     *                        compliance.
-     * @param otherHeaders A an array of key:value pairs. Must not contain any
-     *                     <a href="https://tools.ietf.org/html/rfc7540#section-8.1.2.1">pseudo headers</a>
-     *                     or {@code null} names/values.
-     *                     A copy will <strong>NOT</strong> be made of this array. If the contents of this array
-     *                     may be modified externally you are responsible for passing in a copy.
-     * @return A read only representation of the headers.
-     */
-    public static ReadOnlyHttp2Headers trailers(boolean validateHeaders, AsciiString... otherHeaders) {
-        return new ReadOnlyHttp2Headers(validateHeaders, EMPTY_ASCII_STRINGS, otherHeaders);
-    }
-
-    /**
-     * Create a new read only representation of headers used by clients.
-     * @param validateHeaders {@code true} will run validation on each header name/value pair to ensure protocol
-     *                        compliance.
-     * @param method The value for {@link PseudoHeaderName#METHOD}.
-     * @param path The value for {@link PseudoHeaderName#PATH}.
-     * @param scheme The value for {@link PseudoHeaderName#SCHEME}.
-     * @param authority The value for {@link PseudoHeaderName#AUTHORITY}.
-     * @param otherHeaders A an array of key:value pairs. Must not contain any
-     *                     <a href="https://tools.ietf.org/html/rfc7540#section-8.1.2.1">pseudo headers</a>
-     *                     or {@code null} names/values.
-     *                     A copy will <strong>NOT</strong> be made of this array. If the contents of this array
-     *                     may be modified externally you are responsible for passing in a copy.
-     * @return a new read only representation of headers used by clients.
-     */
-    public static ReadOnlyHttp2Headers clientHeaders(boolean validateHeaders,
-                                                     AsciiString method, AsciiString path,
-                                                     AsciiString scheme, AsciiString authority,
-                                                     AsciiString... otherHeaders) {
-        return new ReadOnlyHttp2Headers(validateHeaders,
-                new AsciiString[] {
-                  PseudoHeaderName.METHOD.value(), method, PseudoHeaderName.PATH.value(), path,
-                  PseudoHeaderName.SCHEME.value(), scheme, PseudoHeaderName.AUTHORITY.value(), authority
-                },
-                otherHeaders);
-    }
-
-    /**
-     * Create a new read only representation of headers used by servers.
-     * @param validateHeaders {@code true} will run validation on each header name/value pair to ensure protocol
-     *                        compliance.
-     * @param status The value for {@link PseudoHeaderName#STATUS}.
-     * @param otherHeaders A an array of key:value pairs. Must not contain any
-     *                     <a href="https://tools.ietf.org/html/rfc7540#section-8.1.2.1">pseudo headers</a>
-     *                     or {@code null} names/values.
-     *                     A copy will <strong>NOT</strong> be made of this array. If the contents of this array
-     *                     may be modified externally you are responsible for passing in a copy.
-     * @return a new read only representation of headers used by servers.
-     */
-    public static ReadOnlyHttp2Headers serverHeaders(boolean validateHeaders,
-                                                     AsciiString status,
-                                                     AsciiString... otherHeaders) {
-        return new ReadOnlyHttp2Headers(validateHeaders,
-                                        new AsciiString[] { PseudoHeaderName.STATUS.value(), status },
-                                        otherHeaders);
-    }
-
     private ReadOnlyHttp2Headers(boolean validateHeaders, AsciiString[] pseudoHeaders, AsciiString... otherHeaders) {
         assert (pseudoHeaders.length & 1) == 0; // pseudoHeaders are only set internally so assert should be enough.
         if ((otherHeaders.length & 1) != 0) {
@@ -116,6 +51,62 @@ public final class ReadOnlyHttp2Headers implements Http2Headers {
         }
         this.pseudoHeaders = pseudoHeaders;
         this.otherHeaders = otherHeaders;
+    }
+
+    /**
+     * Used to create read only object designed to represent trailers.
+     * <p>
+     * If this is used for a purpose other than trailers you may violate the header serialization ordering defined by
+     * <a href="https://tools.ietf.org/html/rfc7540#section-8.1.2.1">RFC 7540, 8.1.2.1</a>.
+     *
+     * @param validateHeaders {@code true} will run validation on each header name/value pair to ensure protocol
+     *                        compliance.
+     * @param otherHeaders    A an array of key:value pairs. Must not contain any
+     *                        <a href="https://tools.ietf.org/html/rfc7540#section-8.1.2.1">pseudo headers</a>
+     *                        or {@code null} names/values.
+     *                        A copy will <strong>NOT</strong> be made of this array. If the contents of this array
+     *                        may be modified externally you are responsible for passing in a copy.
+     * @return A read only representation of the headers.
+     */
+    public static ReadOnlyHttp2Headers trailers(boolean validateHeaders, AsciiString... otherHeaders) {
+        return new ReadOnlyHttp2Headers(validateHeaders, EMPTY_ASCII_STRINGS, otherHeaders);
+    }
+
+    /**
+     * Create a new read only representation of headers used by clients.
+     *
+     * @param validateHeaders {@code true} will run validation on each header name/value pair to ensure protocol
+     *                        compliance.
+     * @param method          The value for {@link PseudoHeaderName#METHOD}.
+     * @param path            The value for {@link PseudoHeaderName#PATH}.
+     * @param scheme          The value for {@link PseudoHeaderName#SCHEME}.
+     * @param authority       The value for {@link PseudoHeaderName#AUTHORITY}.
+     * @param otherHeaders    A an array of key:value pairs. Must not contain any
+     *                        <a href="https://tools.ietf.org/html/rfc7540#section-8.1.2.1">pseudo headers</a>
+     *                        or {@code null} names/values.
+     *                        A copy will <strong>NOT</strong> be made of this array. If the contents of this array
+     *                        may be modified externally you are responsible for passing in a copy.
+     * @return a new read only representation of headers used by clients.
+     */
+    public static ReadOnlyHttp2Headers clientHeaders(boolean validateHeaders, AsciiString method, AsciiString path, AsciiString scheme, AsciiString authority, AsciiString... otherHeaders) {
+        return new ReadOnlyHttp2Headers(validateHeaders, new AsciiString[]{PseudoHeaderName.METHOD.value(), method, PseudoHeaderName.PATH.value(), path, PseudoHeaderName.SCHEME.value(), scheme, PseudoHeaderName.AUTHORITY.value(), authority}, otherHeaders);
+    }
+
+    /**
+     * Create a new read only representation of headers used by servers.
+     *
+     * @param validateHeaders {@code true} will run validation on each header name/value pair to ensure protocol
+     *                        compliance.
+     * @param status          The value for {@link PseudoHeaderName#STATUS}.
+     * @param otherHeaders    A an array of key:value pairs. Must not contain any
+     *                        <a href="https://tools.ietf.org/html/rfc7540#section-8.1.2.1">pseudo headers</a>
+     *                        or {@code null} names/values.
+     *                        A copy will <strong>NOT</strong> be made of this array. If the contents of this array
+     *                        may be modified externally you are responsible for passing in a copy.
+     * @return a new read only representation of headers used by servers.
+     */
+    public static ReadOnlyHttp2Headers serverHeaders(boolean validateHeaders, AsciiString status, AsciiString... otherHeaders) {
+        return new ReadOnlyHttp2Headers(validateHeaders, new AsciiString[]{PseudoHeaderName.STATUS.value(), status}, otherHeaders);
     }
 
     private static IllegalArgumentException newInvalidArraySizeException() {
@@ -139,13 +130,24 @@ public final class ReadOnlyHttp2Headers implements Http2Headers {
             if (!seenNonPseudoHeader && !name.isEmpty() && name.byteAt(0) != PSEUDO_HEADER_TOKEN) {
                 seenNonPseudoHeader = true;
             } else if (seenNonPseudoHeader && !name.isEmpty() && name.byteAt(0) == PSEUDO_HEADER_TOKEN) {
-                throw new IllegalArgumentException(
-                     "otherHeaders name at index " + i + " is a pseudo header that appears after non-pseudo headers.");
+                throw new IllegalArgumentException("otherHeaders name at index " + i + " is a pseudo header that appears after non-pseudo headers.");
             }
             if (otherHeaders[i + 1] == null) {
                 throw new IllegalArgumentException("otherHeaders value at index " + (i + 1) + " is null");
             }
         }
+    }
+
+    private static boolean contains(CharSequence name, int nameHash, CharSequence value, int valueHash, HashingStrategy<CharSequence> hashingStrategy, AsciiString[] headers) {
+        final int headersEnd = headers.length - 1;
+        for (int i = 0; i < headersEnd; i += 2) {
+            AsciiString roName = headers[i];
+            AsciiString roValue = headers[i + 1];
+            if (roName.hashCode() == nameHash && roValue.hashCode() == valueHash && roName.contentEqualsIgnoreCase(name) && hashingStrategy.equals(roValue, value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private AsciiString get0(CharSequence name) {
@@ -746,26 +748,10 @@ public final class ReadOnlyHttp2Headers implements Http2Headers {
     @Override
     public boolean contains(CharSequence name, CharSequence value, boolean caseInsensitive) {
         final int nameHash = AsciiString.hashCode(name);
-        final HashingStrategy<CharSequence> strategy =
-                caseInsensitive ? CASE_INSENSITIVE_HASHER : CASE_SENSITIVE_HASHER;
+        final HashingStrategy<CharSequence> strategy = caseInsensitive ? CASE_INSENSITIVE_HASHER : CASE_SENSITIVE_HASHER;
         final int valueHash = strategy.hashCode(value);
 
-        return contains(name, nameHash, value, valueHash, strategy, otherHeaders)
-                || contains(name, nameHash, value, valueHash, strategy, pseudoHeaders);
-    }
-
-    private static boolean contains(CharSequence name, int nameHash, CharSequence value, int valueHash,
-                                    HashingStrategy<CharSequence> hashingStrategy, AsciiString[] headers) {
-        final int headersEnd = headers.length - 1;
-        for (int i = 0; i < headersEnd; i += 2) {
-            AsciiString roName = headers[i];
-            AsciiString roValue = headers[i + 1];
-            if (roName.hashCode() == nameHash && roValue.hashCode() == valueHash &&
-                roName.contentEqualsIgnoreCase(name) && hashingStrategy.equals(roValue, value)) {
-                return true;
-            }
-        }
-        return false;
+        return contains(name, nameHash, value, valueHash, strategy, otherHeaders) || contains(name, nameHash, value, valueHash, strategy, pseudoHeaders);
     }
 
     @Override
@@ -781,9 +767,9 @@ public final class ReadOnlyHttp2Headers implements Http2Headers {
     }
 
     private final class ReadOnlyValueIterator implements Iterator<CharSequence> {
-        private int i;
         private final int nameHash;
         private final CharSequence name;
+        private int i;
         private AsciiString[] current = pseudoHeaders.length != 0 ? pseudoHeaders : otherHeaders;
         private AsciiString next;
 
@@ -832,8 +818,7 @@ public final class ReadOnlyHttp2Headers implements Http2Headers {
         }
     }
 
-    private final class ReadOnlyIterator implements Map.Entry<CharSequence, CharSequence>,
-                                                    Iterator<Map.Entry<CharSequence, CharSequence>> {
+    private final class ReadOnlyIterator implements Map.Entry<CharSequence, CharSequence>, Iterator<Map.Entry<CharSequence, CharSequence>> {
         private int i;
         private AsciiString[] current = pseudoHeaders.length != 0 ? pseudoHeaders : otherHeaders;
         private AsciiString key;

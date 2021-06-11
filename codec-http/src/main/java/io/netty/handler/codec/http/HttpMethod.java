@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.util.AsciiString;
@@ -88,26 +73,7 @@ public class HttpMethod implements Comparable<HttpMethod> {
     private static final EnumNameMap<HttpMethod> methodMap;
 
     static {
-        methodMap = new EnumNameMap<HttpMethod>(
-                new EnumNameMap.Node<HttpMethod>(OPTIONS.toString(), OPTIONS),
-                new EnumNameMap.Node<HttpMethod>(GET.toString(), GET),
-                new EnumNameMap.Node<HttpMethod>(HEAD.toString(), HEAD),
-                new EnumNameMap.Node<HttpMethod>(POST.toString(), POST),
-                new EnumNameMap.Node<HttpMethod>(PUT.toString(), PUT),
-                new EnumNameMap.Node<HttpMethod>(PATCH.toString(), PATCH),
-                new EnumNameMap.Node<HttpMethod>(DELETE.toString(), DELETE),
-                new EnumNameMap.Node<HttpMethod>(TRACE.toString(), TRACE),
-                new EnumNameMap.Node<HttpMethod>(CONNECT.toString(), CONNECT));
-    }
-
-    /**
-     * Returns the {@link HttpMethod} represented by the specified name.
-     * If the specified name is a standard HTTP method name, a cached instance
-     * will be returned.  Otherwise, a new instance will be returned.
-     */
-    public static HttpMethod valueOf(String name) {
-        HttpMethod result = methodMap.get(name);
-        return result != null ? result : new HttpMethod(name);
+        methodMap = new EnumNameMap<HttpMethod>(new EnumNameMap.Node<HttpMethod>(OPTIONS.toString(), OPTIONS), new EnumNameMap.Node<HttpMethod>(GET.toString(), GET), new EnumNameMap.Node<HttpMethod>(HEAD.toString(), HEAD), new EnumNameMap.Node<HttpMethod>(POST.toString(), POST), new EnumNameMap.Node<HttpMethod>(PUT.toString(), PUT), new EnumNameMap.Node<HttpMethod>(PATCH.toString(), PATCH), new EnumNameMap.Node<HttpMethod>(DELETE.toString(), DELETE), new EnumNameMap.Node<HttpMethod>(TRACE.toString(), TRACE), new EnumNameMap.Node<HttpMethod>(CONNECT.toString(), CONNECT));
     }
 
     private final AsciiString name;
@@ -125,7 +91,7 @@ public class HttpMethod implements Comparable<HttpMethod> {
             throw new IllegalArgumentException("empty name");
         }
 
-        for (int i = 0; i < name.length(); i ++) {
+        for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
             if (Character.isISOControl(c) || Character.isWhitespace(c)) {
                 throw new IllegalArgumentException("invalid character in name");
@@ -133,6 +99,16 @@ public class HttpMethod implements Comparable<HttpMethod> {
         }
 
         this.name = AsciiString.cached(name);
+    }
+
+    /**
+     * Returns the {@link HttpMethod} represented by the specified name.
+     * If the specified name is a standard HTTP method name, a cached instance
+     * will be returned.  Otherwise, a new instance will be returned.
+     */
+    public static HttpMethod valueOf(String name) {
+        HttpMethod result = methodMap.get(name);
+        return result != null ? result : new HttpMethod(name);
     }
 
     /**
@@ -190,16 +166,10 @@ public class HttpMethod implements Comparable<HttpMethod> {
             for (EnumNameMap.Node<T> node : nodes) {
                 int i = hashCode(node.key) & valuesMask;
                 if (values[i] != null) {
-                    throw new IllegalArgumentException("index " + i + " collision between values: [" +
-                            values[i].key + ", " + node.key + ']');
+                    throw new IllegalArgumentException("index " + i + " collision between values: [" + values[i].key + ", " + node.key + ']');
                 }
                 values[i] = node;
             }
-        }
-
-        T get(String name) {
-            EnumNameMap.Node<T> node = values[hashCode(name) & valuesMask];
-            return node == null || !node.key.equals(name) ? null : node.value;
         }
 
         private static int hashCode(String name) {
@@ -209,6 +179,11 @@ public class HttpMethod implements Comparable<HttpMethod> {
             // For example with the current set of HttpMethods it just so happens that the String hash code value
             // shifted right by 6 bits modulo 16 is unique relative to all other HttpMethod values.
             return name.hashCode() >>> 6;
+        }
+
+        T get(String name) {
+            EnumNameMap.Node<T> node = values[hashCode(name) & valuesMask];
+            return node == null || !node.key.equals(name) ? null : node.value;
         }
 
         private static final class Node<T> {

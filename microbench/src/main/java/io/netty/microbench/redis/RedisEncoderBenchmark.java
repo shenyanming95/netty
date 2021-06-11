@@ -38,19 +38,16 @@ import java.util.List;
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
 public class RedisEncoderBenchmark extends AbstractMicrobenchmark {
+    @Param({"true", "false"})
+    public boolean pooledAllocator;
+    @Param({"true", "false"})
+    public boolean voidPromise;
+    @Param({"50", "200", "1000"})
+    public int arraySize;
     private RedisEncoder encoder;
     private ByteBuf content;
     private ChannelHandlerContext context;
     private ArrayRedisMessage redisArray;
-
-    @Param({ "true", "false" })
-    public boolean pooledAllocator;
-
-    @Param({ "true", "false" })
-    public boolean voidPromise;
-
-    @Param({ "50", "200", "1000" })
-    public int arraySize;
 
     @Setup(Level.Trial)
     public void setup() {
@@ -65,8 +62,7 @@ public class RedisEncoderBenchmark extends AbstractMicrobenchmark {
         }
         redisArray = new ArrayRedisMessage(rList);
         encoder = new RedisEncoder();
-        context = new EmbeddedChannelWriteReleaseHandlerContext(pooledAllocator ? PooledByteBufAllocator.DEFAULT :
-                UnpooledByteBufAllocator.DEFAULT, encoder) {
+        context = new EmbeddedChannelWriteReleaseHandlerContext(pooledAllocator ? PooledByteBufAllocator.DEFAULT : UnpooledByteBufAllocator.DEFAULT, encoder) {
             @Override
             protected void handleException(Throwable t) {
                 handleUnexpectedException(t);

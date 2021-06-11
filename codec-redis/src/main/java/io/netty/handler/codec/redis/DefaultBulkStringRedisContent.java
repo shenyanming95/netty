@@ -81,10 +81,6 @@ public class DefaultBulkStringRedisContent extends DefaultByteBufHolder implemen
 
     @Override
     public String toString() {
-        return new StringBuilder(StringUtil.simpleClassName(this))
-                .append('[')
-                .append("content=")
-                .append(content())
-                .append(']').toString();
+        return new StringBuilder(StringUtil.simpleClassName(this)).append('[').append("content=").append(content()).append(']').toString();
     }
 }

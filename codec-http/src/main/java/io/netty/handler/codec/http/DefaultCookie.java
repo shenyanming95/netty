@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.util.internal.ObjectUtil;
@@ -75,14 +60,14 @@ public class DefaultCookie extends io.netty.handler.codec.http.cookie.DefaultCoo
 
     @Override
     @Deprecated
-    public String comment() {
-        return comment;
+    public void setComment(String comment) {
+        this.comment = validateValue("comment", comment);
     }
 
     @Override
     @Deprecated
-    public void setComment(String comment) {
-        this.comment = validateValue("comment", comment);
+    public String comment() {
+        return comment;
     }
 
     @Override
@@ -93,14 +78,14 @@ public class DefaultCookie extends io.netty.handler.codec.http.cookie.DefaultCoo
 
     @Override
     @Deprecated
-    public String commentUrl() {
-        return commentUrl;
+    public void setCommentUrl(String commentUrl) {
+        this.commentUrl = validateValue("commentUrl", commentUrl);
     }
 
     @Override
     @Deprecated
-    public void setCommentUrl(String commentUrl) {
-        this.commentUrl = validateValue("commentUrl", commentUrl);
+    public String commentUrl() {
+        return commentUrl;
     }
 
     @Override
@@ -123,15 +108,6 @@ public class DefaultCookie extends io.netty.handler.codec.http.cookie.DefaultCoo
 
     @Override
     @Deprecated
-    public Set<Integer> ports() {
-        if (unmodifiablePorts == null) {
-            unmodifiablePorts = Collections.unmodifiableSet(ports);
-        }
-        return unmodifiablePorts;
-    }
-
-    @Override
-    @Deprecated
     public void setPorts(int... ports) {
         ObjectUtil.checkNotNull(ports, "ports");
 
@@ -140,7 +116,7 @@ public class DefaultCookie extends io.netty.handler.codec.http.cookie.DefaultCoo
             unmodifiablePorts = this.ports = Collections.emptySet();
         } else {
             Set<Integer> newPorts = new TreeSet<Integer>();
-            for (int p: portsCopy) {
+            for (int p : portsCopy) {
                 if (p <= 0 || p > 65535) {
                     throw new IllegalArgumentException("port out of range: " + p);
                 }
@@ -155,7 +131,7 @@ public class DefaultCookie extends io.netty.handler.codec.http.cookie.DefaultCoo
     @Deprecated
     public void setPorts(Iterable<Integer> ports) {
         Set<Integer> newPorts = new TreeSet<Integer>();
-        for (int p: ports) {
+        for (int p : ports) {
             if (p <= 0 || p > 65535) {
                 throw new IllegalArgumentException("port out of range: " + p);
             }
@@ -167,6 +143,15 @@ public class DefaultCookie extends io.netty.handler.codec.http.cookie.DefaultCoo
             this.ports = newPorts;
             unmodifiablePorts = null;
         }
+    }
+
+    @Override
+    @Deprecated
+    public Set<Integer> ports() {
+        if (unmodifiablePorts == null) {
+            unmodifiablePorts = Collections.unmodifiableSet(ports);
+        }
+        return unmodifiablePorts;
     }
 
     @Override
@@ -183,13 +168,13 @@ public class DefaultCookie extends io.netty.handler.codec.http.cookie.DefaultCoo
 
     @Override
     @Deprecated
-    public int version() {
-        return version;
+    public void setVersion(int version) {
+        this.version = version;
     }
 
     @Override
     @Deprecated
-    public void setVersion(int version) {
-        this.version = version;
+    public int version() {
+        return version;
     }
 }

@@ -20,9 +20,9 @@ import io.netty.util.internal.UnstableApi;
 
 /**
  * An <a href="https://tools.ietf.org/html/rfc6891#section-6.1">OPT RR</a> record.
- *
+ * <p>
  * This is used for <a href="https://tools.ietf.org/html/rfc6891#section-6.1.3">
- *     Extension Mechanisms for DNS (EDNS(0))</a>.
+ * Extension Mechanisms for DNS (EDNS(0))</a>.
  */
 @UnstableApi
 public abstract class AbstractDnsOptPseudoRrRecord extends AbstractDnsRecord implements DnsOptPseudoRecord {
@@ -38,7 +38,7 @@ public abstract class AbstractDnsOptPseudoRrRecord extends AbstractDnsRecord imp
     // See https://tools.ietf.org/html/rfc6891#section-6.1.3
     private static long packIntoLong(int val, int val2) {
         // We are currently not support DO and Z fields, just use 0.
-        return ((val & 0xff) << 24 | (val2 & 0xff) << 16 | (0 & 0xff) <<  8 | 0 & 0xff) & 0xFFFFFFFFL;
+        return ((val & 0xff) << 24 | (val2 & 0xff) << 16 | (0 & 0xff) << 8 | 0 & 0xff) & 0xFFFFFFFFL;
     }
 
     @Override
@@ -53,7 +53,7 @@ public abstract class AbstractDnsOptPseudoRrRecord extends AbstractDnsRecord imp
 
     @Override
     public int flags() {
-       return (short) ((short) timeToLive() & 0xff);
+        return (short) ((short) timeToLive() & 0xff);
     }
 
     @Override
@@ -62,17 +62,6 @@ public abstract class AbstractDnsOptPseudoRrRecord extends AbstractDnsRecord imp
     }
 
     final StringBuilder toStringBuilder() {
-        return new StringBuilder(64)
-                .append(StringUtil.simpleClassName(this))
-                .append('(')
-                .append("OPT flags:")
-                .append(flags())
-                .append(" version:")
-                .append(version())
-                .append(" extendedRecode:")
-                .append(extendedRcode())
-                .append(" udp:")
-                .append(dnsClass())
-                .append(')');
+        return new StringBuilder(64).append(StringUtil.simpleClassName(this)).append('(').append("OPT flags:").append(flags()).append(" version:").append(version()).append(" extendedRecode:").append(extendedRcode()).append(" udp:").append(dnsClass()).append(')');
     }
 }

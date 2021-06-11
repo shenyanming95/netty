@@ -50,22 +50,19 @@ import java.util.concurrent.Future;
  * {@link ChannelPipeline} to have the best effect.
  */
 public class FlushConsolidationHandler extends ChannelDuplexHandler {
-    private final int explicitFlushAfterFlushes;
-    private final boolean consolidateWhenNoReadInProgress;
-    private final Runnable flushTask;
-    private int flushPendingCount;
-
-    // // 当回调channelRead()的时候, readInProgress 就会被置为true
-    private boolean readInProgress;
-
-    private ChannelHandlerContext ctx;
-    private Future<?> nextScheduledFlush;
-
     /**
      * The default number of flushes after which a flush will be forwarded to downstream handlers (whether while in a
      * read loop, or while batching outside of a read loop).
      */
     public static final int DEFAULT_EXPLICIT_FLUSH_AFTER_FLUSHES = 256;
+    private final int explicitFlushAfterFlushes;
+    private final boolean consolidateWhenNoReadInProgress;
+    private final Runnable flushTask;
+    private int flushPendingCount;
+    // // 当回调channelRead()的时候, readInProgress 就会被置为true
+    private boolean readInProgress;
+    private ChannelHandlerContext ctx;
+    private Future<?> nextScheduledFlush;
 
     /**
      * Create new instance which explicit flush after {@value DEFAULT_EXPLICIT_FLUSH_AFTER_FLUSHES} pending flush
@@ -87,26 +84,23 @@ public class FlushConsolidationHandler extends ChannelDuplexHandler {
     /**
      * Create new instance.
      *
-     * @param explicitFlushAfterFlushes the number of flushes after which an explicit flush will be done.
+     * @param explicitFlushAfterFlushes       the number of flushes after which an explicit flush will be done.
      * @param consolidateWhenNoReadInProgress whether to consolidate flushes even when no read loop is currently
      *                                        ongoing.
      */
     public FlushConsolidationHandler(int explicitFlushAfterFlushes, boolean consolidateWhenNoReadInProgress) {
-        this.explicitFlushAfterFlushes =
-                ObjectUtil.checkPositive(explicitFlushAfterFlushes, "explicitFlushAfterFlushes");
+        this.explicitFlushAfterFlushes = ObjectUtil.checkPositive(explicitFlushAfterFlushes, "explicitFlushAfterFlushes");
         this.consolidateWhenNoReadInProgress = consolidateWhenNoReadInProgress;
-        this.flushTask = consolidateWhenNoReadInProgress ?
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        if (flushPendingCount > 0 && !readInProgress) {
-                            flushPendingCount = 0;
-                            nextScheduledFlush = null;
-                            ctx.flush();
-                        } // else we'll flush when the read completes
-                    }
-                }
-                : null;
+        this.flushTask = consolidateWhenNoReadInProgress ? new Runnable() {
+            @Override
+            public void run() {
+                if (flushPendingCount > 0 && !readInProgress) {
+                    flushPendingCount = 0;
+                    nextScheduledFlush = null;
+                    ctx.flush();
+                } // else we'll flush when the read completes
+            }
+        } : null;
     }
 
     @Override
@@ -131,9 +125,9 @@ public class FlushConsolidationHandler extends ChannelDuplexHandler {
             if (++flushPendingCount == explicitFlushAfterFlushes) {
                 flushNow(ctx);
             }
-        // 如果业务线程没有复用I/O线程, 那么就有可能在ChannelReadComplete()调用后才来调用channelRead()方法,
-        // 此时 readInProgress 就会为false, 然后来到这个代码逻辑, 通过显示指定 consolidateWhenNoReadInProgress 参数,
-        // 来判断是否要增强写.
+            // 如果业务线程没有复用I/O线程, 那么就有可能在ChannelReadComplete()调用后才来调用channelRead()方法,
+            // 此时 readInProgress 就会为false, 然后来到这个代码逻辑, 通过显示指定 consolidateWhenNoReadInProgress 参数,
+            // 来判断是否要增强写.
         } else if (consolidateWhenNoReadInProgress) {
             // 业务线程独立出来, 并且开启了 consolidateWhenNoReadInProgress 参数,
             // 它的处理方式是和上面一样的, 等待一定次数再执行flush,

@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
@@ -23,9 +8,9 @@ import java.util.List;
 /**
  * A <a href="http://tools.ietf.org/html/rfc6265">RFC6265</a> compliant cookie encoder to be used server side,
  * so some fields are sent (Version is typically ignored).
- *
+ * <p>
  * As Netty's Cookie merges Expires and MaxAge into one single field, only Max-Age field is sent.
- *
+ * <p>
  * Note that multiple cookies must be sent as separate "Set-Cookie" headers.
  *
  * <pre>
@@ -35,16 +20,19 @@ import java.util.List;
  * </pre>
  *
  * @see ServerCookieDecoder
- *
  * @deprecated Use {@link io.netty.handler.codec.http.cookie.ServerCookieEncoder} instead
  */
 @Deprecated
 public final class ServerCookieEncoder {
 
+    private ServerCookieEncoder() {
+        // Unused
+    }
+
     /**
      * Encodes the specified cookie name-value pair into a Set-Cookie header value.
      *
-     * @param name the cookie name
+     * @param name  the cookie name
      * @param value the cookie value
      * @return a single Set-Cookie header value
      */
@@ -95,9 +83,5 @@ public final class ServerCookieEncoder {
     @Deprecated
     public static List<String> encode(Iterable<Cookie> cookies) {
         return io.netty.handler.codec.http.cookie.ServerCookieEncoder.LAX.encode(cookies);
-    }
-
-    private ServerCookieEncoder() {
-        // Unused
     }
 }

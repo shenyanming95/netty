@@ -41,11 +41,7 @@ abstract class DnsResponseDecoder<A extends SocketAddress> {
             throw new CorruptedFrameException("not a response");
         }
 
-        final DnsResponse response = newResponse(
-                sender,
-                recipient,
-                id,
-                DnsOpCode.valueOf((byte) (flags >> 11 & 0xf)), DnsResponseCode.valueOf((byte) (flags & 0xf)));
+        final DnsResponse response = newResponse(sender, recipient, id, DnsOpCode.valueOf((byte) (flags >> 11 & 0xf)), DnsResponseCode.valueOf((byte) (flags & 0xf)));
 
         response.setRecursionDesired((flags >> 8 & 1) == 1);
         response.setAuthoritativeAnswer((flags >> 10 & 1) == 1);
@@ -80,18 +76,16 @@ abstract class DnsResponseDecoder<A extends SocketAddress> {
         }
     }
 
-    protected abstract DnsResponse newResponse(A sender, A recipient, int id,
-                                               DnsOpCode opCode, DnsResponseCode responseCode) throws Exception;
+    protected abstract DnsResponse newResponse(A sender, A recipient, int id, DnsOpCode opCode, DnsResponseCode responseCode) throws Exception;
 
     private void decodeQuestions(DnsResponse response, ByteBuf buf, int questionCount) throws Exception {
-        for (int i = questionCount; i > 0; i --) {
+        for (int i = questionCount; i > 0; i--) {
             response.addRecord(DnsSection.QUESTION, recordDecoder.decodeQuestion(buf));
         }
     }
 
-    private boolean decodeRecords(
-            DnsResponse response, DnsSection section, ByteBuf buf, int count) throws Exception {
-        for (int i = count; i > 0; i --) {
+    private boolean decodeRecords(DnsResponse response, DnsSection section, ByteBuf buf, int count) throws Exception {
+        for (int i = count; i > 0; i--) {
             final DnsRecord r = recordDecoder.decodeRecord(buf);
             if (r == null) {
                 // Truncated response

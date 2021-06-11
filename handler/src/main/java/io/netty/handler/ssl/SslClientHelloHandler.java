@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.buffer.ByteBuf;
@@ -36,13 +21,18 @@ import java.util.List;
  */
 public abstract class SslClientHelloHandler<T> extends ByteToMessageDecoder implements ChannelOutboundHandler {
 
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(SslClientHelloHandler.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SslClientHelloHandler.class);
 
     private boolean handshakeFailed;
     private boolean suppressRead;
     private boolean readPending;
     private ByteBuf handshakeBuffer;
+
+    private static void releaseIfNotNull(ByteBuf buffer) {
+        if (buffer != null) {
+            buffer.release();
+        }
+    }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
@@ -64,8 +54,7 @@ public abstract class SslClientHelloHandler<T> extends ByteToMessageDecoder impl
                             // Not an SSL/TLS packet
                             if (len == SslUtils.NOT_ENCRYPTED) {
                                 handshakeFailed = true;
-                                NotSslRecordException e = new NotSslRecordException(
-                                        "not an SSL/TLS record: " + ByteBufUtil.hexDump(in));
+                                NotSslRecordException e = new NotSslRecordException("not an SSL/TLS record: " + ByteBufUtil.hexDump(in));
                                 in.skipBytes(in.readableBytes());
                                 ctx.fireUserEventTriggered(new SniCompletionEvent(e));
                                 SslUtils.handleHandshakeFailure(ctx, e, true);
@@ -82,8 +71,7 @@ public abstract class SslClientHelloHandler<T> extends ByteToMessageDecoder impl
                             final int majorVersion = in.getUnsignedByte(readerIndex + 1);
                             // SSLv3 or TLS
                             if (majorVersion == 3) {
-                                int packetLength = in.getUnsignedShort(readerIndex + 3) +
-                                        SslUtils.SSL_RECORD_HEADER_LENGTH;
+                                int packetLength = in.getUnsignedShort(readerIndex + 3) + SslUtils.SSL_RECORD_HEADER_LENGTH;
 
                                 if (readableBytes < packetLength) {
                                     // client hello incomplete; try again to decode once more data is ready.
@@ -102,8 +90,7 @@ public abstract class SslClientHelloHandler<T> extends ByteToMessageDecoder impl
                                         return;
                                     }
 
-                                    final int handshakeType = in.getUnsignedByte(readerIndex +
-                                            SslUtils.SSL_RECORD_HEADER_LENGTH);
+                                    final int handshakeType = in.getUnsignedByte(readerIndex + SslUtils.SSL_RECORD_HEADER_LENGTH);
 
                                     // Check if this is a clientHello(1)
                                     // See https://tools.ietf.org/html/rfc5246#section-7.4
@@ -114,8 +101,7 @@ public abstract class SslClientHelloHandler<T> extends ByteToMessageDecoder impl
 
                                     // Read the length of the handshake as it may arrive in fragments
                                     // See https://tools.ietf.org/html/rfc5246#section-7.4
-                                    handshakeLength = in.getUnsignedMedium(readerIndex +
-                                            SslUtils.SSL_RECORD_HEADER_LENGTH + 1);
+                                    handshakeLength = in.getUnsignedMedium(readerIndex + SslUtils.SSL_RECORD_HEADER_LENGTH + 1);
 
                                     // Consume handshakeType and handshakeLength (this sums up as 4 bytes)
                                     readerIndex += 4;
@@ -138,8 +124,7 @@ public abstract class SslClientHelloHandler<T> extends ByteToMessageDecoder impl
                                 }
 
                                 // Combine the encapsulated data in one buffer but not include the SSL_RECORD_HEADER
-                                handshakeBuffer.writeBytes(in, readerIndex + SslUtils.SSL_RECORD_HEADER_LENGTH,
-                                        packetLength - SslUtils.SSL_RECORD_HEADER_LENGTH);
+                                handshakeBuffer.writeBytes(in, readerIndex + SslUtils.SSL_RECORD_HEADER_LENGTH, packetLength - SslUtils.SSL_RECORD_HEADER_LENGTH);
                                 readerIndex += packetLength;
                                 readableBytes -= packetLength;
                                 if (handshakeLength <= handshakeBuffer.readableBytes()) {
@@ -174,12 +159,6 @@ public abstract class SslClientHelloHandler<T> extends ByteToMessageDecoder impl
     private void releaseHandshakeBuffer() {
         releaseIfNotNull(handshakeBuffer);
         handshakeBuffer = null;
-    }
-
-    private static void releaseIfNotNull(ByteBuf buffer) {
-        if (buffer != null) {
-            buffer.release();
-        }
     }
 
     private void select(final ChannelHandlerContext ctx, ByteBuf clientHello) throws Exception {
@@ -235,7 +214,7 @@ public abstract class SslClientHelloHandler<T> extends ByteToMessageDecoder impl
     /**
      * Kicks off a lookup for the given {@code ClientHello} and returns a {@link Future} which in turn will
      * notify the {@link #onLookupComplete(ChannelHandlerContext, Future)} on completion.
-     *
+     * <p>
      * See https://tools.ietf.org/html/rfc5246#section-7.4.1.2
      *
      * <pre>
@@ -280,8 +259,7 @@ public abstract class SslClientHelloHandler<T> extends ByteToMessageDecoder impl
     }
 
     @Override
-    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress,
-                        ChannelPromise promise) throws Exception {
+    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         ctx.connect(remoteAddress, localAddress, promise);
     }
 

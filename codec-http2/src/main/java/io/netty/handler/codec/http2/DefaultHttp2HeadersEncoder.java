@@ -41,15 +41,12 @@ public class DefaultHttp2HeadersEncoder implements Http2HeadersEncoder, Http2Hea
         this(sensitivityDetector, new HpackEncoder(ignoreMaxHeaderListSize));
     }
 
-    public DefaultHttp2HeadersEncoder(SensitivityDetector sensitivityDetector, boolean ignoreMaxHeaderListSize,
-                                      int dynamicTableArraySizeHint) {
+    public DefaultHttp2HeadersEncoder(SensitivityDetector sensitivityDetector, boolean ignoreMaxHeaderListSize, int dynamicTableArraySizeHint) {
         this(sensitivityDetector, ignoreMaxHeaderListSize, dynamicTableArraySizeHint, HpackEncoder.HUFF_CODE_THRESHOLD);
     }
 
-    public DefaultHttp2HeadersEncoder(SensitivityDetector sensitivityDetector, boolean ignoreMaxHeaderListSize,
-                                      int dynamicTableArraySizeHint, int huffCodeThreshold) {
-        this(sensitivityDetector,
-                new HpackEncoder(ignoreMaxHeaderListSize, dynamicTableArraySizeHint, huffCodeThreshold));
+    public DefaultHttp2HeadersEncoder(SensitivityDetector sensitivityDetector, boolean ignoreMaxHeaderListSize, int dynamicTableArraySizeHint, int huffCodeThreshold) {
+        this(sensitivityDetector, new HpackEncoder(ignoreMaxHeaderListSize, dynamicTableArraySizeHint, huffCodeThreshold));
     }
 
     /**

@@ -27,11 +27,6 @@ public final class UnaryPromiseNotifier<T> implements FutureListener<T> {
         this.promise = ObjectUtil.checkNotNull(promise, "promise");
     }
 
-    @Override
-    public void operationComplete(Future<T> future) throws Exception {
-        cascadeTo(future, promise);
-    }
-
     public static <X> void cascadeTo(Future<X> completedFuture, Promise<? super X> promise) {
         if (completedFuture.isSuccess()) {
             if (!promise.trySuccess(completedFuture.getNow())) {
@@ -43,9 +38,13 @@ public final class UnaryPromiseNotifier<T> implements FutureListener<T> {
             }
         } else {
             if (!promise.tryFailure(completedFuture.cause())) {
-                logger.warn("Failed to mark a promise as failure because it's done already: {}", promise,
-                            completedFuture.cause());
+                logger.warn("Failed to mark a promise as failure because it's done already: {}", promise, completedFuture.cause());
             }
         }
+    }
+
+    @Override
+    public void operationComplete(Future<T> future) throws Exception {
+        cascadeTo(future, promise);
     }
 }

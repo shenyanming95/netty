@@ -27,8 +27,7 @@ import static io.netty.handler.codec.http2.Http2Headers.PseudoHeaderName.hasPseu
 import static io.netty.util.AsciiString.*;
 
 @UnstableApi
-public class DefaultHttp2Headers
-        extends DefaultHeaders<CharSequence, CharSequence, Http2Headers> implements Http2Headers {
+public class DefaultHttp2Headers extends DefaultHeaders<CharSequence, CharSequence, Http2Headers> implements Http2Headers {
     private static final ByteProcessor HTTP2_NAME_VALIDATOR_PROCESSOR = new ByteProcessor() {
         @Override
         public boolean process(byte value) {
@@ -39,8 +38,7 @@ public class DefaultHttp2Headers
         @Override
         public void validateName(CharSequence name) {
             if (name == null || name.length() == 0) {
-                PlatformDependent.throwException(connectionError(PROTOCOL_ERROR,
-                        "empty headers are not allowed [%s]", name));
+                PlatformDependent.throwException(connectionError(PROTOCOL_ERROR, "empty headers are not allowed [%s]", name));
             }
             if (name instanceof AsciiString) {
                 final int index;
@@ -50,20 +48,17 @@ public class DefaultHttp2Headers
                     PlatformDependent.throwException(e);
                     return;
                 } catch (Throwable t) {
-                    PlatformDependent.throwException(connectionError(PROTOCOL_ERROR, t,
-                            "unexpected error. invalid header name [%s]", name));
+                    PlatformDependent.throwException(connectionError(PROTOCOL_ERROR, t, "unexpected error. invalid header name [%s]", name));
                     return;
                 }
 
                 if (index != -1) {
-                    PlatformDependent.throwException(connectionError(PROTOCOL_ERROR,
-                            "invalid header name [%s]", name));
+                    PlatformDependent.throwException(connectionError(PROTOCOL_ERROR, "invalid header name [%s]", name));
                 }
             } else {
                 for (int i = 0; i < name.length(); ++i) {
                     if (isUpperCase(name.charAt(i))) {
-                        PlatformDependent.throwException(connectionError(PROTOCOL_ERROR,
-                                "invalid header name [%s]", name));
+                        PlatformDependent.throwException(connectionError(PROTOCOL_ERROR, "invalid header name [%s]", name));
                     }
                 }
             }
@@ -84,33 +79,30 @@ public class DefaultHttp2Headers
 
     /**
      * Create a new instance.
+     *
      * @param validate {@code true} to validate header names according to
-     * <a href="https://tools.ietf.org/html/rfc7540">rfc7540</a>. {@code false} to not validate header names.
+     *                 <a href="https://tools.ietf.org/html/rfc7540">rfc7540</a>. {@code false} to not validate header names.
      */
     @SuppressWarnings("unchecked")
     public DefaultHttp2Headers(boolean validate) {
         // Case sensitive compare is used because it is cheaper, and header validation can be used to catch invalid
         // headers.
-        super(CASE_SENSITIVE_HASHER,
-              CharSequenceValueConverter.INSTANCE,
-              validate ? HTTP2_NAME_VALIDATOR : NameValidator.NOT_NULL);
+        super(CASE_SENSITIVE_HASHER, CharSequenceValueConverter.INSTANCE, validate ? HTTP2_NAME_VALIDATOR : NameValidator.NOT_NULL);
     }
 
     /**
      * Create a new instance.
-     * @param validate {@code true} to validate header names according to
-     * <a href="https://tools.ietf.org/html/rfc7540">rfc7540</a>. {@code false} to not validate header names.
+     *
+     * @param validate      {@code true} to validate header names according to
+     *                      <a href="https://tools.ietf.org/html/rfc7540">rfc7540</a>. {@code false} to not validate header names.
      * @param arraySizeHint A hint as to how large the hash data structure should be.
-     * The next positive power of two will be used. An upper bound may be enforced.
+     *                      The next positive power of two will be used. An upper bound may be enforced.
      */
     @SuppressWarnings("unchecked")
     public DefaultHttp2Headers(boolean validate, int arraySizeHint) {
         // Case sensitive compare is used because it is cheaper, and header validation can be used to catch invalid
         // headers.
-        super(CASE_SENSITIVE_HASHER,
-              CharSequenceValueConverter.INSTANCE,
-              validate ? HTTP2_NAME_VALIDATOR : NameValidator.NOT_NULL,
-              arraySizeHint);
+        super(CASE_SENSITIVE_HASHER, CharSequenceValueConverter.INSTANCE, validate ? HTTP2_NAME_VALIDATOR : NameValidator.NOT_NULL, arraySizeHint);
     }
 
     @Override
@@ -195,14 +187,12 @@ public class DefaultHttp2Headers
     }
 
     @Override
-    protected final HeaderEntry<CharSequence, CharSequence> newHeaderEntry(int h, CharSequence name, CharSequence value,
-                                                           HeaderEntry<CharSequence, CharSequence> next) {
+    protected final HeaderEntry<CharSequence, CharSequence> newHeaderEntry(int h, CharSequence name, CharSequence value, HeaderEntry<CharSequence, CharSequence> next) {
         return new Http2HeaderEntry(h, name, value, next);
     }
 
     private final class Http2HeaderEntry extends HeaderEntry<CharSequence, CharSequence> {
-        protected Http2HeaderEntry(int hash, CharSequence key, CharSequence value,
-                HeaderEntry<CharSequence, CharSequence> next) {
+        protected Http2HeaderEntry(int hash, CharSequence key, CharSequence value, HeaderEntry<CharSequence, CharSequence> next) {
             super(hash, key);
             this.value = value;
             this.next = next;

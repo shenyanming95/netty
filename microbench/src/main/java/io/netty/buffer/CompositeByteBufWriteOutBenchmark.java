@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.buffer;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
@@ -28,37 +13,41 @@ import static io.netty.buffer.Unpooled.wrappedBuffer;
 @Measurement(iterations = 12, time = 1, timeUnit = TimeUnit.SECONDS)
 public class CompositeByteBufWriteOutBenchmark extends AbstractMicrobenchmark {
 
-    public enum ByteBufType {
-        SMALL_CHUNKS {
-            @Override
-            ByteBuf[] sourceBuffers(int length) {
-                return makeSmallChunks(length);
+    @Param({"64", "1024", "10240", "102400", "1024000"})
+    public int size;
+    @Param
+    public ByteBufType bufferType;
+    private ByteBuf targetBuffer;
+    private ByteBuf[] sourceBufs;
+
+    private static ByteBuf[] makeSmallChunks(int length) {
+
+        List<ByteBuf> buffers = new ArrayList<ByteBuf>(((length + 1) / 48) * 9);
+        for (int i = 0; i < length + 48; i += 48) {
+            for (int j = 4; j <= 12; j++) {
+                buffers.add(wrappedBuffer(new byte[j]));
             }
-        },
-        LARGE_CHUNKS {
-            @Override
-            ByteBuf[] sourceBuffers(int length) {
-                return makeLargeChunks(length);
-            }
-        };
-        abstract ByteBuf[] sourceBuffers(int length);
+        }
+
+        return buffers.toArray(new ByteBuf[0]);
+    }
+
+    private static ByteBuf[] makeLargeChunks(int length) {
+
+        List<ByteBuf> buffers = new ArrayList<ByteBuf>((length + 1) / 768);
+        for (int i = 0; i < length + 1536; i += 1536) {
+            buffers.add(wrappedBuffer(new byte[512]));
+            buffers.add(wrappedBuffer(new byte[1024]));
+        }
+
+        return buffers.toArray(new ByteBuf[0]);
     }
 
     @Override
     protected String[] jvmArgs() {
         // Ensure we minimize the GC overhead by sizing the heap big enough.
-        return new String[] { "-XX:MaxDirectMemorySize=2g", "-Xmx4g", "-Xms4g", "-Xmn3g" };
+        return new String[]{"-XX:MaxDirectMemorySize=2g", "-Xmx4g", "-Xms4g", "-Xmn3g"};
     }
-
-    @Param({ "64", "1024", "10240", "102400", "1024000" })
-    public int size;
-
-    @Param
-    public ByteBufType bufferType;
-
-    private ByteBuf targetBuffer;
-
-    private ByteBuf[] sourceBufs;
 
     @Setup
     public void setup() {
@@ -83,26 +72,19 @@ public class CompositeByteBufWriteOutBenchmark extends AbstractMicrobenchmark {
         return targetBuffer.clear().writeBytes(cbb).readableBytes();
     }
 
-    private static ByteBuf[] makeSmallChunks(int length) {
-
-        List<ByteBuf> buffers = new ArrayList<ByteBuf>(((length + 1) / 48) * 9);
-        for (int i = 0; i < length + 48; i += 48) {
-            for (int j = 4; j <= 12; j++) {
-                buffers.add(wrappedBuffer(new byte[j]));
+    public enum ByteBufType {
+        SMALL_CHUNKS {
+            @Override
+            ByteBuf[] sourceBuffers(int length) {
+                return makeSmallChunks(length);
             }
-        }
+        }, LARGE_CHUNKS {
+            @Override
+            ByteBuf[] sourceBuffers(int length) {
+                return makeLargeChunks(length);
+            }
+        };
 
-        return buffers.toArray(new ByteBuf[0]);
-    }
-
-    private static ByteBuf[] makeLargeChunks(int length) {
-
-        List<ByteBuf> buffers = new ArrayList<ByteBuf>((length + 1) / 768);
-        for (int i = 0; i < length + 1536; i += 1536) {
-            buffers.add(wrappedBuffer(new byte[512]));
-            buffers.add(wrappedBuffer(new byte[1024]));
-        }
-
-        return buffers.toArray(new ByteBuf[0]);
+        abstract ByteBuf[] sourceBuffers(int length);
     }
 }

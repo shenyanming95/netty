@@ -38,7 +38,7 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  * {@link ChannelPipeline} pipeline = ...;
  * pipeline.addLast("udpEncoder", new {@link DatagramPacketEncoder}(new {@link ProtobufEncoder}(...));
  * </code></pre>
- *
+ * <p>
  * Note: As UDP packets are out-of-order, you should make sure the encoded message size are not greater than
  * the max safe packet size in your particular network path which guarantees no packet fragmentation.
  *
@@ -61,32 +61,26 @@ public class DatagramPacketEncoder<M> extends MessageToMessageEncoder<AddressedE
     @Override
     public boolean acceptOutboundMessage(Object msg) throws Exception {
         if (super.acceptOutboundMessage(msg)) {
-            @SuppressWarnings("rawtypes")
-            AddressedEnvelope envelope = (AddressedEnvelope) msg;
-            return encoder.acceptOutboundMessage(envelope.content())
-                    && (envelope.sender() instanceof InetSocketAddress || envelope.sender() == null)
-                    && envelope.recipient() instanceof InetSocketAddress;
+            @SuppressWarnings("rawtypes") AddressedEnvelope envelope = (AddressedEnvelope) msg;
+            return encoder.acceptOutboundMessage(envelope.content()) && (envelope.sender() instanceof InetSocketAddress || envelope.sender() == null) && envelope.recipient() instanceof InetSocketAddress;
         }
         return false;
     }
 
     @Override
-    protected void encode(
-            ChannelHandlerContext ctx, AddressedEnvelope<M, InetSocketAddress> msg, List<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, AddressedEnvelope<M, InetSocketAddress> msg, List<Object> out) throws Exception {
         assert out.isEmpty();
 
         encoder.encode(ctx, msg.content(), out);
         if (out.size() != 1) {
-            throw new EncoderException(
-                    StringUtil.simpleClassName(encoder) + " must produce only one message.");
+            throw new EncoderException(StringUtil.simpleClassName(encoder) + " must produce only one message.");
         }
         Object content = out.get(0);
         if (content instanceof ByteBuf) {
             // Replace the ByteBuf with a DatagramPacket.
             out.set(0, new DatagramPacket((ByteBuf) content, msg.recipient(), msg.sender()));
         } else {
-            throw new EncoderException(
-                    StringUtil.simpleClassName(encoder) + " must produce only ByteBuf.");
+            throw new EncoderException(StringUtil.simpleClassName(encoder) + " must produce only ByteBuf.");
         }
     }
 
@@ -96,9 +90,7 @@ public class DatagramPacketEncoder<M> extends MessageToMessageEncoder<AddressedE
     }
 
     @Override
-    public void connect(
-            ChannelHandlerContext ctx, SocketAddress remoteAddress,
-            SocketAddress localAddress, ChannelPromise promise) throws Exception {
+    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         encoder.connect(ctx, remoteAddress, localAddress, promise);
     }
 

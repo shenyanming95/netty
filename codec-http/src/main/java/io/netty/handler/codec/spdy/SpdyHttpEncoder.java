@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.spdy;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -32,7 +17,7 @@ import java.util.Map.Entry;
  * into {@link SpdySynStreamFrame}s and {@link SpdySynReplyFrame}s.
  *
  * <h3>Request Annotations</h3>
- *
+ * <p>
  * SPDY specific headers must be added to {@link HttpRequest}s:
  * <table border=1>
  * <tr>
@@ -53,7 +38,7 @@ import java.util.Map.Entry;
  * </table>
  *
  * <h3>Response Annotations</h3>
- *
+ * <p>
  * SPDY specific headers must be added to {@link HttpResponse}s:
  * <table border=1>
  * <tr>
@@ -66,7 +51,7 @@ import java.util.Map.Entry;
  * </table>
  *
  * <h3>Pushed Resource Annotations</h3>
- *
+ * <p>
  * SPDY specific headers must be added to pushed {@link HttpRequest}s:
  * <table border=1>
  * <tr>
@@ -91,33 +76,32 @@ import java.util.Map.Entry;
  * </table>
  *
  * <h3>Required Annotations</h3>
- *
+ * <p>
  * SPDY requires that all Requests and Pushed Resources contain
  * an HTTP "Host" header.
  *
  * <h3>Optional Annotations</h3>
- *
+ * <p>
  * Requests and Pushed Resources must contain a SPDY scheme header.
  * This can be set via the {@code "X-SPDY-Scheme"} header but otherwise
  * defaults to "https" as that is the most common SPDY deployment.
  *
  * <h3>Chunked Content</h3>
- *
+ * <p>
  * This encoder associates all {@link HttpContent}s that it receives
  * with the most recently received 'chunked' {@link HttpRequest}
  * or {@link HttpResponse}.
  *
  * <h3>Pushed Resources</h3>
- *
+ * <p>
  * All pushed resources should be sent before sending the response
  * that corresponds to the initial request.
  */
 public class SpdyHttpEncoder extends MessageToMessageEncoder<HttpObject> {
 
-    private int currentStreamId;
-
     private final boolean validateHeaders;
     private final boolean headersToLowerCase;
+    private int currentStreamId;
 
     /**
      * Creates a new instance.
@@ -140,6 +124,23 @@ public class SpdyHttpEncoder extends MessageToMessageEncoder<HttpObject> {
         ObjectUtil.checkNotNull(version, "version");
         this.headersToLowerCase = headersToLowerCase;
         this.validateHeaders = validateHeaders;
+    }
+
+    /**
+     * Checks if the given HTTP message should be considered as a last SPDY frame.
+     *
+     * @param httpMessage check this HTTP message
+     * @return whether the given HTTP message should generate a <em>last</em> SPDY frame.
+     */
+    private static boolean isLast(HttpMessage httpMessage) {
+        if (httpMessage instanceof FullHttpMessage) {
+            FullHttpMessage fullMessage = (FullHttpMessage) httpMessage;
+            if (fullMessage.trailingHeaders().isEmpty() && !fullMessage.content().isReadable()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -185,8 +186,7 @@ public class SpdyHttpEncoder extends MessageToMessageEncoder<HttpObject> {
                     Iterator<Entry<CharSequence, CharSequence>> itr = trailers.iteratorCharSequence();
                     while (itr.hasNext()) {
                         Map.Entry<CharSequence, CharSequence> entry = itr.next();
-                        final CharSequence headerName =
-                                headersToLowerCase ? AsciiString.of(entry.getKey()).toLowerCase() : entry.getKey();
+                        final CharSequence headerName = headersToLowerCase ? AsciiString.of(entry.getKey()).toLowerCase() : entry.getKey();
                         spdyHeadersFrame.headers().add(headerName, entry.getValue());
                     }
 
@@ -226,8 +226,7 @@ public class SpdyHttpEncoder extends MessageToMessageEncoder<HttpObject> {
         httpHeaders.remove("Proxy-Connection");
         httpHeaders.remove(HttpHeaderNames.TRANSFER_ENCODING);
 
-        SpdySynStreamFrame spdySynStreamFrame =
-                new DefaultSpdySynStreamFrame(streamId, associatedToStreamId, priority, validateHeaders);
+        SpdySynStreamFrame spdySynStreamFrame = new DefaultSpdySynStreamFrame(streamId, associatedToStreamId, priority, validateHeaders);
 
         // Unfold the first line of the message into name/value pairs
         SpdyHeaders frameHeaders = spdySynStreamFrame.headers();
@@ -250,8 +249,7 @@ public class SpdyHttpEncoder extends MessageToMessageEncoder<HttpObject> {
         Iterator<Entry<CharSequence, CharSequence>> itr = httpHeaders.iteratorCharSequence();
         while (itr.hasNext()) {
             Map.Entry<CharSequence, CharSequence> entry = itr.next();
-            final CharSequence headerName =
-                    headersToLowerCase ? AsciiString.of(entry.getKey()).toLowerCase() : entry.getKey();
+            final CharSequence headerName = headersToLowerCase ? AsciiString.of(entry.getKey()).toLowerCase() : entry.getKey();
             frameHeaders.add(headerName, entry.getValue());
         }
         currentStreamId = spdySynStreamFrame.streamId();
@@ -293,8 +291,7 @@ public class SpdyHttpEncoder extends MessageToMessageEncoder<HttpObject> {
         Iterator<Entry<CharSequence, CharSequence>> itr = httpHeaders.iteratorCharSequence();
         while (itr.hasNext()) {
             Map.Entry<CharSequence, CharSequence> entry = itr.next();
-            final CharSequence headerName =
-                    headersToLowerCase ? AsciiString.of(entry.getKey()).toLowerCase() : entry.getKey();
+            final CharSequence headerName = headersToLowerCase ? AsciiString.of(entry.getKey()).toLowerCase() : entry.getKey();
             spdyHeadersFrame.headers().add(headerName, entry.getValue());
         }
 
@@ -302,22 +299,5 @@ public class SpdyHttpEncoder extends MessageToMessageEncoder<HttpObject> {
         spdyHeadersFrame.setLast(isLast(httpResponse));
 
         return spdyHeadersFrame;
-    }
-
-    /**
-     * Checks if the given HTTP message should be considered as a last SPDY frame.
-     *
-     * @param httpMessage check this HTTP message
-     * @return whether the given HTTP message should generate a <em>last</em> SPDY frame.
-     */
-    private static boolean isLast(HttpMessage httpMessage) {
-        if (httpMessage instanceof FullHttpMessage) {
-            FullHttpMessage fullMessage = (FullHttpMessage) httpMessage;
-            if (fullMessage.trailingHeaders().isEmpty() && !fullMessage.content().isReadable()) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

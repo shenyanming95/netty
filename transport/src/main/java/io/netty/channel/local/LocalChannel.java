@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.local;
 
 import io.netty.channel.*;
@@ -38,17 +23,13 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  */
 public class LocalChannel extends AbstractChannel {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(LocalChannel.class);
-    @SuppressWarnings({ "rawtypes" })
-    private static final AtomicReferenceFieldUpdater<LocalChannel, Future> FINISH_READ_FUTURE_UPDATER =
-            AtomicReferenceFieldUpdater.newUpdater(LocalChannel.class, Future.class, "finishReadFuture");
+    @SuppressWarnings({"rawtypes"})
+    private static final AtomicReferenceFieldUpdater<LocalChannel, Future> FINISH_READ_FUTURE_UPDATER = AtomicReferenceFieldUpdater.newUpdater(LocalChannel.class, Future.class, "finishReadFuture");
     private static final ChannelMetadata METADATA = new ChannelMetadata(false);
     private static final int MAX_READER_STACK_DEPTH = 8;
-
-    private enum State { OPEN, BOUND, CONNECTED, CLOSED }
-
-    private final ChannelConfig config = new DefaultChannelConfig(this);
     // To further optimize this we could write our own SPSC queue.
     final Queue<Object> inboundBuffer = PlatformDependent.newSpscQueue();
+    private final ChannelConfig config = new DefaultChannelConfig(this);
     private final Runnable readTask = new Runnable() {
         @Override
         public void run() {
@@ -58,14 +39,12 @@ public class LocalChannel extends AbstractChannel {
             }
         }
     };
-
     private final Runnable shutdownHook = new Runnable() {
         @Override
         public void run() {
             unsafe().close(unsafe().voidPromise());
         }
     };
-
     private volatile State state;
     private volatile LocalChannel peer;
     private volatile LocalAddress localAddress;
@@ -181,9 +160,7 @@ public class LocalChannel extends AbstractChannel {
 
     @Override
     protected void doBind(SocketAddress localAddress) throws Exception {
-        this.localAddress =
-                LocalChannelRegistry.register(this, this.localAddress,
-                        localAddress);
+        this.localAddress = LocalChannelRegistry.register(this, this.localAddress, localAddress);
         state = State.BOUND;
     }
 
@@ -238,8 +215,7 @@ public class LocalChannel extends AbstractChannel {
                         }
                     });
                 } catch (Throwable cause) {
-                    logger.warn("Releasing Inbound Queues for channels {}-{} because exception occurred!",
-                            this, peer, cause);
+                    logger.warn("Releasing Inbound Queues for channels {}-{} because exception occurred!", this, peer, cause);
                     if (peerEventLoop.inEventLoop()) {
                         peer.releaseInboundBuffers();
                     } else {
@@ -327,13 +303,13 @@ public class LocalChannel extends AbstractChannel {
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
         switch (state) {
-        case OPEN:
-        case BOUND:
-            throw new NotYetConnectedException();
-        case CLOSED:
-            throw new ClosedChannelException();
-        case CONNECTED:
-            break;
+            case OPEN:
+            case BOUND:
+                throw new NotYetConnectedException();
+            case CLOSED:
+                throw new ClosedChannelException();
+            case CONNECTED:
+                break;
         }
 
         final LocalChannel peer = this.peer;
@@ -341,7 +317,7 @@ public class LocalChannel extends AbstractChannel {
         writeInProgress = true;
         try {
             ClosedChannelException exception = null;
-            for (;;) {
+            for (; ; ) {
                 Object msg = in.current();
                 if (msg == null) {
                     break;
@@ -435,11 +411,12 @@ public class LocalChannel extends AbstractChannel {
         }
     }
 
+    private enum State {OPEN, BOUND, CONNECTED, CLOSED}
+
     private class LocalUnsafe extends AbstractUnsafe {
 
         @Override
-        public void connect(final SocketAddress remoteAddress,
-                SocketAddress localAddress, final ChannelPromise promise) {
+        public void connect(final SocketAddress remoteAddress, SocketAddress localAddress, final ChannelPromise promise) {
             if (!promise.setUncancellable() || !ensureOpen(promise)) {
                 return;
             }

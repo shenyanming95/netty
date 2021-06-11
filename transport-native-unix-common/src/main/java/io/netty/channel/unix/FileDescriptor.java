@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.unix;
 
 
@@ -34,26 +19,89 @@ import static java.lang.Math.min;
  */
 public class FileDescriptor {
 
-    private static final AtomicIntegerFieldUpdater<FileDescriptor> stateUpdater =
-            AtomicIntegerFieldUpdater.newUpdater(FileDescriptor.class, "state");
+    private static final AtomicIntegerFieldUpdater<FileDescriptor> stateUpdater = AtomicIntegerFieldUpdater.newUpdater(FileDescriptor.class, "state");
 
     private static final int STATE_CLOSED_MASK = 1;
     private static final int STATE_INPUT_SHUTDOWN_MASK = 1 << 1;
     private static final int STATE_OUTPUT_SHUTDOWN_MASK = 1 << 2;
-    private static final int STATE_ALL_MASK = STATE_CLOSED_MASK |
-                                              STATE_INPUT_SHUTDOWN_MASK |
-                                              STATE_OUTPUT_SHUTDOWN_MASK;
-
+    private static final int STATE_ALL_MASK = STATE_CLOSED_MASK | STATE_INPUT_SHUTDOWN_MASK | STATE_OUTPUT_SHUTDOWN_MASK;
+    final int fd;
     /**
      * Bit map = [Output Shutdown | Input Shutdown | Closed]
      */
     volatile int state;
-    final int fd;
 
     public FileDescriptor(int fd) {
         checkPositiveOrZero(fd, "fd");
         this.fd = fd;
     }
+
+    /**
+     * Open a new {@link FileDescriptor} for the given path.
+     */
+    public static FileDescriptor from(String path) throws IOException {
+        int res = open(checkNotNull(path, "path"));
+        if (res < 0) {
+            throw newIOException("open", res);
+        }
+        return new FileDescriptor(res);
+    }
+
+    /**
+     * Open a new {@link FileDescriptor} for the given {@link File}.
+     */
+    public static FileDescriptor from(File file) throws IOException {
+        return from(checkNotNull(file, "file").getPath());
+    }
+
+    /**
+     * @return [0] = read end, [1] = write end
+     */
+    public static FileDescriptor[] pipe() throws IOException {
+        long res = newPipe();
+        if (res < 0) {
+            throw newIOException("newPipe", (int) res);
+        }
+        return new FileDescriptor[]{new FileDescriptor((int) (res >>> 32)), new FileDescriptor((int) res)};
+    }
+
+    static boolean isClosed(int state) {
+        return (state & STATE_CLOSED_MASK) != 0;
+    }
+
+    static boolean isInputShutdown(int state) {
+        return (state & STATE_INPUT_SHUTDOWN_MASK) != 0;
+    }
+
+    static boolean isOutputShutdown(int state) {
+        return (state & STATE_OUTPUT_SHUTDOWN_MASK) != 0;
+    }
+
+    static int inputShutdown(int state) {
+        return state | STATE_INPUT_SHUTDOWN_MASK;
+    }
+
+    static int outputShutdown(int state) {
+        return state | STATE_OUTPUT_SHUTDOWN_MASK;
+    }
+
+    private static native int open(String path);
+
+    private static native int close(int fd);
+
+    private static native int write(int fd, ByteBuffer buf, int pos, int limit);
+
+    private static native int writeAddress(int fd, long address, int pos, int limit);
+
+    private static native long writev(int fd, ByteBuffer[] buffers, int offset, int length, long maxBytesToWrite);
+
+    private static native long writevAddresses(int fd, long memoryAddress, int length);
+
+    private static native int read(int fd, ByteBuffer buf, int pos, int limit);
+
+    private static native int readAddress(int fd, long address, int pos, int limit);
+
+    private static native long newPipe();
 
     /**
      * Return the int value of the filedescriptor.
@@ -66,7 +114,7 @@ public class FileDescriptor {
      * Close the file descriptor.
      */
     public void close() throws IOException {
-        for (;;) {
+        for (; ; ) {
             int state = this.state;
             if (isClosed(state)) {
                 return;
@@ -145,9 +193,7 @@ public class FileDescriptor {
 
     @Override
     public String toString() {
-        return "FileDescriptor{" +
-                "fd=" + fd +
-                '}';
+        return "FileDescriptor{" + "fd=" + fd + '}';
     }
 
     @Override
@@ -167,69 +213,7 @@ public class FileDescriptor {
         return fd;
     }
 
-    /**
-     * Open a new {@link FileDescriptor} for the given path.
-     */
-    public static FileDescriptor from(String path) throws IOException {
-        int res = open(checkNotNull(path, "path"));
-        if (res < 0) {
-            throw newIOException("open", res);
-        }
-        return new FileDescriptor(res);
-    }
-
-    /**
-     * Open a new {@link FileDescriptor} for the given {@link File}.
-     */
-    public static FileDescriptor from(File file) throws IOException {
-        return from(checkNotNull(file, "file").getPath());
-    }
-
-    /**
-     * @return [0] = read end, [1] = write end
-     */
-    public static FileDescriptor[] pipe() throws IOException {
-        long res = newPipe();
-        if (res < 0) {
-            throw newIOException("newPipe", (int) res);
-        }
-        return new FileDescriptor[]{new FileDescriptor((int) (res >>> 32)), new FileDescriptor((int) res)};
-    }
-
     final boolean casState(int expected, int update) {
         return stateUpdater.compareAndSet(this, expected, update);
     }
-
-    static boolean isClosed(int state) {
-        return (state & STATE_CLOSED_MASK) != 0;
-    }
-
-    static boolean isInputShutdown(int state) {
-        return (state & STATE_INPUT_SHUTDOWN_MASK) != 0;
-    }
-
-    static boolean isOutputShutdown(int state) {
-        return (state & STATE_OUTPUT_SHUTDOWN_MASK) != 0;
-    }
-
-    static int inputShutdown(int state) {
-        return state | STATE_INPUT_SHUTDOWN_MASK;
-    }
-
-    static int outputShutdown(int state) {
-        return state | STATE_OUTPUT_SHUTDOWN_MASK;
-    }
-
-    private static native int open(String path);
-    private static native int close(int fd);
-
-    private static native int write(int fd, ByteBuffer buf, int pos, int limit);
-    private static native int writeAddress(int fd, long address, int pos, int limit);
-    private static native long writev(int fd, ByteBuffer[] buffers, int offset, int length, long maxBytesToWrite);
-    private static native long writevAddresses(int fd, long memoryAddress, int length);
-
-    private static native int read(int fd, ByteBuffer buf, int pos, int limit);
-    private static native int readAddress(int fd, long address, int pos, int limit);
-
-    private static native long newPipe();
 }

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.socksx.v4;
 
 import io.netty.handler.codec.DecoderResult;
@@ -34,7 +19,7 @@ public class DefaultSocks4CommandRequest extends AbstractSocks4Message implement
     /**
      * Creates a new instance.
      *
-     * @param type the type of the request
+     * @param type    the type of the request
      * @param dstAddr the {@code DSTIP} field of the request
      * @param dstPort the {@code DSTPORT} field of the request
      */
@@ -45,18 +30,17 @@ public class DefaultSocks4CommandRequest extends AbstractSocks4Message implement
     /**
      * Creates a new instance.
      *
-     * @param type the type of the request
+     * @param type    the type of the request
      * @param dstAddr the {@code DSTIP} field of the request
      * @param dstPort the {@code DSTPORT} field of the request
-     * @param userId the {@code USERID} field of the request
+     * @param userId  the {@code USERID} field of the request
      */
     public DefaultSocks4CommandRequest(Socks4CommandType type, String dstAddr, int dstPort, String userId) {
         if (dstPort <= 0 || dstPort >= 65536) {
             throw new IllegalArgumentException("dstPort: " + dstPort + " (expected: 1~65535)");
         }
         this.type = ObjectUtil.checkNotNull(type, "type");
-        this.dstAddr = IDN.toASCII(
-                ObjectUtil.checkNotNull(dstAddr, "dstAddr"));
+        this.dstAddr = IDN.toASCII(ObjectUtil.checkNotNull(dstAddr, "dstAddr"));
         this.userId = ObjectUtil.checkNotNull(userId, "userId");
         this.dstPort = dstPort;
     }

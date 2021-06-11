@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.resolver;
 
 import io.netty.util.NetUtil;
@@ -42,6 +27,12 @@ public final class HostsFileParser {
     private static final Pattern WHITESPACES = Pattern.compile("[ \t]+");
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(HostsFileParser.class);
+
+    /**
+     * Can't be instantiated.
+     */
+    private HostsFileParser() {
+    }
 
     private static File locateHostsFile() {
         File hostsFile;
@@ -108,7 +99,7 @@ public final class HostsFileParser {
     /**
      * Parse a hosts file.
      *
-     * @param file the file to be parsed
+     * @param file     the file to be parsed
      * @param charsets the {@link Charset}s to try as file encodings when parsing.
      * @return a {@link HostsFileEntries}
      * @throws IOException file could not be read
@@ -117,9 +108,8 @@ public final class HostsFileParser {
         checkNotNull(file, "file");
         checkNotNull(charsets, "charsets");
         if (file.exists() && file.isFile()) {
-            for (Charset charset: charsets) {
-                HostsFileEntries entries = parse(new BufferedReader(new InputStreamReader(
-                        new FileInputStream(file), charset)));
+            for (Charset charset : charsets) {
+                HostsFileEntries entries = parse(new BufferedReader(new InputStreamReader(new FileInputStream(file), charset)));
                 if (entries != HostsFileEntries.EMPTY) {
                     return entries;
                 }
@@ -156,7 +146,7 @@ public final class HostsFileParser {
 
                 // split
                 List<String> lineParts = new ArrayList<String>();
-                for (String s: WHITESPACES.split(line)) {
+                for (String s : WHITESPACES.split(line)) {
                     if (!s.isEmpty()) {
                         lineParts.add(s);
                     }
@@ -176,7 +166,7 @@ public final class HostsFileParser {
                 }
 
                 // loop over hostname and aliases
-                for (int i = 1; i < lineParts.size(); i ++) {
+                for (int i = 1; i < lineParts.size(); i++) {
                     String hostname = lineParts.get(i);
                     String hostnameLower = hostname.toLowerCase(Locale.ENGLISH);
                     InetAddress address = InetAddress.getByAddress(hostname, ipBytes);
@@ -195,9 +185,7 @@ public final class HostsFileParser {
                     }
                 }
             }
-            return ipv4Entries.isEmpty() && ipv6Entries.isEmpty() ?
-                    HostsFileEntries.EMPTY :
-                    new HostsFileEntries(ipv4Entries, ipv6Entries);
+            return ipv4Entries.isEmpty() && ipv6Entries.isEmpty() ? HostsFileEntries.EMPTY : new HostsFileEntries(ipv4Entries, ipv6Entries);
         } finally {
             try {
                 buff.close();
@@ -205,11 +193,5 @@ public final class HostsFileParser {
                 logger.warn("Failed to close a reader", e);
             }
         }
-    }
-
-    /**
-     * Can't be instantiated.
-     */
-    private HostsFileParser() {
     }
 }

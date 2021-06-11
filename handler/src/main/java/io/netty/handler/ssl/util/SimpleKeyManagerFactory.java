@@ -42,16 +42,15 @@ public abstract class SimpleKeyManagerFactory extends KeyManagerFactory {
      * to delegate its callbacks back to {@link SimpleKeyManagerFactory}.  However, it is impossible to do so,
      * because {@link KeyManagerFactory} requires {@link KeyManagerFactorySpi} at construction time and
      * does not provide a way to access it later.
-     *
+     * <p>
      * To work around this issue, we use an ugly hack which uses a {@link FastThreadLocal }.
      */
-    private static final FastThreadLocal<SimpleKeyManagerFactorySpi> CURRENT_SPI =
-            new FastThreadLocal<SimpleKeyManagerFactorySpi>() {
-                @Override
-                protected SimpleKeyManagerFactorySpi initialValue() {
-                    return new SimpleKeyManagerFactorySpi();
-                }
-            };
+    private static final FastThreadLocal<SimpleKeyManagerFactorySpi> CURRENT_SPI = new FastThreadLocal<SimpleKeyManagerFactorySpi>() {
+        @Override
+        protected SimpleKeyManagerFactorySpi initialValue() {
+            return new SimpleKeyManagerFactorySpi();
+        }
+    };
 
     /**
      * Creates a new instance.
@@ -97,6 +96,16 @@ public abstract class SimpleKeyManagerFactory extends KeyManagerFactory {
         private SimpleKeyManagerFactory parent;
         private volatile KeyManager[] keyManagers;
 
+        @SuppressJava6Requirement(reason = "Usage guarded by java version check")
+        private static void wrapIfNeeded(KeyManager[] keyManagers) {
+            for (int i = 0; i < keyManagers.length; i++) {
+                final KeyManager tm = keyManagers[i];
+                if (tm instanceof X509KeyManager && !(tm instanceof X509ExtendedKeyManager)) {
+                    keyManagers[i] = new X509KeyManagerWrapper((X509KeyManager) tm);
+                }
+            }
+        }
+
         void init(SimpleKeyManagerFactory parent) {
             this.parent = parent;
         }
@@ -113,8 +122,7 @@ public abstract class SimpleKeyManagerFactory extends KeyManagerFactory {
         }
 
         @Override
-        protected void engineInit(
-                ManagerFactoryParameters managerFactoryParameters) throws InvalidAlgorithmParameterException {
+        protected void engineInit(ManagerFactoryParameters managerFactoryParameters) throws InvalidAlgorithmParameterException {
             try {
                 parent.engineInit(managerFactoryParameters);
             } catch (InvalidAlgorithmParameterException e) {
@@ -135,16 +143,6 @@ public abstract class SimpleKeyManagerFactory extends KeyManagerFactory {
                 this.keyManagers = keyManagers;
             }
             return keyManagers.clone();
-        }
-
-        @SuppressJava6Requirement(reason = "Usage guarded by java version check")
-        private static void wrapIfNeeded(KeyManager[] keyManagers) {
-            for (int i = 0; i < keyManagers.length; i++) {
-                final KeyManager tm = keyManagers[i];
-                if (tm instanceof X509KeyManager && !(tm instanceof X509ExtendedKeyManager)) {
-                    keyManagers[i] = new X509KeyManagerWrapper((X509KeyManager) tm);
-                }
-            }
         }
     }
 }

@@ -66,10 +66,7 @@ public class OcspServerExample {
         }
 
         // Step 3: Construct the OCSP request
-        OCSPReq request = new OcspRequestBuilder()
-                .certificate(certificate)
-                .issuer(issuer)
-                .build();
+        OCSPReq request = new OcspRequestBuilder().certificate(certificate).issuer(issuer).build();
 
         // Step 4: Do the request to the CA's OCSP responder
         OCSPResp response = OcspUtils.request(uri, request, 5L, TimeUnit.SECONDS);
@@ -111,15 +108,10 @@ public class OcspServerExample {
             throw new IllegalStateException("Because we don't have a PrivateKey we can't continue past this point.");
         }
 
-        ReferenceCountedOpenSslContext context
-            = (ReferenceCountedOpenSslContext) SslContextBuilder.forServer(privateKey, keyCertChain)
-                .sslProvider(SslProvider.OPENSSL)
-                .enableOcsp(true)
-                .build();
+        ReferenceCountedOpenSslContext context = (ReferenceCountedOpenSslContext) SslContextBuilder.forServer(privateKey, keyCertChain).sslProvider(SslProvider.OPENSSL).enableOcsp(true).build();
 
         try {
-            ServerBootstrap bootstrap = new ServerBootstrap()
-                    .childHandler(newServerHandler(context, response));
+            ServerBootstrap bootstrap = new ServerBootstrap().childHandler(newServerHandler(context, response));
 
             // so on and so forth...
         } finally {
@@ -127,16 +119,14 @@ public class OcspServerExample {
         }
     }
 
-    private static ChannelInitializer<Channel> newServerHandler(final ReferenceCountedOpenSslContext context,
-            final OCSPResp response) {
+    private static ChannelInitializer<Channel> newServerHandler(final ReferenceCountedOpenSslContext context, final OCSPResp response) {
         return new ChannelInitializer<Channel>() {
             @Override
             protected void initChannel(Channel ch) throws Exception {
                 SslHandler sslHandler = context.newHandler(ch.alloc());
 
                 if (response != null) {
-                    ReferenceCountedOpenSslEngine engine
-                        = (ReferenceCountedOpenSslEngine) sslHandler.engine();
+                    ReferenceCountedOpenSslEngine engine = (ReferenceCountedOpenSslEngine) sslHandler.engine();
 
                     engine.setOcspResponse(response.getEncoded());
                 }
@@ -169,23 +159,22 @@ public class OcspServerExample {
 
     private static X509Certificate[] parseCertificates(Reader reader) throws Exception {
 
-        JcaX509CertificateConverter converter = new JcaX509CertificateConverter()
-                .setProvider(new BouncyCastleProvider());
+        JcaX509CertificateConverter converter = new JcaX509CertificateConverter().setProvider(new BouncyCastleProvider());
 
         List<X509Certificate> dst = new ArrayList<X509Certificate>();
 
         PEMParser parser = new PEMParser(reader);
         try {
-          X509CertificateHolder holder = null;
+            X509CertificateHolder holder = null;
 
-          while ((holder = (X509CertificateHolder) parser.readObject()) != null) {
-            X509Certificate certificate = converter.getCertificate(holder);
-            if (certificate == null) {
-              continue;
+            while ((holder = (X509CertificateHolder) parser.readObject()) != null) {
+                X509Certificate certificate = converter.getCertificate(holder);
+                if (certificate == null) {
+                    continue;
+                }
+
+                dst.add(certificate);
             }
-
-            dst.add(certificate);
-          }
         } finally {
             parser.close();
         }

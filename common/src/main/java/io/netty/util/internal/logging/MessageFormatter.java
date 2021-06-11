@@ -1,22 +1,7 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 /**
  * Copyright (c) 2004-2011 QOS.ch
  * All rights reserved.
- *
+ * <p>
  * Permission is hereby granted, free  of charge, to any person obtaining
  * a  copy  of this  software  and  associated  documentation files  (the
  * "Software"), to  deal in  the Software without  restriction, including
@@ -24,10 +9,10 @@
  * distribute,  sublicense, and/or sell  copies of  the Software,  and to
  * permit persons to whom the Software  is furnished to do so, subject to
  * the following conditions:
- *
+ * <p>
  * The  above  copyright  notice  and  this permission  notice  shall  be
  * included in all copies or substantial portions of the Software.
- *
+ * <p>
  * THE  SOFTWARE IS  PROVIDED  "AS  IS", WITHOUT  WARRANTY  OF ANY  KIND,
  * EXPRESS OR  IMPLIED, INCLUDING  BUT NOT LIMITED  TO THE  WARRANTIES OF
  * MERCHANTABILITY,    FITNESS    FOR    A   PARTICULAR    PURPOSE    AND
@@ -35,7 +20,6 @@
  * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  * OF CONTRACT, TORT OR OTHERWISE,  ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 package io.netty.util.internal.logging;
 
@@ -112,6 +96,9 @@ final class MessageFormatter {
     private static final String DELIM_STR = "{}";
     private static final char ESCAPE_CHAR = '\\';
 
+    private MessageFormatter() {
+    }
+
     /**
      * Performs single argument substitution for the 'messagePattern' passed as
      * parameter.
@@ -152,8 +139,7 @@ final class MessageFormatter {
      *                       anchor
      * @return The formatted message
      */
-    static FormattingTuple format(final String messagePattern,
-                                  Object argA, Object argB) {
+    static FormattingTuple format(final String messagePattern, Object argA, Object argB) {
         return arrayFormat(messagePattern, new Object[]{argA, argB});
     }
 
@@ -167,15 +153,14 @@ final class MessageFormatter {
      *                       anchors
      * @return The formatted message
      */
-    static FormattingTuple arrayFormat(final String messagePattern,
-                                       final Object[] argArray) {
+    static FormattingTuple arrayFormat(final String messagePattern, final Object[] argArray) {
         if (argArray == null || argArray.length == 0) {
             return new FormattingTuple(messagePattern, null);
         }
 
         int lastArrIdx = argArray.length - 1;
         Object lastEntry = argArray[lastArrIdx];
-        Throwable throwable = lastEntry instanceof Throwable? (Throwable) lastEntry : null;
+        Throwable throwable = lastEntry instanceof Throwable ? (Throwable) lastEntry : null;
 
         if (messagePattern == null) {
             return new FormattingTuple(null, throwable);
@@ -216,12 +201,11 @@ final class MessageFormatter {
 
         // append the characters following the last {} pair.
         sbuf.append(messagePattern, i, messagePattern.length());
-        return new FormattingTuple(sbuf.toString(), L <= lastArrIdx? throwable : null);
+        return new FormattingTuple(sbuf.toString(), L <= lastArrIdx ? throwable : null);
     }
 
     // special treatment of array values was suggested by 'lizongbo'
-    private static void deeplyAppendParameter(StringBuilder sbuf, Object o,
-                                              Set<Object[]> seenSet) {
+    private static void deeplyAppendParameter(StringBuilder sbuf, Object o, Set<Object[]> seenSet) {
         if (o == null) {
             sbuf.append("null");
             return;
@@ -276,9 +260,7 @@ final class MessageFormatter {
             String oAsString = o.toString();
             sbuf.append(oAsString);
         } catch (Throwable t) {
-            System.err
-                    .println("SLF4J: Failed toString() invocation on an object of type ["
-                            + o.getClass().getName() + ']');
+            System.err.println("SLF4J: Failed toString() invocation on an object of type [" + o.getClass().getName() + ']');
             t.printStackTrace();
             sbuf.append("[FAILED toString()]");
         }
@@ -390,8 +372,5 @@ final class MessageFormatter {
             sbuf.append(", ");
             sbuf.append(a[i]);
         }
-    }
-
-    private MessageFormatter() {
     }
 }

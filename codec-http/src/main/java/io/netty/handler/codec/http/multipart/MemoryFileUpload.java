@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.multipart;
 
 import io.netty.buffer.ByteBuf;
@@ -26,7 +11,7 @@ import java.nio.charset.Charset;
 
 /**
  * Default FileUpload implementation that stores file into memory.<br><br>
- *
+ * <p>
  * Warning: be aware of the memory limitation.
  */
 public class MemoryFileUpload extends AbstractMemoryHttpData implements FileUpload {
@@ -37,8 +22,7 @@ public class MemoryFileUpload extends AbstractMemoryHttpData implements FileUplo
 
     private String contentTransferEncoding;
 
-    public MemoryFileUpload(String name, String filename, String contentType,
-            String contentTransferEncoding, Charset charset, long size) {
+    public MemoryFileUpload(String name, String filename, String contentType, String contentTransferEncoding, Charset charset, long size) {
         super(name, charset, size);
         setFilename(filename);
         setContentType(contentType);
@@ -73,8 +57,7 @@ public class MemoryFileUpload extends AbstractMemoryHttpData implements FileUplo
     @Override
     public int compareTo(InterfaceHttpData o) {
         if (!(o instanceof FileUpload)) {
-            throw new ClassCastException("Cannot compare " + getHttpDataType() +
-                    " with " + o.getHttpDataType());
+            throw new ClassCastException("Cannot compare " + getHttpDataType() + " with " + o.getHttpDataType());
         }
         return compareTo((FileUpload) o);
     }
@@ -84,13 +67,13 @@ public class MemoryFileUpload extends AbstractMemoryHttpData implements FileUplo
     }
 
     @Override
-    public void setContentType(String contentType) {
-        this.contentType = ObjectUtil.checkNotNull(contentType, "contentType");
+    public String getContentType() {
+        return contentType;
     }
 
     @Override
-    public String getContentType() {
-        return contentType;
+    public void setContentType(String contentType) {
+        this.contentType = ObjectUtil.checkNotNull(contentType, "contentType");
     }
 
     @Override
@@ -105,14 +88,7 @@ public class MemoryFileUpload extends AbstractMemoryHttpData implements FileUplo
 
     @Override
     public String toString() {
-        return HttpHeaderNames.CONTENT_DISPOSITION + ": " +
-               HttpHeaderValues.FORM_DATA + "; " + HttpHeaderValues.NAME + "=\"" + getName() +
-            "\"; " + HttpHeaderValues.FILENAME + "=\"" + filename + "\"\r\n" +
-            HttpHeaderNames.CONTENT_TYPE + ": " + contentType +
-            (getCharset() != null? "; " + HttpHeaderValues.CHARSET + '=' + getCharset().name() + "\r\n" : "\r\n") +
-            HttpHeaderNames.CONTENT_LENGTH + ": " + length() + "\r\n" +
-            "Completed: " + isCompleted() +
-            "\r\nIsInMemory: " + isInMemory();
+        return HttpHeaderNames.CONTENT_DISPOSITION + ": " + HttpHeaderValues.FORM_DATA + "; " + HttpHeaderValues.NAME + "=\"" + getName() + "\"; " + HttpHeaderValues.FILENAME + "=\"" + filename + "\"\r\n" + HttpHeaderNames.CONTENT_TYPE + ": " + contentType + (getCharset() != null ? "; " + HttpHeaderValues.CHARSET + '=' + getCharset().name() + "\r\n" : "\r\n") + HttpHeaderNames.CONTENT_LENGTH + ": " + length() + "\r\n" + "Completed: " + isCompleted() + "\r\nIsInMemory: " + isInMemory();
     }
 
     @Override
@@ -149,8 +125,7 @@ public class MemoryFileUpload extends AbstractMemoryHttpData implements FileUplo
 
     @Override
     public FileUpload replace(ByteBuf content) {
-        MemoryFileUpload upload = new MemoryFileUpload(
-                getName(), getFilename(), getContentType(), getContentTransferEncoding(), getCharset(), size);
+        MemoryFileUpload upload = new MemoryFileUpload(getName(), getFilename(), getContentType(), getContentTransferEncoding(), getCharset(), size);
         if (content != null) {
             try {
                 upload.setContent(content);

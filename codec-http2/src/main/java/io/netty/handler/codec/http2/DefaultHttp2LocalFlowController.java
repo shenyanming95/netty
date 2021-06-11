@@ -45,7 +45,74 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
      * is sent to expand the window.
      */
     public static final float DEFAULT_WINDOW_UPDATE_RATIO = 0.5f;
+    /**
+     * The local flow control state for a single stream that is not in a state where flow controlled frames cannot
+     * be exchanged.
+     */
+    private static final FlowState REDUCED_FLOW_STATE = new FlowState() {
 
+        @Override
+        public int windowSize() {
+            return 0;
+        }
+
+        @Override
+        public int initialWindowSize() {
+            return 0;
+        }
+
+        @Override
+        public void window(int initialWindowSize) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void incrementInitialStreamWindow(int delta) {
+            // This operation needs to be supported during the initial settings exchange when
+            // the peer has not yet acknowledged this peer being activated.
+        }
+
+        @Override
+        public boolean writeWindowUpdateIfNeeded() throws Http2Exception {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean consumeBytes(int numBytes) throws Http2Exception {
+            return false;
+        }
+
+        @Override
+        public int unconsumedBytes() {
+            return 0;
+        }
+
+        @Override
+        public float windowUpdateRatio() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void windowUpdateRatio(float ratio) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void receiveFlowControlledFrame(int dataLength) throws Http2Exception {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void incrementFlowControlWindows(int delta) throws Http2Exception {
+            // This operation needs to be supported during the initial settings exchange when
+            // the peer has not yet acknowledged this peer being activated.
+        }
+
+        @Override
+        public void endOfStream(boolean endOfStream) {
+            throw new UnsupportedOperationException();
+        }
+    };
     private final Http2Connection connection;
     private final Http2Connection.PropertyKey stateKey;
     private Http2FrameWriter frameWriter;
@@ -60,27 +127,23 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
     /**
      * Constructs a controller with the given settings.
      *
-     * @param connection the connection state.
-     * @param windowUpdateRatio the window percentage below which to send a {@code WINDOW_UPDATE}.
+     * @param connection                 the connection state.
+     * @param windowUpdateRatio          the window percentage below which to send a {@code WINDOW_UPDATE}.
      * @param autoRefillConnectionWindow if {@code true}, effectively disables the connection window
-     * in the flow control algorithm as they will always refill automatically without requiring the
-     * application to consume the bytes. When enabled, the maximum bytes you must be prepared to
-     * queue is proportional to {@code maximum number of concurrent streams * the initial window
-     * size per stream}
-     * (<a href="https://tools.ietf.org/html/rfc7540#section-6.5.2">SETTINGS_MAX_CONCURRENT_STREAMS</a>
-     * <a href="https://tools.ietf.org/html/rfc7540#section-6.5.2">SETTINGS_INITIAL_WINDOW_SIZE</a>).
+     *                                   in the flow control algorithm as they will always refill automatically without requiring the
+     *                                   application to consume the bytes. When enabled, the maximum bytes you must be prepared to
+     *                                   queue is proportional to {@code maximum number of concurrent streams * the initial window
+     *                                   size per stream}
+     *                                   (<a href="https://tools.ietf.org/html/rfc7540#section-6.5.2">SETTINGS_MAX_CONCURRENT_STREAMS</a>
+     *                                   <a href="https://tools.ietf.org/html/rfc7540#section-6.5.2">SETTINGS_INITIAL_WINDOW_SIZE</a>).
      */
-    public DefaultHttp2LocalFlowController(Http2Connection connection,
-                                           float windowUpdateRatio,
-                                           boolean autoRefillConnectionWindow) {
+    public DefaultHttp2LocalFlowController(Http2Connection connection, float windowUpdateRatio, boolean autoRefillConnectionWindow) {
         this.connection = checkNotNull(connection, "connection");
         windowUpdateRatio(windowUpdateRatio);
 
         // Add a flow state for the connection.
         stateKey = connection.newKey();
-        FlowState connectionState = autoRefillConnectionWindow ?
-                new AutoRefillState(connection.connectionStream(), initialWindowSize) :
-                new DefaultState(connection.connectionStream(), initialWindowSize);
+        FlowState connectionState = autoRefillConnectionWindow ? new AutoRefillState(connection.connectionStream(), initialWindowSize) : new DefaultState(connection.connectionStream(), initialWindowSize);
         connection.connectionStream().setProperty(stateKey, connectionState);
 
         // Register for notification of new streams.
@@ -123,6 +186,16 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
                 }
             }
         });
+    }
+
+    private static void checkValidRatio(float ratio) {
+        if (Double.compare(ratio, 0.0) <= 0 || Double.compare(ratio, 1.0) >= 0) {
+            throw new IllegalArgumentException("Invalid ratio: " + ratio);
+        }
+    }
+
+    private static boolean isClosed(Http2Stream stream) {
+        return stream.state() == Http2Stream.State.CLOSED;
     }
 
     @Override
@@ -201,16 +274,11 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
         return state(stream).unconsumedBytes();
     }
 
-    private static void checkValidRatio(float ratio) {
-        if (Double.compare(ratio, 0.0) <= 0 || Double.compare(ratio, 1.0) >= 0) {
-            throw new IllegalArgumentException("Invalid ratio: " + ratio);
-        }
-    }
-
     /**
      * The window update ratio is used to determine when a window update must be sent. If the ratio
      * of bytes processed since the last update has meet or exceeded this ratio then a window update will
      * be sent. This is the global window update ratio that will be used for new streams.
+     *
      * @param ratio the ratio to use when checking if a {@code WINDOW_UPDATE} is determined necessary for new streams.
      * @throws IllegalArgumentException If the ratio is out of bounds (0, 1).
      */
@@ -238,8 +306,9 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
      * initial {@code SETTINGS} frame is sent before this is called. It would
      * be considered a {@link Http2Error#PROTOCOL_ERROR} if a {@code WINDOW_UPDATE}
      * was generated by this method before the initial {@code SETTINGS} frame is sent.
+     *
      * @param stream the stream for which {@code ratio} applies to.
-     * @param ratio the ratio to use when checking if a {@code WINDOW_UPDATE} is determined necessary.
+     * @param ratio  the ratio to use when checking if a {@code WINDOW_UPDATE} is determined necessary.
      * @throws Http2Exception If a protocol-error occurs while generating {@code WINDOW_UPDATE} frames
      */
     public void windowUpdateRatio(Http2Stream stream, float ratio) throws Http2Exception {
@@ -254,6 +323,7 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
      * The window update ratio is used to determine when a window update must be sent. If the ratio
      * of bytes processed since the last update has meet or exceeded this ratio then a window update will
      * be sent. This window update ratio will only be applied to {@code streamId}.
+     *
      * @throws Http2Exception If no stream corresponding to {@code stream} could be found.
      */
     public float windowUpdateRatio(Http2Stream stream) throws Http2Exception {
@@ -261,8 +331,7 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
     }
 
     @Override
-    public void receiveFlowControlledFrame(Http2Stream stream, ByteBuf data, int padding,
-            boolean endOfStream) throws Http2Exception {
+    public void receiveFlowControlledFrame(Http2Stream stream, ByteBuf data, int padding, boolean endOfStream) throws Http2Exception {
         assert ctx != null && ctx.executor().inEventLoop();
         int dataLength = data.readableBytes() + padding;
 
@@ -289,8 +358,64 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
         return stream.getProperty(stateKey);
     }
 
-    private static boolean isClosed(Http2Stream stream) {
-        return stream.state() == Http2Stream.State.CLOSED;
+    /**
+     * An abstraction which provides specific extensions used by local flow control.
+     */
+    private interface FlowState {
+
+        int windowSize();
+
+        int initialWindowSize();
+
+        void window(int initialWindowSize);
+
+        /**
+         * Increment the initial window size for this stream.
+         *
+         * @param delta The amount to increase the initial window size by.
+         */
+        void incrementInitialStreamWindow(int delta);
+
+        /**
+         * Updates the flow control window for this stream if it is appropriate.
+         *
+         * @return true if {@code WINDOW_UPDATE} was written, false otherwise.
+         */
+        boolean writeWindowUpdateIfNeeded() throws Http2Exception;
+
+        /**
+         * Indicates that the application has consumed {@code numBytes} from the connection or stream and is
+         * ready to receive more data.
+         *
+         * @param numBytes the number of bytes to be returned to the flow control window.
+         * @return true if {@code WINDOW_UPDATE} was written, false otherwise.
+         * @throws Http2Exception
+         */
+        boolean consumeBytes(int numBytes) throws Http2Exception;
+
+        int unconsumedBytes();
+
+        float windowUpdateRatio();
+
+        void windowUpdateRatio(float ratio);
+
+        /**
+         * A flow control event has occurred and we should decrement the amount of available bytes for this stream.
+         *
+         * @param dataLength The amount of data to for which this stream is no longer eligible to use for flow control.
+         * @throws Http2Exception If too much data is used relative to how much is available.
+         */
+        void receiveFlowControlledFrame(int dataLength) throws Http2Exception;
+
+        /**
+         * Increment the windows which are used to determine many bytes have been processed.
+         *
+         * @param delta The amount to increment the window by.
+         * @throws Http2Exception if integer overflow occurs on the window.
+         */
+        void incrementFlowControlWindows(int delta) throws Http2Exception;
+
+        void endOfStream(boolean endOfStream);
     }
 
     /**
@@ -392,8 +517,7 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
         @Override
         public void incrementInitialStreamWindow(int delta) {
             // Clip the delta so that the resulting initialStreamWindowSize falls within the allowed range.
-            int newValue = (int) min(MAX_INITIAL_WINDOW_SIZE,
-                    max(MIN_INITIAL_WINDOW_SIZE, initialStreamWindowSize + (long) delta));
+            int newValue = (int) min(MAX_INITIAL_WINDOW_SIZE, max(MIN_INITIAL_WINDOW_SIZE, initialStreamWindowSize + (long) delta));
             delta = newValue - initialStreamWindowSize;
 
             initialStreamWindowSize += delta;
@@ -402,8 +526,7 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
         @Override
         public void incrementFlowControlWindows(int delta) throws Http2Exception {
             if (delta > 0 && window > MAX_INITIAL_WINDOW_SIZE - delta) {
-                throw streamError(stream.id(), FLOW_CONTROL_ERROR,
-                        "Flow control window overflowed for stream: %d", stream.id());
+                throw streamError(stream.id(), FLOW_CONTROL_ERROR, "Flow control window overflowed for stream: %d", stream.id());
             }
 
             window += delta;
@@ -424,15 +547,13 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
             // This difference is stored for the connection when writing the SETTINGS frame
             // and is cleared once we send a WINDOW_UPDATE frame.
             if (window < lowerBound) {
-                throw streamError(stream.id(), FLOW_CONTROL_ERROR,
-                        "Flow control window exceeded for stream: %d", stream.id());
+                throw streamError(stream.id(), FLOW_CONTROL_ERROR, "Flow control window exceeded for stream: %d", stream.id());
             }
         }
 
         private void returnProcessedBytes(int delta) throws Http2Exception {
             if (processedWindow - delta < window) {
-                throw streamError(stream.id(), INTERNAL_ERROR,
-                        "Attempting to return too many bytes for stream %d", stream.id());
+                throw streamError(stream.id(), INTERNAL_ERROR, "Attempting to return too many bytes for stream %d", stream.id());
             }
             processedWindow -= delta;
         }
@@ -475,8 +596,7 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
             try {
                 incrementFlowControlWindows(deltaWindowSize);
             } catch (Throwable t) {
-                throw connectionError(INTERNAL_ERROR, t,
-                        "Attempting to return too many bytes for stream %d", stream.id());
+                throw connectionError(INTERNAL_ERROR, t, "Attempting to return too many bytes for stream %d", stream.id());
             }
 
             // Send a window update for the stream/connection.
@@ -485,137 +605,11 @@ public class DefaultHttp2LocalFlowController implements Http2LocalFlowController
     }
 
     /**
-     * The local flow control state for a single stream that is not in a state where flow controlled frames cannot
-     * be exchanged.
-     */
-    private static final FlowState REDUCED_FLOW_STATE = new FlowState() {
-
-        @Override
-        public int windowSize() {
-            return 0;
-        }
-
-        @Override
-        public int initialWindowSize() {
-            return 0;
-        }
-
-        @Override
-        public void window(int initialWindowSize) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void incrementInitialStreamWindow(int delta) {
-            // This operation needs to be supported during the initial settings exchange when
-            // the peer has not yet acknowledged this peer being activated.
-        }
-
-        @Override
-        public boolean writeWindowUpdateIfNeeded() throws Http2Exception {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean consumeBytes(int numBytes) throws Http2Exception {
-            return false;
-        }
-
-        @Override
-        public int unconsumedBytes() {
-            return 0;
-        }
-
-        @Override
-        public float windowUpdateRatio() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void windowUpdateRatio(float ratio) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void receiveFlowControlledFrame(int dataLength) throws Http2Exception {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void incrementFlowControlWindows(int delta) throws Http2Exception {
-            // This operation needs to be supported during the initial settings exchange when
-            // the peer has not yet acknowledged this peer being activated.
-        }
-
-        @Override
-        public void endOfStream(boolean endOfStream) {
-            throw new UnsupportedOperationException();
-        }
-    };
-
-    /**
-     * An abstraction which provides specific extensions used by local flow control.
-     */
-    private interface FlowState {
-
-        int windowSize();
-
-        int initialWindowSize();
-
-        void window(int initialWindowSize);
-
-        /**
-         * Increment the initial window size for this stream.
-         * @param delta The amount to increase the initial window size by.
-         */
-        void incrementInitialStreamWindow(int delta);
-
-        /**
-         * Updates the flow control window for this stream if it is appropriate.
-         *
-         * @return true if {@code WINDOW_UPDATE} was written, false otherwise.
-         */
-        boolean writeWindowUpdateIfNeeded() throws Http2Exception;
-
-        /**
-         * Indicates that the application has consumed {@code numBytes} from the connection or stream and is
-         * ready to receive more data.
-         *
-         * @param numBytes the number of bytes to be returned to the flow control window.
-         * @return true if {@code WINDOW_UPDATE} was written, false otherwise.
-         * @throws Http2Exception
-         */
-        boolean consumeBytes(int numBytes) throws Http2Exception;
-
-        int unconsumedBytes();
-
-        float windowUpdateRatio();
-
-        void windowUpdateRatio(float ratio);
-
-        /**
-         * A flow control event has occurred and we should decrement the amount of available bytes for this stream.
-         * @param dataLength The amount of data to for which this stream is no longer eligible to use for flow control.
-         * @throws Http2Exception If too much data is used relative to how much is available.
-         */
-        void receiveFlowControlledFrame(int dataLength) throws Http2Exception;
-
-        /**
-         * Increment the windows which are used to determine many bytes have been processed.
-         * @param delta The amount to increment the window by.
-         * @throws Http2Exception if integer overflow occurs on the window.
-         */
-        void incrementFlowControlWindows(int delta) throws Http2Exception;
-
-        void endOfStream(boolean endOfStream);
-    }
-
-    /**
      * Provides a means to iterate over all active streams and increment the flow control windows.
      */
     private final class WindowUpdateVisitor implements Http2StreamVisitor {
-        private CompositeStreamException compositeException;
         private final int delta;
+        private CompositeStreamException compositeException;
 
         WindowUpdateVisitor(int delta) {
             this.delta = delta;

@@ -36,14 +36,20 @@ final class InflightNameResolver<T> implements NameResolver<T> {
     private final ConcurrentMap<String, Promise<T>> resolvesInProgress;
     private final ConcurrentMap<String, Promise<List<T>>> resolveAllsInProgress;
 
-    InflightNameResolver(EventExecutor executor, NameResolver<T> delegate,
-                         ConcurrentMap<String, Promise<T>> resolvesInProgress,
-                         ConcurrentMap<String, Promise<List<T>>> resolveAllsInProgress) {
+    InflightNameResolver(EventExecutor executor, NameResolver<T> delegate, ConcurrentMap<String, Promise<T>> resolvesInProgress, ConcurrentMap<String, Promise<List<T>>> resolveAllsInProgress) {
 
         this.executor = checkNotNull(executor, "executor");
         this.delegate = checkNotNull(delegate, "delegate");
         this.resolvesInProgress = checkNotNull(resolvesInProgress, "resolvesInProgress");
         this.resolveAllsInProgress = checkNotNull(resolveAllsInProgress, "resolveAllsInProgress");
+    }
+
+    private static <T> void transferResult(Future<T> src, Promise<T> dst) {
+        if (src.isSuccess()) {
+            dst.trySuccess(src.getNow());
+        } else {
+            dst.tryFailure(src.cause());
+        }
     }
 
     @Override
@@ -71,9 +77,7 @@ final class InflightNameResolver<T> implements NameResolver<T> {
         return resolve(resolveAllsInProgress, inetHost, promise, true);
     }
 
-    private <U> Promise<U> resolve(
-            final ConcurrentMap<String, Promise<U>> resolveMap,
-            final String inetHost, final Promise<U> promise, boolean resolveAll) {
+    private <U> Promise<U> resolve(final ConcurrentMap<String, Promise<U>> resolveMap, final String inetHost, final Promise<U> promise, boolean resolveAll) {
 
         final Promise<U> earlyPromise = resolveMap.putIfAbsent(inetHost, promise);
         if (earlyPromise != null) {
@@ -91,12 +95,10 @@ final class InflightNameResolver<T> implements NameResolver<T> {
         } else {
             try {
                 if (resolveAll) {
-                    @SuppressWarnings("unchecked")
-                    final Promise<List<T>> castPromise = (Promise<List<T>>) promise; // U is List<T>
+                    @SuppressWarnings("unchecked") final Promise<List<T>> castPromise = (Promise<List<T>>) promise; // U is List<T>
                     delegate.resolveAll(inetHost, castPromise);
                 } else {
-                    @SuppressWarnings("unchecked")
-                    final Promise<T> castPromise = (Promise<T>) promise; // U is T
+                    @SuppressWarnings("unchecked") final Promise<T> castPromise = (Promise<T>) promise; // U is T
                     delegate.resolve(inetHost, castPromise);
                 }
             } finally {
@@ -114,14 +116,6 @@ final class InflightNameResolver<T> implements NameResolver<T> {
         }
 
         return promise;
-    }
-
-    private static <T> void transferResult(Future<T> src, Promise<T> dst) {
-        if (src.isSuccess()) {
-            dst.trySuccess(src.getNow());
-        } else {
-            dst.tryFailure(src.cause());
-        }
     }
 
     @Override

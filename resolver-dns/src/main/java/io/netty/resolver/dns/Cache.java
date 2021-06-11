@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.resolver.dns;
 
 import io.netty.channel.EventLoop;
@@ -35,9 +20,10 @@ import static java.util.Collections.singletonList;
  * @param <E>
  */
 abstract class Cache<E> {
-    private static final AtomicReferenceFieldUpdater<Cache.Entries, ScheduledFuture> FUTURE_UPDATER =
-            AtomicReferenceFieldUpdater.newUpdater(Cache.Entries.class, ScheduledFuture.class, "expirationFuture");
-
+    // Two years are supported by all our EventLoop implementations and so safe to use as maximum.
+    // See also: https://github.com/netty/netty/commit/b47fb817991b42ec8808c7d26538f3f2464e1fa6
+    static final int MAX_SUPPORTED_TTL_SECS = (int) TimeUnit.DAYS.toSeconds(365 * 2);
+    private static final AtomicReferenceFieldUpdater<Cache.Entries, ScheduledFuture> FUTURE_UPDATER = AtomicReferenceFieldUpdater.newUpdater(Cache.Entries.class, ScheduledFuture.class, "expirationFuture");
     private static final ScheduledFuture<?> CANCELLED = new ScheduledFuture<Object>() {
 
         @Override
@@ -77,11 +63,6 @@ abstract class Cache<E> {
             throw new UnsupportedOperationException();
         }
     };
-
-    // Two years are supported by all our EventLoop implementations and so safe to use as maximum.
-    // See also: https://github.com/netty/netty/commit/b47fb817991b42ec8808c7d26538f3f2464e1fa6
-    static final int MAX_SUPPORTED_TTL_SECS = (int) TimeUnit.DAYS.toSeconds(365 * 2);
-
     private final ConcurrentMap<String, Entries> resolveCache = PlatformDependent.newConcurrentHashMap();
 
     /**
@@ -89,7 +70,7 @@ abstract class Cache<E> {
      */
     final void clear() {
         while (!resolveCache.isEmpty()) {
-            for (Iterator<Entry<String, Entries>> i = resolveCache.entrySet().iterator(); i.hasNext();) {
+            for (Iterator<Entry<String, Entries>> i = resolveCache.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry<String, Entries> e = i.next();
                 i.remove();
 
@@ -144,8 +125,7 @@ abstract class Cache<E> {
     /**
      * Sort the {@link List} for a {@code hostname} before caching these.
      */
-    protected void sortEntries(
-            @SuppressWarnings("unused") String hostname, @SuppressWarnings("unused") List<E> entries) {
+    protected void sortEntries(@SuppressWarnings("unused") String hostname, @SuppressWarnings("unused") List<E> entries) {
         // NOOP.
     }
 
@@ -168,7 +148,7 @@ abstract class Cache<E> {
 
         void add(E e, int ttl, EventLoop loop) {
             if (!shouldReplaceAll(e)) {
-                for (;;) {
+                for (; ; ) {
                     List<E> entries = get();
                     if (!entries.isEmpty()) {
                         final E firstEntry = entries.get(0);
@@ -227,7 +207,7 @@ abstract class Cache<E> {
         }
 
         private void scheduleCacheExpirationIfNeeded(int ttl, EventLoop loop) {
-            for (;;) {
+            for (; ; ) {
                 // We currently don't calculate a new TTL when we need to retry the CAS as we don't expect this to
                 // be invoked very concurrently and also we use SECONDS anyway. If this ever becomes a problem
                 // we can reconsider.

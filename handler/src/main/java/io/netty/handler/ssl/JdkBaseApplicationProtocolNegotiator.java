@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import javax.net.ssl.SSLEngine;
@@ -28,6 +13,30 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  * Common base class for {@link JdkApplicationProtocolNegotiator} classes to inherit from.
  */
 class JdkBaseApplicationProtocolNegotiator implements JdkApplicationProtocolNegotiator {
+    static final ProtocolSelectorFactory FAIL_SELECTOR_FACTORY = new ProtocolSelectorFactory() {
+        @Override
+        public ProtocolSelector newSelector(SSLEngine engine, Set<String> supportedProtocols) {
+            return new FailProtocolSelector((JdkSslEngine) engine, supportedProtocols);
+        }
+    };
+    static final ProtocolSelectorFactory NO_FAIL_SELECTOR_FACTORY = new ProtocolSelectorFactory() {
+        @Override
+        public ProtocolSelector newSelector(SSLEngine engine, Set<String> supportedProtocols) {
+            return new NoFailProtocolSelector((JdkSslEngine) engine, supportedProtocols);
+        }
+    };
+    static final ProtocolSelectionListenerFactory FAIL_SELECTION_LISTENER_FACTORY = new ProtocolSelectionListenerFactory() {
+        @Override
+        public ProtocolSelectionListener newListener(SSLEngine engine, List<String> supportedProtocols) {
+            return new FailProtocolSelectionListener((JdkSslEngine) engine, supportedProtocols);
+        }
+    };
+    static final ProtocolSelectionListenerFactory NO_FAIL_SELECTION_LISTENER_FACTORY = new ProtocolSelectionListenerFactory() {
+        @Override
+        public ProtocolSelectionListener newListener(SSLEngine engine, List<String> supportedProtocols) {
+            return new NoFailProtocolSelectionListener((JdkSslEngine) engine, supportedProtocols);
+        }
+    };
     private final List<String> protocols;
     private final ProtocolSelectorFactory selectorFactory;
     private final ProtocolSelectionListenerFactory listenerFactory;
@@ -35,40 +44,37 @@ class JdkBaseApplicationProtocolNegotiator implements JdkApplicationProtocolNego
 
     /**
      * Create a new instance.
-     * @param wrapperFactory Determines which application protocol will be used by wrapping the SSLEngine in use.
+     *
+     * @param wrapperFactory  Determines which application protocol will be used by wrapping the SSLEngine in use.
      * @param selectorFactory How the peer selecting the protocol should behave.
      * @param listenerFactory How the peer being notified of the selected protocol should behave.
-     * @param protocols The order of iteration determines the preference of support for protocols.
+     * @param protocols       The order of iteration determines the preference of support for protocols.
      */
-    JdkBaseApplicationProtocolNegotiator(SslEngineWrapperFactory wrapperFactory,
-            ProtocolSelectorFactory selectorFactory, ProtocolSelectionListenerFactory listenerFactory,
-            Iterable<String> protocols) {
+    JdkBaseApplicationProtocolNegotiator(SslEngineWrapperFactory wrapperFactory, ProtocolSelectorFactory selectorFactory, ProtocolSelectionListenerFactory listenerFactory, Iterable<String> protocols) {
         this(wrapperFactory, selectorFactory, listenerFactory, toList(protocols));
     }
 
     /**
      * Create a new instance.
-     * @param wrapperFactory Determines which application protocol will be used by wrapping the SSLEngine in use.
+     *
+     * @param wrapperFactory  Determines which application protocol will be used by wrapping the SSLEngine in use.
      * @param selectorFactory How the peer selecting the protocol should behave.
      * @param listenerFactory How the peer being notified of the selected protocol should behave.
-     * @param protocols The order of iteration determines the preference of support for protocols.
+     * @param protocols       The order of iteration determines the preference of support for protocols.
      */
-    JdkBaseApplicationProtocolNegotiator(SslEngineWrapperFactory wrapperFactory,
-            ProtocolSelectorFactory selectorFactory, ProtocolSelectionListenerFactory listenerFactory,
-            String... protocols) {
+    JdkBaseApplicationProtocolNegotiator(SslEngineWrapperFactory wrapperFactory, ProtocolSelectorFactory selectorFactory, ProtocolSelectionListenerFactory listenerFactory, String... protocols) {
         this(wrapperFactory, selectorFactory, listenerFactory, toList(protocols));
     }
 
     /**
      * Create a new instance.
-     * @param wrapperFactory Determines which application protocol will be used by wrapping the SSLEngine in use.
+     *
+     * @param wrapperFactory  Determines which application protocol will be used by wrapping the SSLEngine in use.
      * @param selectorFactory How the peer selecting the protocol should behave.
      * @param listenerFactory How the peer being notified of the selected protocol should behave.
-     * @param protocols The order of iteration determines the preference of support for protocols.
+     * @param protocols       The order of iteration determines the preference of support for protocols.
      */
-    private JdkBaseApplicationProtocolNegotiator(SslEngineWrapperFactory wrapperFactory,
-            ProtocolSelectorFactory selectorFactory, ProtocolSelectionListenerFactory listenerFactory,
-            List<String> protocols) {
+    private JdkBaseApplicationProtocolNegotiator(SslEngineWrapperFactory wrapperFactory, ProtocolSelectorFactory selectorFactory, ProtocolSelectionListenerFactory listenerFactory, List<String> protocols) {
         this.wrapperFactory = checkNotNull(wrapperFactory, "wrapperFactory");
         this.selectorFactory = checkNotNull(selectorFactory, "selectorFactory");
         this.listenerFactory = checkNotNull(listenerFactory, "listenerFactory");
@@ -94,36 +100,6 @@ class JdkBaseApplicationProtocolNegotiator implements JdkApplicationProtocolNego
     public SslEngineWrapperFactory wrapperFactory() {
         return wrapperFactory;
     }
-
-    static final ProtocolSelectorFactory FAIL_SELECTOR_FACTORY = new ProtocolSelectorFactory() {
-        @Override
-        public ProtocolSelector newSelector(SSLEngine engine, Set<String> supportedProtocols) {
-            return new FailProtocolSelector((JdkSslEngine) engine, supportedProtocols);
-        }
-    };
-
-    static final ProtocolSelectorFactory NO_FAIL_SELECTOR_FACTORY = new ProtocolSelectorFactory() {
-        @Override
-        public ProtocolSelector newSelector(SSLEngine engine, Set<String> supportedProtocols) {
-            return new NoFailProtocolSelector((JdkSslEngine) engine, supportedProtocols);
-        }
-    };
-
-    static final ProtocolSelectionListenerFactory FAIL_SELECTION_LISTENER_FACTORY =
-            new ProtocolSelectionListenerFactory() {
-        @Override
-        public ProtocolSelectionListener newListener(SSLEngine engine, List<String> supportedProtocols) {
-            return new FailProtocolSelectionListener((JdkSslEngine) engine, supportedProtocols);
-        }
-    };
-
-    static final ProtocolSelectionListenerFactory NO_FAIL_SELECTION_LISTENER_FACTORY =
-            new ProtocolSelectionListenerFactory() {
-        @Override
-        public ProtocolSelectionListener newListener(SSLEngine engine, List<String> supportedProtocols) {
-            return new NoFailProtocolSelectionListener((JdkSslEngine) engine, supportedProtocols);
-        }
-    };
 
     static class NoFailProtocolSelector implements ProtocolSelector {
         private final JdkSslEngine engineWrapper;

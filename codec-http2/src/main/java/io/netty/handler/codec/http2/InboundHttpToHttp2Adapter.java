@@ -36,24 +36,13 @@ public class InboundHttpToHttp2Adapter extends ChannelInboundHandlerAdapter {
     }
 
     private static int getStreamId(Http2Connection connection, HttpHeaders httpHeaders) {
-        return httpHeaders.getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(),
-                                  connection.remote().incrementAndGetNextStreamId());
-    }
-
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof FullHttpMessage) {
-            handle(ctx, connection, listener, (FullHttpMessage) msg);
-        } else {
-            super.channelRead(ctx, msg);
-        }
+        return httpHeaders.getInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), connection.remote().incrementAndGetNextStreamId());
     }
 
     // note that this may behave strangely when used for the initial upgrade
     // message when using h2c, since that message is ineligible for flow
     // control, but there is not yet an API for signaling that.
-    static void handle(ChannelHandlerContext ctx, Http2Connection connection,
-                              Http2FrameListener listener, FullHttpMessage message) throws Http2Exception {
+    static void handle(ChannelHandlerContext ctx, Http2Connection connection, Http2FrameListener listener, FullHttpMessage message) throws Http2Exception {
         try {
             int streamId = getStreamId(connection, message.headers());
             Http2Stream stream = connection.stream(streamId);
@@ -64,8 +53,7 @@ public class InboundHttpToHttp2Adapter extends ChannelInboundHandlerAdapter {
             Http2Headers messageHeaders = HttpConversionUtil.toHttp2Headers(message, true);
             boolean hasContent = message.content().isReadable();
             boolean hasTrailers = !message.trailingHeaders().isEmpty();
-            listener.onHeadersRead(
-                    ctx, streamId, messageHeaders, 0, !(hasContent || hasTrailers));
+            listener.onHeadersRead(ctx, streamId, messageHeaders, 0, !(hasContent || hasTrailers));
             if (hasContent) {
                 listener.onDataRead(ctx, streamId, message.content(), 0, !hasTrailers);
             }
@@ -76,6 +64,15 @@ public class InboundHttpToHttp2Adapter extends ChannelInboundHandlerAdapter {
             stream.closeRemoteSide();
         } finally {
             message.release();
+        }
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (msg instanceof FullHttpMessage) {
+            handle(ctx, connection, listener, (FullHttpMessage) msg);
+        } else {
+            super.channelRead(ctx, msg);
         }
     }
 }

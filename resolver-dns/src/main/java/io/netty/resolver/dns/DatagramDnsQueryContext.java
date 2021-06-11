@@ -24,9 +24,7 @@ import java.net.InetSocketAddress;
 
 final class DatagramDnsQueryContext extends DnsQueryContext {
 
-    DatagramDnsQueryContext(DnsNameResolver parent, InetSocketAddress nameServerAddr, DnsQuestion question,
-                            DnsRecord[] additionals,
-                            Promise<AddressedEnvelope<DnsResponse, InetSocketAddress>> promise) {
+    DatagramDnsQueryContext(DnsNameResolver parent, InetSocketAddress nameServerAddr, DnsQuestion question, DnsRecord[] additionals, Promise<AddressedEnvelope<DnsResponse, InetSocketAddress>> promise) {
         super(parent, nameServerAddr, question, additionals, promise);
     }
 

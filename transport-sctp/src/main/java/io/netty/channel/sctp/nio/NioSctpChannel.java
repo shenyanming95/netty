@@ -40,7 +40,7 @@ import java.util.*;
 /**
  * {@link io.netty.channel.sctp.SctpChannel} implementation which use non-blocking mode and allows to read /
  * write {@link SctpMessage}s to the underlying {@link SctpChannel}.
- *
+ * <p>
  * Be aware that not all operations systems support SCTP. Please refer to the documentation of your operation system,
  * to understand what you need to do to use it. Also this feature is only supported on Java 7+.
  */
@@ -52,14 +52,6 @@ public class NioSctpChannel extends AbstractNioMessageChannel implements io.nett
     private final SctpChannelConfig config;
 
     private final NotificationHandler<?> notificationHandler;
-
-    private static SctpChannel newSctpChannel() {
-        try {
-            return SctpChannel.open();
-        } catch (IOException e) {
-            throw new ChannelException("Failed to open a sctp channel.", e);
-        }
-    }
 
     /**
      * Create a new instance
@@ -78,9 +70,9 @@ public class NioSctpChannel extends AbstractNioMessageChannel implements io.nett
     /**
      * Create a new instance
      *
-     * @param parent        the {@link Channel} which is the parent of this {@link NioSctpChannel}
-     *                      or {@code null}.
-     * @param sctpChannel   the underlying {@link SctpChannel}
+     * @param parent      the {@link Channel} which is the parent of this {@link NioSctpChannel}
+     *                    or {@code null}.
+     * @param sctpChannel the underlying {@link SctpChannel}
      */
     public NioSctpChannel(Channel parent, SctpChannel sctpChannel) {
         super(parent, sctpChannel, SelectionKey.OP_READ);
@@ -93,12 +85,19 @@ public class NioSctpChannel extends AbstractNioMessageChannel implements io.nett
                 sctpChannel.close();
             } catch (IOException e2) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn(
-                            "Failed to close a partially initialized sctp channel.", e2);
+                    logger.warn("Failed to close a partially initialized sctp channel.", e2);
                 }
             }
 
             throw new ChannelException("Failed to enter non-blocking mode.", e);
+        }
+    }
+
+    private static SctpChannel newSctpChannel() {
+        try {
+            return SctpChannel.open();
+        } catch (IOException e) {
+            throw new ChannelException("Failed to open a sctp channel.", e);
         }
     }
 
@@ -261,14 +260,13 @@ public class NioSctpChannel extends AbstractNioMessageChannel implements io.nett
             }
 
             allocHandle.lastBytesRead(data.position() - pos);
-            buf.add(new SctpMessage(messageInfo,
-                    buffer.writerIndex(buffer.writerIndex() + allocHandle.lastBytesRead())));
+            buf.add(new SctpMessage(messageInfo, buffer.writerIndex(buffer.writerIndex() + allocHandle.lastBytesRead())));
             free = false;
             return 1;
         } catch (Throwable cause) {
             PlatformDependent.throwException(cause);
             return -1;
-        }  finally {
+        } finally {
             if (free) {
                 buffer.release();
             }
@@ -314,13 +312,10 @@ public class NioSctpChannel extends AbstractNioMessageChannel implements io.nett
                 return m;
             }
 
-            return new SctpMessage(m.protocolIdentifier(), m.streamIdentifier(), m.isUnordered(),
-                                   newDirectBuffer(m, buf));
+            return new SctpMessage(m.protocolIdentifier(), m.streamIdentifier(), m.isUnordered(), newDirectBuffer(m, buf));
         }
 
-        throw new UnsupportedOperationException(
-                "unsupported message type: " + StringUtil.simpleClassName(msg) +
-                " (expected: " + StringUtil.simpleClassName(SctpMessage.class));
+        throw new UnsupportedOperationException("unsupported message type: " + StringUtil.simpleClassName(msg) + " (expected: " + StringUtil.simpleClassName(SctpMessage.class));
     }
 
     @Override

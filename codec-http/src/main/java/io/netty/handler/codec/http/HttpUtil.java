@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.util.AsciiString;
@@ -37,15 +22,15 @@ public final class HttpUtil {
     private static final AsciiString CHARSET_EQUALS = AsciiString.of(HttpHeaderValues.CHARSET + "=");
     private static final AsciiString SEMICOLON = AsciiString.cached(";");
 
-    private HttpUtil() { }
+    private HttpUtil() {
+    }
 
     /**
      * Determine if a uri is in origin-form according to
      * <a href="https://tools.ietf.org/html/rfc7230#section-5.3">rfc7230, 5.3</a>.
      */
     public static boolean isOriginForm(URI uri) {
-        return uri.getScheme() == null && uri.getSchemeSpecificPart() == null &&
-               uri.getHost() == null && uri.getAuthority() == null;
+        return uri.getScheme() == null && uri.getSchemeSpecificPart() == null && uri.getHost() == null && uri.getAuthority() == null;
     }
 
     /**
@@ -53,23 +38,18 @@ public final class HttpUtil {
      * <a href="https://tools.ietf.org/html/rfc7230#section-5.3">rfc7230, 5.3</a>.
      */
     public static boolean isAsteriskForm(URI uri) {
-        return "*".equals(uri.getPath()) &&
-                uri.getScheme() == null && uri.getSchemeSpecificPart() == null &&
-                uri.getHost() == null && uri.getAuthority() == null && uri.getQuery() == null &&
-                uri.getFragment() == null;
+        return "*".equals(uri.getPath()) && uri.getScheme() == null && uri.getSchemeSpecificPart() == null && uri.getHost() == null && uri.getAuthority() == null && uri.getQuery() == null && uri.getFragment() == null;
     }
 
     /**
      * Returns {@code true} if and only if the connection can remain open and
      * thus 'kept alive'.  This methods respects the value of the.
-     *
+     * <p>
      * {@code "Connection"} header first and then the return value of
      * {@link HttpVersion#isKeepAliveDefault()}.
      */
     public static boolean isKeepAlive(HttpMessage message) {
-        return !message.headers().containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE, true) &&
-               (message.protocolVersion().isKeepAliveDefault() ||
-                message.headers().containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE, true));
+        return !message.headers().containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE, true) && (message.protocolVersion().isKeepAliveDefault() || message.headers().containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE, true));
     }
 
     /**
@@ -90,6 +70,7 @@ public final class HttpUtil {
      *     <li>remove otherwise.</li>
      *     </ul></li>
      * </ul>
+     *
      * @see #setKeepAlive(HttpHeaders, HttpVersion, boolean)
      */
     public static void setKeepAlive(HttpMessage message, boolean keepAlive) {
@@ -138,10 +119,8 @@ public final class HttpUtil {
      * other.
      *
      * @return the content length
-     *
-     * @throws NumberFormatException
-     *         if the message does not have the {@code "Content-Length"} header
-     *         or its value is not a number
+     * @throws NumberFormatException if the message does not have the {@code "Content-Length"} header
+     *                               or its value is not a number
      */
     public static long getContentLength(HttpMessage message) {
         String value = message.headers().get(HttpHeaderNames.CONTENT_LENGTH);
@@ -191,8 +170,8 @@ public final class HttpUtil {
      * Get an {@code int} representation of {@link #getContentLength(HttpMessage, long)}.
      *
      * @return the content length or {@code defaultValue} if this message does
-     *         not have the {@code "Content-Length"} header or its value is not
-     *         a number. Not to exceed the boundaries of integer.
+     * not have the {@code "Content-Length"} header or its value is not
+     * a number. Not to exceed the boundaries of integer.
      */
     public static int getContentLength(HttpMessage message, int defaultValue) {
         return (int) Math.min(Integer.MAX_VALUE, getContentLength(message, (long) defaultValue));
@@ -207,16 +186,12 @@ public final class HttpUtil {
         HttpHeaders h = message.headers();
         if (message instanceof HttpRequest) {
             HttpRequest req = (HttpRequest) message;
-            if (HttpMethod.GET.equals(req.method()) &&
-                    h.contains(HttpHeaderNames.SEC_WEBSOCKET_KEY1) &&
-                    h.contains(HttpHeaderNames.SEC_WEBSOCKET_KEY2)) {
+            if (HttpMethod.GET.equals(req.method()) && h.contains(HttpHeaderNames.SEC_WEBSOCKET_KEY1) && h.contains(HttpHeaderNames.SEC_WEBSOCKET_KEY2)) {
                 return 8;
             }
         } else if (message instanceof HttpResponse) {
             HttpResponse res = (HttpResponse) message;
-            if (res.status().code() == 101 &&
-                    h.contains(HttpHeaderNames.SEC_WEBSOCKET_ORIGIN) &&
-                    h.contains(HttpHeaderNames.SEC_WEBSOCKET_LOCATION)) {
+            if (res.status().code() == 101 && h.contains(HttpHeaderNames.SEC_WEBSOCKET_ORIGIN) && h.contains(HttpHeaderNames.SEC_WEBSOCKET_LOCATION)) {
                 return 16;
             }
         }
@@ -247,8 +222,8 @@ public final class HttpUtil {
      */
     public static boolean is100ContinueExpected(HttpMessage message) {
         return isExpectHeaderValid(message)
-          // unquoted tokens in the expect header are case-insensitive, thus 100-continue is case insensitive
-          && message.headers().contains(HttpHeaderNames.EXPECT, HttpHeaderValues.CONTINUE, true);
+                // unquoted tokens in the expect header are case-insensitive, thus 100-continue is case insensitive
+                && message.headers().contains(HttpHeaderNames.EXPECT, HttpHeaderValues.CONTINUE, true);
     }
 
     /**
@@ -274,8 +249,7 @@ public final class HttpUtil {
          * section 5.1.1 says "A server that receives a 100-continue expectation in an HTTP/1.0 request MUST ignore
          * that expectation."
          */
-        return message instanceof HttpRequest &&
-                message.protocolVersion().compareTo(HttpVersion.HTTP_1_1) >= 0;
+        return message instanceof HttpRequest && message.protocolVersion().compareTo(HttpVersion.HTTP_1_1) >= 0;
     }
 
     /**
@@ -307,9 +281,9 @@ public final class HttpUtil {
      * Set the {@link HttpHeaderNames#TRANSFER_ENCODING} to either include {@link HttpHeaderValues#CHUNKED} if
      * {@code chunked} is {@code true}, or remove {@link HttpHeaderValues#CHUNKED} if {@code chunked} is {@code false}.
      *
-     * @param m The message which contains the headers to modify.
+     * @param m       The message which contains the headers to modify.
      * @param chunked if {@code true} then include {@link HttpHeaderValues#CHUNKED} in the headers. otherwise remove
-     * {@link HttpHeaderValues#CHUNKED} from the headers.
+     *                {@link HttpHeaderValues#CHUNKED} from the headers.
      */
     public static void setTransferEncodingChunked(HttpMessage m, boolean chunked) {
         if (chunked) {
@@ -405,7 +379,7 @@ public final class HttpUtil {
 
     /**
      * Fetch charset from message's Content-Type header as a char sequence.
-     *
+     * <p>
      * A lot of sites/possibly clients have charset="CHARSET", for example charset="utf-8". Or "utf8" instead of "utf-8"
      * This is not according to standard, but this method provide an ability to catch desired mistakes manually in code
      *
@@ -421,7 +395,7 @@ public final class HttpUtil {
 
     /**
      * Fetch charset from message's Content-Type header as a char sequence.
-     *
+     * <p>
      * A lot of sites/possibly clients have charset="CHARSET", for example charset="utf-8". Or "utf8" instead of "utf-8"
      * This is not according to standard, but this method provide an ability to catch desired mistakes manually in code
      *
@@ -439,7 +413,7 @@ public final class HttpUtil {
 
     /**
      * Fetch charset from Content-Type header value as a char sequence.
-     *
+     * <p>
      * A lot of sites/possibly clients have charset="CHARSET", for example charset="utf-8". Or "utf8" instead of "utf-8"
      * This is not according to standard, but this method provide an ability to catch desired mistakes manually in code
      *

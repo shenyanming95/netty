@@ -35,8 +35,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  * <strong>Because it provides no ordering care should be taken when using it!</strong>
  */
 public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor implements EventExecutor {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(
-            UnorderedThreadPoolEventExecutor.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(UnorderedThreadPoolEventExecutor.class);
 
     private final Promise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();
     private final Set<EventExecutor> executorSet = Collections.singleton((EventExecutor) this);
@@ -67,8 +66,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     /**
      * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory, RejectedExecutionHandler)}
      */
-    public UnorderedThreadPoolEventExecutor(int corePoolSize, ThreadFactory threadFactory,
-                                            RejectedExecutionHandler handler) {
+    public UnorderedThreadPoolEventExecutor(int corePoolSize, ThreadFactory threadFactory, RejectedExecutionHandler handler) {
         super(corePoolSize, threadFactory, handler);
     }
 
@@ -155,8 +153,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
 
     @Override
     protected <V> RunnableScheduledFuture<V> decorateTask(Runnable runnable, RunnableScheduledFuture<V> task) {
-        return runnable instanceof NonNotifyRunnable ?
-                task : new RunnableScheduledFutureTask<V>(this, runnable, task);
+        return runnable instanceof NonNotifyRunnable ? task : new RunnableScheduledFutureTask<V>(this, runnable, task);
     }
 
     @Override
@@ -204,18 +201,15 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         super.schedule(new NonNotifyRunnable(command), 0, NANOSECONDS);
     }
 
-    private static final class RunnableScheduledFutureTask<V> extends PromiseTask<V>
-            implements RunnableScheduledFuture<V>, ScheduledFuture<V> {
+    private static final class RunnableScheduledFutureTask<V> extends PromiseTask<V> implements RunnableScheduledFuture<V>, ScheduledFuture<V> {
         private final RunnableScheduledFuture<V> future;
 
-        RunnableScheduledFutureTask(EventExecutor executor, Runnable runnable,
-                                           RunnableScheduledFuture<V> future) {
+        RunnableScheduledFutureTask(EventExecutor executor, Runnable runnable, RunnableScheduledFuture<V> future) {
             super(executor, runnable);
             this.future = future;
         }
 
-        RunnableScheduledFutureTask(EventExecutor executor, Callable<V> callable,
-                                           RunnableScheduledFuture<V> future) {
+        RunnableScheduledFutureTask(EventExecutor executor, Callable<V> callable, RunnableScheduledFuture<V> future) {
             super(executor, callable);
             this.future = future;
         }

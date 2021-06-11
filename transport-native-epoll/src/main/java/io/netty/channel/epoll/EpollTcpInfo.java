@@ -1,61 +1,46 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.epoll;
 
 /**
  * <p>
  * struct tcp_info
  * {
- *      __u8    tcpi_state;
- *      __u8    tcpi_ca_state;
- *      __u8    tcpi_retransmits;
- *      __u8    tcpi_probes;
- *      __u8    tcpi_backoff;
- *      __u8    tcpi_options;
- *      __u8    tcpi_snd_wscale : 4, tcpi_rcv_wscale : 4;
- *
- *      __u32   tcpi_rto;
- *      __u32   tcpi_ato;
- *      __u32   tcpi_snd_mss;
- *      __u32   tcpi_rcv_mss;
- *
- *      __u32   tcpi_unacked;
- *      __u32   tcpi_sacked;
- *      __u32   tcpi_lost;
- *      __u32   tcpi_retrans;
- *      __u32   tcpi_fackets;
- *
- *      __u32   tcpi_last_data_sent;
- *      __u32   tcpi_last_ack_sent;
- *      __u32   tcpi_last_data_recv;
- *      __u32   tcpi_last_ack_recv;
- *
- *      __u32   tcpi_pmtu;
- *      __u32   tcpi_rcv_ssthresh;
- *      __u32   tcpi_rtt;
- *      __u32   tcpi_rttvar;
- *      __u32   tcpi_snd_ssthresh;
- *      __u32   tcpi_snd_cwnd;
- *      __u32   tcpi_advmss;
- *      __u32   tcpi_reordering;
- *
- *      __u32   tcpi_rcv_rtt;
- *      __u32   tcpi_rcv_space;
- *
- *      __u32   tcpi_total_retrans;
+ * __u8    tcpi_state;
+ * __u8    tcpi_ca_state;
+ * __u8    tcpi_retransmits;
+ * __u8    tcpi_probes;
+ * __u8    tcpi_backoff;
+ * __u8    tcpi_options;
+ * __u8    tcpi_snd_wscale : 4, tcpi_rcv_wscale : 4;
+ * <p>
+ * __u32   tcpi_rto;
+ * __u32   tcpi_ato;
+ * __u32   tcpi_snd_mss;
+ * __u32   tcpi_rcv_mss;
+ * <p>
+ * __u32   tcpi_unacked;
+ * __u32   tcpi_sacked;
+ * __u32   tcpi_lost;
+ * __u32   tcpi_retrans;
+ * __u32   tcpi_fackets;
+ * <p>
+ * __u32   tcpi_last_data_sent;
+ * __u32   tcpi_last_ack_sent;
+ * __u32   tcpi_last_data_recv;
+ * __u32   tcpi_last_ack_recv;
+ * <p>
+ * __u32   tcpi_pmtu;
+ * __u32   tcpi_rcv_ssthresh;
+ * __u32   tcpi_rtt;
+ * __u32   tcpi_rttvar;
+ * __u32   tcpi_snd_ssthresh;
+ * __u32   tcpi_snd_cwnd;
+ * __u32   tcpi_advmss;
+ * __u32   tcpi_reordering;
+ * <p>
+ * __u32   tcpi_rcv_rtt;
+ * __u32   tcpi_rcv_space;
+ * <p>
+ * __u32   tcpi_total_retrans;
  * };
  * </p>
  */

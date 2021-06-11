@@ -44,31 +44,23 @@ public class WebSocketServerHandshaker00 extends WebSocketServerHandshaker {
     /**
      * Constructor specifying the destination web socket location
      *
-     * @param webSocketURL
-     *            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
-     *            sent to this URL.
-     * @param subprotocols
-     *            CSV of supported protocols
-     * @param maxFramePayloadLength
-     *            Maximum allowable frame payload length. Setting this value to your application's requirement may
-     *            reduce denial of service attacks using long data frames.
+     * @param webSocketURL          URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
+     *                              sent to this URL.
+     * @param subprotocols          CSV of supported protocols
+     * @param maxFramePayloadLength Maximum allowable frame payload length. Setting this value to your application's requirement may
+     *                              reduce denial of service attacks using long data frames.
      */
     public WebSocketServerHandshaker00(String webSocketURL, String subprotocols, int maxFramePayloadLength) {
-        this(webSocketURL, subprotocols, WebSocketDecoderConfig.newBuilder()
-            .maxFramePayloadLength(maxFramePayloadLength)
-            .build());
+        this(webSocketURL, subprotocols, WebSocketDecoderConfig.newBuilder().maxFramePayloadLength(maxFramePayloadLength).build());
     }
 
     /**
      * Constructor specifying the destination web socket location
      *
-     * @param webSocketURL
-     *            URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
-     *            sent to this URL.
-     * @param subprotocols
-     *            CSV of supported protocols
-     * @param decoderConfig
-     *            Frames decoder configuration.
+     * @param webSocketURL  URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web socket frames will be
+     *                      sent to this URL.
+     * @param subprotocols  CSV of supported protocols
+     * @param decoderConfig Frames decoder configuration.
      */
     public WebSocketServerHandshaker00(String webSocketURL, String subprotocols, WebSocketDecoderConfig decoderConfig) {
         super(WebSocketVersion.V00, webSocketURL, subprotocols, decoderConfig);
@@ -118,14 +110,12 @@ public class WebSocketServerHandshaker00 extends WebSocketServerHandshaker {
     protected FullHttpResponse newHandshakeResponse(FullHttpRequest req, HttpHeaders headers) {
 
         // Serve the WebSocket handshake request.
-        if (!req.headers().containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true)
-                || !HttpHeaderValues.WEBSOCKET.contentEqualsIgnoreCase(req.headers().get(HttpHeaderNames.UPGRADE))) {
+        if (!req.headers().containsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true) || !HttpHeaderValues.WEBSOCKET.contentEqualsIgnoreCase(req.headers().get(HttpHeaderNames.UPGRADE))) {
             throw new WebSocketHandshakeException("not a WebSocket handshake request: missing upgrade");
         }
 
         // Hixie 75 does not contain these headers while Hixie 76 does
-        boolean isHixie76 = req.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_KEY1) &&
-                            req.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_KEY2);
+        boolean isHixie76 = req.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_KEY1) && req.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_KEY2);
 
         String origin = req.headers().get(HttpHeaderNames.ORIGIN);
         //throw before allocating FullHttpResponse
@@ -134,15 +124,12 @@ public class WebSocketServerHandshaker00 extends WebSocketServerHandshaker {
         }
 
         // Create the WebSocket handshake response.
-        FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, new HttpResponseStatus(101,
-                isHixie76 ? "WebSocket Protocol Handshake" : "Web Socket Protocol Handshake"),
-                req.content().alloc().buffer(0));
+        FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, new HttpResponseStatus(101, isHixie76 ? "WebSocket Protocol Handshake" : "Web Socket Protocol Handshake"), req.content().alloc().buffer(0));
         if (headers != null) {
             res.headers().add(headers);
         }
 
-        res.headers().set(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET)
-                     .set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE);
+        res.headers().set(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET).set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE);
 
         // Fill in the headers and contents depending on handshake getMethod.
         if (isHixie76) {
@@ -165,10 +152,8 @@ public class WebSocketServerHandshaker00 extends WebSocketServerHandshaker {
             // Calculate the answer of the challenge.
             String key1 = req.headers().get(HttpHeaderNames.SEC_WEBSOCKET_KEY1);
             String key2 = req.headers().get(HttpHeaderNames.SEC_WEBSOCKET_KEY2);
-            int a = (int) (Long.parseLong(BEGINNING_DIGIT.matcher(key1).replaceAll("")) /
-                           BEGINNING_SPACE.matcher(key1).replaceAll("").length());
-            int b = (int) (Long.parseLong(BEGINNING_DIGIT.matcher(key2).replaceAll("")) /
-                           BEGINNING_SPACE.matcher(key2).replaceAll("").length());
+            int a = (int) (Long.parseLong(BEGINNING_DIGIT.matcher(key1).replaceAll("")) / BEGINNING_SPACE.matcher(key1).replaceAll("").length());
+            int b = (int) (Long.parseLong(BEGINNING_DIGIT.matcher(key2).replaceAll("")) / BEGINNING_SPACE.matcher(key2).replaceAll("").length());
             long c = req.content().readLong();
             ByteBuf input = Unpooled.wrappedBuffer(new byte[16]).setIndex(0, 0);
             input.writeInt(a);
@@ -191,10 +176,8 @@ public class WebSocketServerHandshaker00 extends WebSocketServerHandshaker {
     /**
      * Echo back the closing frame
      *
-     * @param channel
-     *            Channel
-     * @param frame
-     *            Web Socket frame that was received
+     * @param channel Channel
+     * @param frame   Web Socket frame that was received
      */
     @Override
     public ChannelFuture close(Channel channel, CloseWebSocketFrame frame, ChannelPromise promise) {

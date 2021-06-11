@@ -53,9 +53,7 @@ public class DefaultSctpChannelConfig extends DefaultChannelConfig implements Sc
 
     @Override
     public Map<ChannelOption<?>, Object> getOptions() {
-        return getOptions(
-                super.getOptions(),
-                SO_RCVBUF, SO_SNDBUF, SCTP_NODELAY, SCTP_INIT_MAXSTREAMS);
+        return getOptions(super.getOptions(), SO_RCVBUF, SO_SNDBUF, SCTP_NODELAY, SCTP_INIT_MAXSTREAMS);
     }
 
     @SuppressWarnings("unchecked")

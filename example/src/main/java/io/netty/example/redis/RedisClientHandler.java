@@ -33,31 +33,6 @@ import java.util.List;
  */
 public class RedisClientHandler extends ChannelDuplexHandler {
 
-    @Override
-    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
-        String[] commands = ((String) msg).split("\\s+");
-        List<RedisMessage> children = new ArrayList<RedisMessage>(commands.length);
-        for (String cmdString : commands) {
-            children.add(new FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(ctx.alloc(), cmdString)));
-        }
-        RedisMessage request = new ArrayRedisMessage(children);
-        ctx.write(request, promise);
-    }
-
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        RedisMessage redisMessage = (RedisMessage) msg;
-        printAggregatedRedisResponse(redisMessage);
-        ReferenceCountUtil.release(redisMessage);
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        System.err.print("exceptionCaught: ");
-        cause.printStackTrace(System.err);
-        ctx.close();
-    }
-
     private static void printAggregatedRedisResponse(RedisMessage msg) {
         if (msg instanceof SimpleStringRedisMessage) {
             System.out.println(((SimpleStringRedisMessage) msg).content());
@@ -81,5 +56,30 @@ public class RedisClientHandler extends ChannelDuplexHandler {
             return "(null)";
         }
         return msg.content().toString(CharsetUtil.UTF_8);
+    }
+
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
+        String[] commands = ((String) msg).split("\\s+");
+        List<RedisMessage> children = new ArrayList<RedisMessage>(commands.length);
+        for (String cmdString : commands) {
+            children.add(new FullBulkStringRedisMessage(ByteBufUtil.writeUtf8(ctx.alloc(), cmdString)));
+        }
+        RedisMessage request = new ArrayRedisMessage(children);
+        ctx.write(request, promise);
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        RedisMessage redisMessage = (RedisMessage) msg;
+        printAggregatedRedisResponse(redisMessage);
+        ReferenceCountUtil.release(redisMessage);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        System.err.print("exceptionCaught: ");
+        cause.printStackTrace(System.err);
+        ctx.close();
     }
 }

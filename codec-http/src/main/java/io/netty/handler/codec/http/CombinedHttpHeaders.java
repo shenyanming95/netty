@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.handler.codec.DefaultHeaders;
@@ -46,14 +31,51 @@ public class CombinedHttpHeaders extends DefaultHttpHeaders {
         return super.containsValue(name, StringUtil.trimOws(value), ignoreCase);
     }
 
-    private static final class CombinedHttpHeadersImpl
-            extends DefaultHeaders<CharSequence, CharSequence, CombinedHttpHeadersImpl> {
+    private static final class CombinedHttpHeadersImpl extends DefaultHeaders<CharSequence, CharSequence, CombinedHttpHeadersImpl> {
         /**
          * An estimate of the size of a header value.
          */
         private static final int VALUE_LENGTH_ESTIMATE = 10;
         private CsvValueEscaper<Object> objectEscaper;
         private CsvValueEscaper<CharSequence> charSequenceEscaper;
+
+        CombinedHttpHeadersImpl(HashingStrategy<CharSequence> nameHashingStrategy, ValueConverter<CharSequence> valueConverter, io.netty.handler.codec.DefaultHeaders.NameValidator<CharSequence> nameValidator) {
+            super(nameHashingStrategy, valueConverter, nameValidator);
+        }
+
+        private static boolean cannotBeCombined(CharSequence name) {
+            return SET_COOKIE.contentEqualsIgnoreCase(name);
+        }
+
+        private static <T> CharSequence commaSeparate(CsvValueEscaper<T> escaper, T... values) {
+            StringBuilder sb = new StringBuilder(values.length * VALUE_LENGTH_ESTIMATE);
+            if (values.length > 0) {
+                int end = values.length - 1;
+                for (int i = 0; i < end; i++) {
+                    sb.append(escaper.escape(values[i])).append(COMMA);
+                }
+                sb.append(escaper.escape(values[end]));
+            }
+            return sb;
+        }
+
+        private static <T> CharSequence commaSeparate(CsvValueEscaper<T> escaper, Iterable<? extends T> values) {
+            @SuppressWarnings("rawtypes") final StringBuilder sb = values instanceof Collection ? new StringBuilder(((Collection) values).size() * VALUE_LENGTH_ESTIMATE) : new StringBuilder();
+            Iterator<? extends T> iterator = values.iterator();
+            if (iterator.hasNext()) {
+                T next = iterator.next();
+                while (iterator.hasNext()) {
+                    sb.append(escaper.escape(next)).append(COMMA);
+                    next = iterator.next();
+                }
+                sb.append(escaper.escape(next));
+            }
+            return sb;
+        }
+
+        private static CharSequence commaSeparateEscapedValues(CharSequence currentValue, CharSequence value) {
+            return new StringBuilder(currentValue.length() + 1 + value.length()).append(currentValue).append(COMMA).append(value);
+        }
 
         private CsvValueEscaper<Object> objectEscaper() {
             if (objectEscaper == null) {
@@ -77,12 +99,6 @@ public class CombinedHttpHeaders extends DefaultHttpHeaders {
                 };
             }
             return charSequenceEscaper;
-        }
-
-        CombinedHttpHeadersImpl(HashingStrategy<CharSequence> nameHashingStrategy,
-                ValueConverter<CharSequence> valueConverter,
-                io.netty.handler.codec.DefaultHeaders.NameValidator<CharSequence> nameValidator) {
-            super(nameHashingStrategy, valueConverter, nameValidator);
         }
 
         @Override
@@ -214,10 +230,6 @@ public class CombinedHttpHeaders extends DefaultHttpHeaders {
             return this;
         }
 
-        private static boolean cannotBeCombined(CharSequence name) {
-            return SET_COOKIE.contentEqualsIgnoreCase(name);
-        }
-
         private CombinedHttpHeadersImpl addEscapedValue(CharSequence name, CharSequence escapedValue) {
             CharSequence currentValue = super.get(name);
             if (currentValue == null || cannotBeCombined(name)) {
@@ -226,41 +238,6 @@ public class CombinedHttpHeaders extends DefaultHttpHeaders {
                 super.set(name, commaSeparateEscapedValues(currentValue, escapedValue));
             }
             return this;
-        }
-
-        private static <T> CharSequence commaSeparate(CsvValueEscaper<T> escaper, T... values) {
-            StringBuilder sb = new StringBuilder(values.length * VALUE_LENGTH_ESTIMATE);
-            if (values.length > 0) {
-                int end = values.length - 1;
-                for (int i = 0; i < end; i++) {
-                    sb.append(escaper.escape(values[i])).append(COMMA);
-                }
-                sb.append(escaper.escape(values[end]));
-            }
-            return sb;
-        }
-
-        private static <T> CharSequence commaSeparate(CsvValueEscaper<T> escaper, Iterable<? extends T> values) {
-            @SuppressWarnings("rawtypes")
-            final StringBuilder sb = values instanceof Collection
-                    ? new StringBuilder(((Collection) values).size() * VALUE_LENGTH_ESTIMATE) : new StringBuilder();
-            Iterator<? extends T> iterator = values.iterator();
-            if (iterator.hasNext()) {
-                T next = iterator.next();
-                while (iterator.hasNext()) {
-                    sb.append(escaper.escape(next)).append(COMMA);
-                    next = iterator.next();
-                }
-                sb.append(escaper.escape(next));
-            }
-            return sb;
-        }
-
-        private static CharSequence commaSeparateEscapedValues(CharSequence currentValue, CharSequence value) {
-            return new StringBuilder(currentValue.length() + 1 + value.length())
-                    .append(currentValue)
-                    .append(COMMA)
-                    .append(value);
         }
 
         /**

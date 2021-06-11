@@ -1,19 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.util.concurrent;
 
 import io.netty.util.internal.ObjectUtil;
@@ -22,14 +6,13 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
+ * @param <V> the type of value returned by the {@link Future}
+ * @param <F> the type of {@link Future}
  * @deprecated Use {@link PromiseCombiner#PromiseCombiner(EventExecutor)}.
- *
+ * <p>
  * {@link GenericFutureListener} implementation which consolidates multiple {@link Future}s
  * into one, by listening to individual {@link Future}s and producing an aggregated result
  * (success/failure) when all {@link Future}s have completed.
- *
- * @param <V> the type of value returned by the {@link Future}
- * @param <F> the type of {@link Future}
  */
 @Deprecated
 public class PromiseAggregator<V, F extends Future<V>> implements GenericFutureListener<F> {
@@ -41,8 +24,8 @@ public class PromiseAggregator<V, F extends Future<V>> implements GenericFutureL
     /**
      * Creates a new instance.
      *
-     * @param aggregatePromise  the {@link Promise} to notify
-     * @param failPending  {@code true} to fail pending promises, false to leave them unaffected
+     * @param aggregatePromise the {@link Promise} to notify
+     * @param failPending      {@code true} to fail pending promises, false to leave them unaffected
      */
     public PromiseAggregator(Promise<Void> aggregatePromise, boolean failPending) {
         this.aggregatePromise = ObjectUtil.checkNotNull(aggregatePromise, "aggregatePromise");

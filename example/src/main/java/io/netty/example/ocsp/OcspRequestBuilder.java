@@ -84,8 +84,7 @@ public class OcspRequestBuilder {
 
         BigInteger serial = certificate.getSerialNumber();
 
-        CertificateID certId = new CertificateID(calculator,
-                new X509CertificateHolder(issuer.getEncoded()), serial);
+        CertificateID certId = new CertificateID(calculator, new X509CertificateHolder(issuer.getEncoded()), serial);
 
         OCSPReqBuilder builder = new OCSPReqBuilder();
         builder.addRequest(certId);
@@ -93,9 +92,7 @@ public class OcspRequestBuilder {
         byte[] nonce = new byte[8];
         generator.nextBytes(nonce);
 
-        Extension[] extensions = new Extension[] {
-                new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, false,
-                        new DEROctetString(nonce)) };
+        Extension[] extensions = new Extension[]{new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, false, new DEROctetString(nonce))};
 
         builder.setRequestExtensions(new Extensions(extensions));
 

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.stream;
 
 import io.netty.buffer.ByteBufAllocator;
@@ -50,7 +35,7 @@ import java.util.Queue;
  * </pre>
  *
  * <h3>Sending a stream which generates a chunk intermittently</h3>
- *
+ * <p>
  * Some {@link ChunkedInput} generates a chunk on a certain event or timing.
  * Such {@link ChunkedInput} implementation often returns {@code null} on
  * {@link ChunkedInput#readChunk(ChannelHandlerContext)}, resulting in the indefinitely suspended
@@ -59,8 +44,7 @@ import java.util.Queue;
  */
 public class ChunkedWriteHandler extends ChannelDuplexHandler {
 
-    private static final InternalLogger logger =
-        InternalLoggerFactory.getInstance(ChunkedWriteHandler.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ChunkedWriteHandler.class);
 
     private final Queue<PendingWrite> queue = new ArrayDeque<PendingWrite>();
     private volatile ChannelHandlerContext ctx;
@@ -74,8 +58,32 @@ public class ChunkedWriteHandler extends ChannelDuplexHandler {
     @Deprecated
     public ChunkedWriteHandler(int maxPendingWrites) {
         if (maxPendingWrites <= 0) {
-            throw new IllegalArgumentException(
-                    "maxPendingWrites: " + maxPendingWrites + " (expected: > 0)");
+            throw new IllegalArgumentException("maxPendingWrites: " + maxPendingWrites + " (expected: > 0)");
+        }
+    }
+
+    private static void handleEndOfInputFuture(ChannelFuture future, PendingWrite currentWrite) {
+        ChunkedInput<?> input = (ChunkedInput<?>) currentWrite.msg;
+        if (!future.isSuccess()) {
+            closeInput(input);
+            currentWrite.fail(future.cause());
+        } else {
+            // read state of the input in local variables before closing it
+            long inputProgress = input.progress();
+            long inputLength = input.length();
+            closeInput(input);
+            currentWrite.progress(inputProgress, inputLength);
+            currentWrite.success(inputLength);
+        }
+    }
+
+    private static void closeInput(ChunkedInput<?> chunks) {
+        try {
+            chunks.close();
+        } catch (Throwable t) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("Failed to close a chunked input.", t);
+            }
         }
     }
 
@@ -140,7 +148,7 @@ public class ChunkedWriteHandler extends ChannelDuplexHandler {
     }
 
     private void discard(Throwable cause) {
-        for (;;) {
+        for (; ; ) {
             PendingWrite currentWrite = queue.poll();
 
             if (currentWrite == null) {
@@ -304,21 +312,6 @@ public class ChunkedWriteHandler extends ChannelDuplexHandler {
         }
     }
 
-    private static void handleEndOfInputFuture(ChannelFuture future, PendingWrite currentWrite) {
-        ChunkedInput<?> input = (ChunkedInput<?>) currentWrite.msg;
-        if (!future.isSuccess()) {
-            closeInput(input);
-            currentWrite.fail(future.cause());
-        } else {
-            // read state of the input in local variables before closing it
-            long inputProgress = input.progress();
-            long inputLength = input.length();
-            closeInput(input);
-            currentWrite.progress(inputProgress, inputLength);
-            currentWrite.success(inputLength);
-        }
-    }
-
     private void handleFuture(ChannelFuture future, PendingWrite currentWrite, boolean resume) {
         ChunkedInput<?> input = (ChunkedInput<?>) currentWrite.msg;
         if (!future.isSuccess()) {
@@ -328,16 +321,6 @@ public class ChunkedWriteHandler extends ChannelDuplexHandler {
             currentWrite.progress(input.progress(), input.length());
             if (resume && future.channel().isWritable()) {
                 resumeTransfer();
-            }
-        }
-    }
-
-    private static void closeInput(ChunkedInput<?> chunks) {
-        try {
-            chunks.close();
-        } catch (Throwable t) {
-            if (logger.isWarnEnabled()) {
-                logger.warn("Failed to close a chunked input.", t);
             }
         }
     }

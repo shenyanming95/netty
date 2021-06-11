@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.util.internal;
 
 import io.netty.util.CharsetUtil;
@@ -28,7 +13,6 @@ import java.util.*;
 
 /**
  * Helper class to load JNI resources.
- *
  */
 public final class NativeLibraryLoader {
 
@@ -40,8 +24,7 @@ public final class NativeLibraryLoader {
     private static final boolean TRY_TO_PATCH_SHADED_ID;
 
     // Just use a-Z and numbers as valid ID bytes.
-    private static final byte[] UNIQUE_ID_BYTES =
-            "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes(CharsetUtil.US_ASCII);
+    private static final byte[] UNIQUE_ID_BYTES = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes(CharsetUtil.US_ASCII);
 
     static {
         String workdir = SystemPropertyUtil.get("io.netty.native.workdir");
@@ -62,21 +45,22 @@ public final class NativeLibraryLoader {
             logger.debug("-Dio.netty.native.workdir: " + WORKDIR + " (io.netty.tmpdir)");
         }
 
-        DELETE_NATIVE_LIB_AFTER_LOADING = SystemPropertyUtil.getBoolean(
-                "io.netty.native.deleteLibAfterLoading", true);
+        DELETE_NATIVE_LIB_AFTER_LOADING = SystemPropertyUtil.getBoolean("io.netty.native.deleteLibAfterLoading", true);
         logger.debug("-Dio.netty.native.deleteLibAfterLoading: {}", DELETE_NATIVE_LIB_AFTER_LOADING);
 
-        TRY_TO_PATCH_SHADED_ID = SystemPropertyUtil.getBoolean(
-                "io.netty.native.tryPatchShadedId", true);
+        TRY_TO_PATCH_SHADED_ID = SystemPropertyUtil.getBoolean("io.netty.native.tryPatchShadedId", true);
         logger.debug("-Dio.netty.native.tryPatchShadedId: {}", TRY_TO_PATCH_SHADED_ID);
+    }
+
+    private NativeLibraryLoader() {
+        // Utility
     }
 
     /**
      * Loads the first available library in the collection with the specified
      * {@link ClassLoader}.
      *
-     * @throws IllegalArgumentException
-     *         if none of the given libraries load successfully.
+     * @throws IllegalArgumentException if none of the given libraries load successfully.
      */
     public static void loadFirstAvailable(ClassLoader loader, String... names) {
         List<Throwable> suppressed = new ArrayList<Throwable>();
@@ -89,8 +73,7 @@ public final class NativeLibraryLoader {
                 logger.debug("Unable to load the library '{}', trying next name...", name, t);
             }
         }
-        IllegalArgumentException iae =
-                new IllegalArgumentException("Failed to load any of the given libraries: " + Arrays.toString(names));
+        IllegalArgumentException iae = new IllegalArgumentException("Failed to load any of the given libraries: " + Arrays.toString(names));
         ThrowableUtil.addSuppressedAndClear(iae, suppressed);
         throw iae;
     }
@@ -105,9 +88,7 @@ public final class NativeLibraryLoader {
         // Use ! instead of . to avoid shading utilities from modifying the string
         String expected = "io!netty!util!internal!NativeLibraryLoader".replace('!', '.');
         if (!maybeShaded.endsWith(expected)) {
-            throw new UnsatisfiedLinkError(String.format(
-                    "Could not find prefix added to %s to get %s. When shading, only adding a "
-                    + "package prefix is supported", expected, maybeShaded));
+            throw new UnsatisfiedLinkError(String.format("Could not find prefix added to %s to get %s. When shading, only adding a " + "package prefix is supported", expected, maybeShaded));
         }
         return maybeShaded.substring(0, maybeShaded.length() - expected.length());
     }
@@ -127,9 +108,7 @@ public final class NativeLibraryLoader {
         } catch (Throwable ex) {
             suppressed.add(ex);
             if (logger.isDebugEnabled()) {
-                logger.debug(
-                        "{} cannot be loaded from java.library.path, "
-                                + "now trying export to -Dio.netty.native.workdir: {}", name, WORKDIR, ex);
+                logger.debug("{} cannot be loaded from java.library.path, " + "now trying export to -Dio.netty.native.workdir: {}", name, WORKDIR, ex);
             }
         }
 
@@ -148,8 +127,7 @@ public final class NativeLibraryLoader {
         try {
             if (url == null) {
                 if (PlatformDependent.isOsx()) {
-                    String fileName = path.endsWith(".jnilib") ? NATIVE_RESOURCE_HOME + "lib" + name + ".dynlib" :
-                            NATIVE_RESOURCE_HOME + "lib" + name + ".jnilib";
+                    String fileName = path.endsWith(".jnilib") ? NATIVE_RESOURCE_HOME + "lib" + name + ".dynlib" : NATIVE_RESOURCE_HOME + "lib" + name + ".jnilib";
                     if (loader == null) {
                         url = ClassLoader.getSystemResource(fileName);
                     } else {
@@ -194,15 +172,11 @@ public final class NativeLibraryLoader {
             loadLibrary(loader, tmpFile.getPath(), true);
         } catch (UnsatisfiedLinkError e) {
             try {
-                if (tmpFile != null && tmpFile.isFile() && tmpFile.canRead() &&
-                    !NoexecVolumeDetector.canExecuteExecutable(tmpFile)) {
+                if (tmpFile != null && tmpFile.isFile() && tmpFile.canRead() && !NoexecVolumeDetector.canExecuteExecutable(tmpFile)) {
                     // Pass "io.netty.native.workdir" as an argument to allow shading tools to see
                     // the string. Since this is printed out to users to tell them what to do next,
                     // we want the value to be correct even when shading.
-                    logger.info("{} exists but cannot be executed even when execute permissions set; " +
-                                "check volume for \"noexec\" flag; use -D{}=[path] " +
-                                "to set native working directory separately.",
-                                tmpFile.getPath(), "io.netty.native.workdir");
+                    logger.info("{} exists but cannot be executed even when execute permissions set; " + "check volume for \"noexec\" flag; use -D{}=[path] " + "to set native working directory separately.", tmpFile.getPath(), "io.netty.native.workdir");
                 }
             } catch (Throwable t) {
                 suppressed.add(t);
@@ -229,8 +203,7 @@ public final class NativeLibraryLoader {
     }
 
     // Package-private for testing.
-    static boolean patchShadedLibraryId(InputStream in, OutputStream out, String originalName, String name)
-            throws IOException {
+    static boolean patchShadedLibraryId(InputStream in, OutputStream out, String originalName, String name) throws IOException {
         byte[] buffer = new byte[8192];
         int length;
         // We read the whole native lib into memory to make it easier to monkey-patch the id.
@@ -252,8 +225,7 @@ public final class NativeLibraryLoader {
             String arch = PlatformDependent.normalizedArch();
             String osArch = "_" + os + "_" + arch;
             if (originalName.endsWith(osArch)) {
-                patched = patchShadedLibraryId(bytes,
-                        originalName.substring(0, originalName.length() - osArch.length()), name);
+                patched = patchShadedLibraryId(bytes, originalName.substring(0, originalName.length() - osArch.length()), name);
             } else {
                 patched = false;
             }
@@ -281,9 +253,10 @@ public final class NativeLibraryLoader {
         // a full mach-o parser and writer. Basically we just replace the the original bytes with some
         // random bytes as part of the ID regeneration. The important thing here is that we need to use the same
         // length to not corrupt the mach-o header.
-        outerLoop: for (int i = 0; i < bytes.length && bytes.length - i >= nameBytes.length; i++) {
+        outerLoop:
+        for (int i = 0; i < bytes.length && bytes.length - i >= nameBytes.length; i++) {
             int idx = i;
-            for (int j = 0; j < nameBytes.length;) {
+            for (int j = 0; j < nameBytes.length; ) {
                 if (bytes[idx++] != nameBytes[j++]) {
                     // Did not match the name, increase the index and try again.
                     break;
@@ -302,14 +275,11 @@ public final class NativeLibraryLoader {
             // We found our ID... now monkey-patch it!
             for (int i = 0; i < nameBytes.length; i++) {
                 // We should only use bytes as replacement that are in our UNIQUE_ID_BYTES array.
-                bytes[idIdx + i] = UNIQUE_ID_BYTES[PlatformDependent.threadLocalRandom()
-                                                                    .nextInt(UNIQUE_ID_BYTES.length)];
+                bytes[idIdx + i] = UNIQUE_ID_BYTES[PlatformDependent.threadLocalRandom().nextInt(UNIQUE_ID_BYTES.length)];
             }
 
             if (logger.isDebugEnabled()) {
-                logger.debug(
-                        "Found the ID of the shaded native library {}. Replacing ID part {} with {}",
-                        name, originalName, new String(bytes, idIdx, nameBytes.length, CharsetUtil.UTF_8));
+                logger.debug("Found the ID of the shaded native library {}. Replacing ID part {} with {}", name, originalName, new String(bytes, idIdx, nameBytes.length, CharsetUtil.UTF_8));
             }
             return true;
         }
@@ -317,8 +287,9 @@ public final class NativeLibraryLoader {
 
     /**
      * Loading the native library into the specified {@link ClassLoader}.
-     * @param loader - The {@link ClassLoader} where the native library will be loaded into
-     * @param name - The native library path or name
+     *
+     * @param loader   - The {@link ClassLoader} where the native library will be loaded into
+     * @param name     - The native library path or name
      * @param absolute - Whether the native library will be loaded by path or by name
      */
     private static void loadLibrary(final ClassLoader loader, final String name, final boolean absolute) {
@@ -347,8 +318,7 @@ public final class NativeLibraryLoader {
         }
     }
 
-    private static void loadLibraryByHelper(final Class<?> helper, final String name, final boolean absolute)
-            throws UnsatisfiedLinkError {
+    private static void loadLibraryByHelper(final Class<?> helper, final String name, final boolean absolute) throws UnsatisfiedLinkError {
         Object ret = AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
             public Object run() {
@@ -378,13 +348,13 @@ public final class NativeLibraryLoader {
 
     /**
      * Try to load the helper {@link Class} into specified {@link ClassLoader}.
+     *
      * @param loader - The {@link ClassLoader} where to load the helper {@link Class}
      * @param helper - The helper {@link Class}
      * @return A new helper Class defined in the specified ClassLoader.
      * @throws ClassNotFoundException Helper class not found or loading failed
      */
-    private static Class<?> tryToLoadClass(final ClassLoader loader, final Class<?> helper)
-            throws ClassNotFoundException {
+    private static Class<?> tryToLoadClass(final ClassLoader loader, final Class<?> helper) throws ClassNotFoundException {
         try {
             return Class.forName(helper.getName(), false, loader);
         } catch (ClassNotFoundException e1) {
@@ -401,11 +371,9 @@ public final class NativeLibraryLoader {
                         try {
                             // Define the helper class in the target ClassLoader,
                             //  then we can call the helper to load the native library.
-                            Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class,
-                                    byte[].class, int.class, int.class);
+                            Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
                             defineClass.setAccessible(true);
-                            return (Class<?>) defineClass.invoke(loader, helper.getName(), classBinary, 0,
-                                    classBinary.length);
+                            return (Class<?>) defineClass.invoke(loader, helper.getName(), classBinary, 0, classBinary.length);
                         } catch (Exception e) {
                             throw new IllegalStateException("Define class failed!", e);
                         }
@@ -426,6 +394,7 @@ public final class NativeLibraryLoader {
 
     /**
      * Load the helper {@link Class} as a byte array, to be redefined in specified {@link ClassLoader}.
+     *
      * @param clazz - The helper {@link Class} provided by this bundle
      * @return The binary content of helper {@link Class}.
      * @throws ClassNotFoundException Helper class not found or loading failed
@@ -445,7 +414,7 @@ public final class NativeLibraryLoader {
         InputStream in = null;
         try {
             in = classUrl.openStream();
-            for (int r; (r = in.read(buf)) != -1;) {
+            for (int r; (r = in.read(buf)) != -1; ) {
                 out.write(buf, 0, r);
             }
             return out.toByteArray();
@@ -467,11 +436,11 @@ public final class NativeLibraryLoader {
         }
     }
 
-    private NativeLibraryLoader() {
-        // Utility
-    }
-
     private static final class NoexecVolumeDetector {
+
+        private NoexecVolumeDetector() {
+            // Utility
+        }
 
         @SuppressJava6Requirement(reason = "Usage guarded by java version check")
         private static boolean canExecuteExecutable(File file) throws IOException {
@@ -492,12 +461,8 @@ public final class NativeLibraryLoader {
             // loaded off a volume with noexec, confirm or add executalbe permissions, then check File#canExecute().
 
             // Note: We use FQCN to not break when netty is used in java6
-            Set<java.nio.file.attribute.PosixFilePermission> existingFilePermissions =
-                    java.nio.file.Files.getPosixFilePermissions(file.toPath());
-            Set<java.nio.file.attribute.PosixFilePermission> executePermissions =
-                    EnumSet.of(java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE,
-                            java.nio.file.attribute.PosixFilePermission.GROUP_EXECUTE,
-                            java.nio.file.attribute.PosixFilePermission.OTHERS_EXECUTE);
+            Set<java.nio.file.attribute.PosixFilePermission> existingFilePermissions = java.nio.file.Files.getPosixFilePermissions(file.toPath());
+            Set<java.nio.file.attribute.PosixFilePermission> executePermissions = EnumSet.of(java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE, java.nio.file.attribute.PosixFilePermission.GROUP_EXECUTE, java.nio.file.attribute.PosixFilePermission.OTHERS_EXECUTE);
             if (existingFilePermissions.containsAll(executePermissions)) {
                 return false;
             }
@@ -506,10 +471,6 @@ public final class NativeLibraryLoader {
             newPermissions.addAll(executePermissions);
             java.nio.file.Files.setPosixFilePermissions(file.toPath(), newPermissions);
             return file.canExecute();
-        }
-
-        private NoexecVolumeDetector() {
-            // Utility
         }
     }
 }

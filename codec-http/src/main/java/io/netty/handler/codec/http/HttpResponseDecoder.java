@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.buffer.ByteBuf;
@@ -96,35 +81,25 @@ public class HttpResponseDecoder extends HttpObjectDecoder {
     /**
      * Creates a new instance with the specified parameters.
      */
-    public HttpResponseDecoder(
-            int maxInitialLineLength, int maxHeaderSize, int maxChunkSize) {
+    public HttpResponseDecoder(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize) {
         super(maxInitialLineLength, maxHeaderSize, maxChunkSize, DEFAULT_CHUNKED_SUPPORTED);
     }
 
-    public HttpResponseDecoder(
-            int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders) {
+    public HttpResponseDecoder(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders) {
         super(maxInitialLineLength, maxHeaderSize, maxChunkSize, DEFAULT_CHUNKED_SUPPORTED, validateHeaders);
     }
 
-    public HttpResponseDecoder(
-            int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders,
-            int initialBufferSize) {
-        super(maxInitialLineLength, maxHeaderSize, maxChunkSize, DEFAULT_CHUNKED_SUPPORTED, validateHeaders,
-              initialBufferSize);
+    public HttpResponseDecoder(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders, int initialBufferSize) {
+        super(maxInitialLineLength, maxHeaderSize, maxChunkSize, DEFAULT_CHUNKED_SUPPORTED, validateHeaders, initialBufferSize);
     }
 
-    public HttpResponseDecoder(
-            int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders,
-            int initialBufferSize, boolean allowDuplicateContentLengths) {
-        super(maxInitialLineLength, maxHeaderSize, maxChunkSize, DEFAULT_CHUNKED_SUPPORTED, validateHeaders,
-              initialBufferSize, allowDuplicateContentLengths);
+    public HttpResponseDecoder(int maxInitialLineLength, int maxHeaderSize, int maxChunkSize, boolean validateHeaders, int initialBufferSize, boolean allowDuplicateContentLengths) {
+        super(maxInitialLineLength, maxHeaderSize, maxChunkSize, DEFAULT_CHUNKED_SUPPORTED, validateHeaders, initialBufferSize, allowDuplicateContentLengths);
     }
 
     @Override
     protected HttpMessage createMessage(String[] initialLine) {
-        return new DefaultHttpResponse(
-                HttpVersion.valueOf(initialLine[0]),
-                HttpResponseStatus.valueOf(Integer.parseInt(initialLine[1]), initialLine[2]), validateHeaders);
+        return new DefaultHttpResponse(HttpVersion.valueOf(initialLine[0]), HttpResponseStatus.valueOf(Integer.parseInt(initialLine[1]), initialLine[2]), validateHeaders);
     }
 
     @Override

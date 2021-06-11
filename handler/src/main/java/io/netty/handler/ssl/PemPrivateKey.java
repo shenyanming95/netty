@@ -30,7 +30,7 @@ import java.security.PrivateKey;
  * This is a special purpose implementation of a {@link PrivateKey} which allows the
  * user to pass PEM/PKCS#8 encoded key material straight into {@link OpenSslContext}
  * without having to parse and re-encode bytes in Java land.
- *
+ * <p>
  * All methods other than what's implemented in {@link PemEncoded} and {@link Destroyable}
  * throw {@link UnsupportedOperationException}s.
  *
@@ -46,6 +46,11 @@ public final class PemPrivateKey extends AbstractReferenceCounted implements Pri
     private static final byte[] END_PRIVATE_KEY = "\n-----END PRIVATE KEY-----\n".getBytes(CharsetUtil.US_ASCII);
 
     private static final String PKCS8_FORMAT = "PKCS#8";
+    private final ByteBuf content;
+
+    private PemPrivateKey(ByteBuf content) {
+        this.content = ObjectUtil.checkNotNull(content, "content");
+    }
 
     /**
      * Creates a {@link PemEncoded} value from the {@link PrivateKey}.
@@ -100,7 +105,7 @@ public final class PemPrivateKey extends AbstractReferenceCounted implements Pri
 
     /**
      * Creates a {@link PemPrivateKey} from raw {@code byte[]}.
-     *
+     * <p>
      * ATTENTION: It's assumed that the given argument is a PEM/PKCS#8 encoded value.
      * No input validation is performed to validate it.
      */
@@ -110,18 +115,12 @@ public final class PemPrivateKey extends AbstractReferenceCounted implements Pri
 
     /**
      * Creates a {@link PemPrivateKey} from raw {@code ByteBuf}.
-     *
+     * <p>
      * ATTENTION: It's assumed that the given argument is a PEM/PKCS#8 encoded value.
      * No input validation is performed to validate it.
      */
     public static PemPrivateKey valueOf(ByteBuf key) {
         return new PemPrivateKey(key);
-    }
-
-    private final ByteBuf content;
-
-    private PemPrivateKey(ByteBuf content) {
-        this.content = ObjectUtil.checkNotNull(content, "content");
     }
 
     @Override

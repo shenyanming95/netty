@@ -26,6 +26,11 @@ final class PreferredAddressTypeComparator implements Comparator<InetAddress> {
 
     private static final PreferredAddressTypeComparator IPv4 = new PreferredAddressTypeComparator(Inet4Address.class);
     private static final PreferredAddressTypeComparator IPv6 = new PreferredAddressTypeComparator(Inet6Address.class);
+    private final Class<? extends InetAddress> preferredAddressType;
+
+    private PreferredAddressTypeComparator(Class<? extends InetAddress> preferredAddressType) {
+        this.preferredAddressType = preferredAddressType;
+    }
 
     static PreferredAddressTypeComparator comparator(InternetProtocolFamily family) {
         switch (family) {
@@ -36,12 +41,6 @@ final class PreferredAddressTypeComparator implements Comparator<InetAddress> {
             default:
                 throw new IllegalArgumentException();
         }
-    }
-
-    private final Class<? extends InetAddress> preferredAddressType;
-
-    private PreferredAddressTypeComparator(Class<? extends InetAddress> preferredAddressType) {
-        this.preferredAddressType = preferredAddressType;
     }
 
     @Override

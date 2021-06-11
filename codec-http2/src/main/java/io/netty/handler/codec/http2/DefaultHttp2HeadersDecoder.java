@@ -49,11 +49,12 @@ public class DefaultHttp2HeadersDecoder implements Http2HeadersDecoder, Http2Hea
 
     /**
      * Create a new instance.
-     * @param validateHeaders {@code true} to validate headers are valid according to the RFC.
+     *
+     * @param validateHeaders   {@code true} to validate headers are valid according to the RFC.
      * @param maxHeaderListSize This is the only setting that can be configured before notifying the peer.
-     *  This is because <a href="https://tools.ietf.org/html/rfc7540#section-6.5.1">SETTINGS_MAX_HEADER_LIST_SIZE</a>
-     *  allows a lower than advertised limit from being enforced, and the default limit is unlimited
-     *  (which is dangerous).
+     *                          This is because <a href="https://tools.ietf.org/html/rfc7540#section-6.5.1">SETTINGS_MAX_HEADER_LIST_SIZE</a>
+     *                          allows a lower than advertised limit from being enforced, and the default limit is unlimited
+     *                          (which is dangerous).
      */
     public DefaultHttp2HeadersDecoder(boolean validateHeaders, long maxHeaderListSize) {
         this(validateHeaders, maxHeaderListSize, /* initialHuffmanDecodeCapacity= */ -1);
@@ -61,15 +62,15 @@ public class DefaultHttp2HeadersDecoder implements Http2HeadersDecoder, Http2Hea
 
     /**
      * Create a new instance.
-     * @param validateHeaders {@code true} to validate headers are valid according to the RFC.
-     * @param maxHeaderListSize This is the only setting that can be configured before notifying the peer.
-     *  This is because <a href="https://tools.ietf.org/html/rfc7540#section-6.5.1">SETTINGS_MAX_HEADER_LIST_SIZE</a>
-     *  allows a lower than advertised limit from being enforced, and the default limit is unlimited
-     *  (which is dangerous).
+     *
+     * @param validateHeaders              {@code true} to validate headers are valid according to the RFC.
+     * @param maxHeaderListSize            This is the only setting that can be configured before notifying the peer.
+     *                                     This is because <a href="https://tools.ietf.org/html/rfc7540#section-6.5.1">SETTINGS_MAX_HEADER_LIST_SIZE</a>
+     *                                     allows a lower than advertised limit from being enforced, and the default limit is unlimited
+     *                                     (which is dangerous).
      * @param initialHuffmanDecodeCapacity Does nothing, do not use.
      */
-    public DefaultHttp2HeadersDecoder(boolean validateHeaders, long maxHeaderListSize,
-                                      @Deprecated int initialHuffmanDecodeCapacity) {
+    public DefaultHttp2HeadersDecoder(boolean validateHeaders, long maxHeaderListSize, @Deprecated int initialHuffmanDecodeCapacity) {
         this(validateHeaders, new HpackDecoder(maxHeaderListSize));
     }
 
@@ -80,8 +81,7 @@ public class DefaultHttp2HeadersDecoder implements Http2HeadersDecoder, Http2Hea
     DefaultHttp2HeadersDecoder(boolean validateHeaders, HpackDecoder hpackDecoder) {
         this.hpackDecoder = ObjectUtil.checkNotNull(hpackDecoder, "hpackDecoder");
         this.validateHeaders = validateHeaders;
-        this.maxHeaderListSizeGoAway =
-                Http2CodecUtil.calculateMaxHeaderListSizeGoAway(hpackDecoder.getMaxHeaderListSize());
+        this.maxHeaderListSizeGoAway = Http2CodecUtil.calculateMaxHeaderListSizeGoAway(hpackDecoder.getMaxHeaderListSize());
     }
 
     @Override
@@ -97,8 +97,7 @@ public class DefaultHttp2HeadersDecoder implements Http2HeadersDecoder, Http2Hea
     @Override
     public void maxHeaderListSize(long max, long goAwayMax) throws Http2Exception {
         if (goAwayMax < max || goAwayMax < 0) {
-            throw connectionError(INTERNAL_ERROR, "Header List Size GO_AWAY %d must be non-negative and >= %d",
-                    goAwayMax, max);
+            throw connectionError(INTERNAL_ERROR, "Header List Size GO_AWAY %d must be non-negative and >= %d", goAwayMax, max);
         }
         hpackDecoder.setMaxHeaderListSize(max);
         this.maxHeaderListSizeGoAway = goAwayMax;
@@ -124,8 +123,7 @@ public class DefaultHttp2HeadersDecoder implements Http2HeadersDecoder, Http2Hea
         try {
             final Http2Headers headers = newHeaders();
             hpackDecoder.decode(streamId, headerBlock, headers, validateHeaders);
-            headerArraySizeAccumulator = HEADERS_COUNT_WEIGHT_NEW * headers.size() +
-                                         HEADERS_COUNT_WEIGHT_HISTORICAL * headerArraySizeAccumulator;
+            headerArraySizeAccumulator = HEADERS_COUNT_WEIGHT_NEW * headers.size() + HEADERS_COUNT_WEIGHT_HISTORICAL * headerArraySizeAccumulator;
             return headers;
         } catch (Http2Exception e) {
             throw e;
@@ -139,6 +137,7 @@ public class DefaultHttp2HeadersDecoder implements Http2HeadersDecoder, Http2Hea
 
     /**
      * A weighted moving average estimating how many headers are expected during the decode process.
+     *
      * @return an estimate of how many headers are expected during the decode process.
      */
     protected final int numberOfHeadersGuess() {
@@ -147,6 +146,7 @@ public class DefaultHttp2HeadersDecoder implements Http2HeadersDecoder, Http2Hea
 
     /**
      * Determines if the headers should be validated as a result of the decode operation.
+     *
      * @return {@code true} if the headers should be validated as a result of the decode operation.
      */
     protected final boolean validateHeaders() {
@@ -155,6 +155,7 @@ public class DefaultHttp2HeadersDecoder implements Http2HeadersDecoder, Http2Hea
 
     /**
      * Create a new {@link Http2Headers} object which will store the results of the decode operation.
+     *
      * @return a new {@link Http2Headers} object which will store the results of the decode operation.
      */
     protected Http2Headers newHeaders() {

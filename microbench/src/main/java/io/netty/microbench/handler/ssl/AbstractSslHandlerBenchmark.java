@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbench.handler.ssl;
 
 import io.netty.buffer.ByteBuf;
@@ -38,85 +23,19 @@ import static org.junit.Assert.assertNull;
 
 public class AbstractSslHandlerBenchmark extends AbstractMicrobenchmark {
     private static final String PROTOCOL_TLS_V1_2 = "TLSv1.2";
-
-    public enum SslEngineProvider {
-        JDK {
-            @Override
-            SslProvider sslProvider() {
-                return SslProvider.JDK;
-            }
-        },
-        OPENSSL {
-            @Override
-            SslProvider sslProvider() {
-                return SslProvider.OPENSSL;
-            }
-        },
-        OPENSSL_REFCNT {
-            @Override
-            SslProvider sslProvider() {
-                return SslProvider.OPENSSL_REFCNT;
-            }
-        };
-        private final SslContext clientContext = newClientContext();
-        private final SslContext serverContext = newServerContext();
-
-        private SslContext newClientContext() {
-            try {
-                return SslContextBuilder.forClient()
-                        .sslProvider(sslProvider())
-                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                        .build();
-            } catch (SSLException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
-        private SslContext newServerContext() {
-            try {
-                File keyFile = new File(getClass().getResource("test_unencrypted.pem").getFile());
-                File crtFile = new File(getClass().getResource("test.crt").getFile());
-
-                return SslContextBuilder.forServer(crtFile, keyFile)
-                        .sslProvider(sslProvider())
-                        .build();
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
-        SslHandler newClientHandler(ByteBufAllocator allocator, String cipher) {
-            SslHandler handler = clientContext.newHandler(allocator);
-            configureEngine(handler.engine(), cipher);
-            return handler;
-        }
-
-        SslHandler newServerHandler(ByteBufAllocator allocator, String cipher) {
-            SslHandler handler = serverContext.newHandler(allocator);
-            configureEngine(handler.engine(), cipher);
-            return handler;
-        }
-
-        abstract SslProvider sslProvider();
-
-        static SSLEngine configureEngine(SSLEngine engine, String cipher) {
-            engine.setEnabledProtocols(new String[]{ PROTOCOL_TLS_V1_2 });
-            engine.setEnabledCipherSuites(new String[]{ cipher });
-            return engine;
-        }
-    }
-
     @Param
     public SslEngineProvider sslProvider;
-
     // Includes cipher required by HTTP/2
-    @Param({ "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" })
+    @Param({"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"})
     public String cipher;
-
     protected SslHandler clientSslHandler;
     protected SslHandler serverSslHandler;
     protected EmbeddedChannelWriteAccumulatingHandlerContext clientCtx;
     protected EmbeddedChannelWriteAccumulatingHandlerContext serverCtx;
+
+    public static void handleUnexpectedException(Throwable t) {
+        assertNull(t);
+    }
 
     protected final void initSslHandlers(ByteBufAllocator allocator) {
         clientSslHandler = newClientHandler(allocator);
@@ -162,10 +81,68 @@ public class AbstractSslHandlerBenchmark extends AbstractMicrobenchmark {
         return sslProvider.newServerHandler(allocator, cipher);
     }
 
-    private static final class SslThroughputBenchmarkHandlerContext extends
-            EmbeddedChannelWriteAccumulatingHandlerContext {
-        SslThroughputBenchmarkHandlerContext(ByteBufAllocator alloc, ChannelHandler handler,
-                                                    ByteToMessageDecoder.Cumulator writeCumulator) {
+    public enum SslEngineProvider {
+        JDK {
+            @Override
+            SslProvider sslProvider() {
+                return SslProvider.JDK;
+            }
+        }, OPENSSL {
+            @Override
+            SslProvider sslProvider() {
+                return SslProvider.OPENSSL;
+            }
+        }, OPENSSL_REFCNT {
+            @Override
+            SslProvider sslProvider() {
+                return SslProvider.OPENSSL_REFCNT;
+            }
+        };
+        private final SslContext clientContext = newClientContext();
+        private final SslContext serverContext = newServerContext();
+
+        static SSLEngine configureEngine(SSLEngine engine, String cipher) {
+            engine.setEnabledProtocols(new String[]{PROTOCOL_TLS_V1_2});
+            engine.setEnabledCipherSuites(new String[]{cipher});
+            return engine;
+        }
+
+        private SslContext newClientContext() {
+            try {
+                return SslContextBuilder.forClient().sslProvider(sslProvider()).trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+            } catch (SSLException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        private SslContext newServerContext() {
+            try {
+                File keyFile = new File(getClass().getResource("test_unencrypted.pem").getFile());
+                File crtFile = new File(getClass().getResource("test.crt").getFile());
+
+                return SslContextBuilder.forServer(crtFile, keyFile).sslProvider(sslProvider()).build();
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        SslHandler newClientHandler(ByteBufAllocator allocator, String cipher) {
+            SslHandler handler = clientContext.newHandler(allocator);
+            configureEngine(handler.engine(), cipher);
+            return handler;
+        }
+
+        SslHandler newServerHandler(ByteBufAllocator allocator, String cipher) {
+            SslHandler handler = serverContext.newHandler(allocator);
+            configureEngine(handler.engine(), cipher);
+            return handler;
+        }
+
+        abstract SslProvider sslProvider();
+    }
+
+    private static final class SslThroughputBenchmarkHandlerContext extends EmbeddedChannelWriteAccumulatingHandlerContext {
+        SslThroughputBenchmarkHandlerContext(ByteBufAllocator alloc, ChannelHandler handler, ByteToMessageDecoder.Cumulator writeCumulator) {
             super(alloc, handler, writeCumulator);
         }
 
@@ -173,9 +150,5 @@ public class AbstractSslHandlerBenchmark extends AbstractMicrobenchmark {
         protected void handleException(Throwable t) {
             handleUnexpectedException(t);
         }
-    }
-
-    public static void handleUnexpectedException(Throwable t) {
-        assertNull(t);
     }
 }

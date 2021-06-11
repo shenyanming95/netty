@@ -19,7 +19,7 @@ import java.lang.annotation.*;
 
 /**
  * Indicates a public API that can change at any time (even in minor/bugfix releases).
- *
+ * <p>
  * Usage guidelines:
  *
  * <ol>
@@ -30,14 +30,7 @@ import java.lang.annotation.*;
  * </ol>
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target({
-        ElementType.ANNOTATION_TYPE,
-        ElementType.CONSTRUCTOR,
-        ElementType.FIELD,
-        ElementType.METHOD,
-        ElementType.PACKAGE,
-        ElementType.TYPE
-})
+@Target({ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.METHOD, ElementType.PACKAGE, ElementType.TYPE})
 @Documented
 public @interface UnstableApi {
 }

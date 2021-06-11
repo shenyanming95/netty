@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.socket.oio;
 
 import io.netty.buffer.ByteBuf;
@@ -54,7 +39,7 @@ public class OioSocketChannel extends OioByteStreamChannel implements SocketChan
     /**
      * Create a new instance from the given {@link Socket}
      *
-     * @param socket    the {@link Socket} which is used by this instance
+     * @param socket the {@link Socket} which is used by this instance
      */
     public OioSocketChannel(Socket socket) {
         this(null, socket);
@@ -63,9 +48,9 @@ public class OioSocketChannel extends OioByteStreamChannel implements SocketChan
     /**
      * Create a new instance from the given {@link Socket}
      *
-     * @param parent    the parent {@link Channel} which was used to create this instance. This can be null if the
-     *                  {@link} has no parent as it was created by your self.
-     * @param socket    the {@link Socket} which is used by this instance
+     * @param parent the parent {@link Channel} which was used to create this instance. This can be null if the
+     *               {@link} has no parent as it was created by your self.
+     * @param socket the {@link Socket} which is used by this instance
      */
     public OioSocketChannel(Channel parent, Socket socket) {
         super(parent);
@@ -89,6 +74,21 @@ public class OioSocketChannel extends OioByteStreamChannel implements SocketChan
                     logger.warn("Failed to close a socket.", e);
                 }
             }
+        }
+    }
+
+    private static void shutdownDone(ChannelFuture shutdownOutputFuture, ChannelFuture shutdownInputFuture, ChannelPromise promise) {
+        Throwable shutdownOutputCause = shutdownOutputFuture.cause();
+        Throwable shutdownInputCause = shutdownInputFuture.cause();
+        if (shutdownOutputCause != null) {
+            if (shutdownInputCause != null) {
+                logger.debug("Exception suppressed because a previous exception occurred.", shutdownInputCause);
+            }
+            promise.setFailure(shutdownOutputCause);
+        } else if (shutdownInputCause != null) {
+            promise.setFailure(shutdownInputCause);
+        } else {
+            promise.setSuccess();
         }
     }
 
@@ -244,24 +244,6 @@ public class OioSocketChannel extends OioByteStreamChannel implements SocketChan
         }
     }
 
-    private static void shutdownDone(ChannelFuture shutdownOutputFuture,
-                                     ChannelFuture shutdownInputFuture,
-                                     ChannelPromise promise) {
-        Throwable shutdownOutputCause = shutdownOutputFuture.cause();
-        Throwable shutdownInputCause = shutdownInputFuture.cause();
-        if (shutdownOutputCause != null) {
-            if (shutdownInputCause != null) {
-                logger.debug("Exception suppressed because a previous exception occurred.",
-                        shutdownInputCause);
-            }
-            promise.setFailure(shutdownOutputCause);
-        } else if (shutdownInputCause != null) {
-            promise.setFailure(shutdownInputCause);
-        } else {
-            promise.setSuccess();
-        }
-    }
-
     @Override
     public InetSocketAddress localAddress() {
         return (InetSocketAddress) super.localAddress();
@@ -288,8 +270,7 @@ public class OioSocketChannel extends OioByteStreamChannel implements SocketChan
     }
 
     @Override
-    protected void doConnect(SocketAddress remoteAddress,
-            SocketAddress localAddress) throws Exception {
+    protected void doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         if (localAddress != null) {
             SocketUtils.bind(socket, localAddress);
         }

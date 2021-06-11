@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec;
 
 import io.netty.buffer.ByteBuf;
@@ -64,18 +49,20 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
     private final int maxFrameLength;
     private final boolean stripDelimiter;
     private final boolean failFast;
+    /**
+     * Set only when decoding with "\n" and "\r\n" as the delimiter.
+     */
+    private final LineBasedFrameDecoder lineBasedDecoder;
     private boolean discardingTooLongFrame;
     private int tooLongFrameLength;
-    /** Set only when decoding with "\n" and "\r\n" as the delimiter.  */
-    private final LineBasedFrameDecoder lineBasedDecoder;
 
     /**
      * Creates a new instance.
      *
-     * @param maxFrameLength  the maximum length of the decoded frame.
-     *                        A {@link TooLongFrameException} is thrown if
-     *                        the length of the frame exceeds this value.
-     * @param delimiter  the delimiter
+     * @param maxFrameLength the maximum length of the decoded frame.
+     *                       A {@link TooLongFrameException} is thrown if
+     *                       the length of the frame exceeds this value.
+     * @param delimiter      the delimiter
      */
     public DelimiterBasedFrameDecoder(int maxFrameLength, ByteBuf delimiter) {
         this(maxFrameLength, true, delimiter);
@@ -84,49 +71,45 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
     /**
      * Creates a new instance.
      *
-     * @param maxFrameLength  the maximum length of the decoded frame.
-     *                        A {@link TooLongFrameException} is thrown if
-     *                        the length of the frame exceeds this value.
-     * @param stripDelimiter  whether the decoded frame should strip out the
-     *                        delimiter or not
-     * @param delimiter  the delimiter
+     * @param maxFrameLength the maximum length of the decoded frame.
+     *                       A {@link TooLongFrameException} is thrown if
+     *                       the length of the frame exceeds this value.
+     * @param stripDelimiter whether the decoded frame should strip out the
+     *                       delimiter or not
+     * @param delimiter      the delimiter
      */
-    public DelimiterBasedFrameDecoder(
-            int maxFrameLength, boolean stripDelimiter, ByteBuf delimiter) {
+    public DelimiterBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter, ByteBuf delimiter) {
         this(maxFrameLength, stripDelimiter, true, delimiter);
     }
 
     /**
      * Creates a new instance.
      *
-     * @param maxFrameLength  the maximum length of the decoded frame.
-     *                        A {@link TooLongFrameException} is thrown if
-     *                        the length of the frame exceeds this value.
-     * @param stripDelimiter  whether the decoded frame should strip out the
-     *                        delimiter or not
-     * @param failFast  If <tt>true</tt>, a {@link TooLongFrameException} is
-     *                  thrown as soon as the decoder notices the length of the
-     *                  frame will exceed <tt>maxFrameLength</tt> regardless of
-     *                  whether the entire frame has been read.
-     *                  If <tt>false</tt>, a {@link TooLongFrameException} is
-     *                  thrown after the entire frame that exceeds
-     *                  <tt>maxFrameLength</tt> has been read.
-     * @param delimiter  the delimiter
+     * @param maxFrameLength the maximum length of the decoded frame.
+     *                       A {@link TooLongFrameException} is thrown if
+     *                       the length of the frame exceeds this value.
+     * @param stripDelimiter whether the decoded frame should strip out the
+     *                       delimiter or not
+     * @param failFast       If <tt>true</tt>, a {@link TooLongFrameException} is
+     *                       thrown as soon as the decoder notices the length of the
+     *                       frame will exceed <tt>maxFrameLength</tt> regardless of
+     *                       whether the entire frame has been read.
+     *                       If <tt>false</tt>, a {@link TooLongFrameException} is
+     *                       thrown after the entire frame that exceeds
+     *                       <tt>maxFrameLength</tt> has been read.
+     * @param delimiter      the delimiter
      */
-    public DelimiterBasedFrameDecoder(
-            int maxFrameLength, boolean stripDelimiter, boolean failFast,
-            ByteBuf delimiter) {
-        this(maxFrameLength, stripDelimiter, failFast, new ByteBuf[] {
-                delimiter.slice(delimiter.readerIndex(), delimiter.readableBytes())});
+    public DelimiterBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter, boolean failFast, ByteBuf delimiter) {
+        this(maxFrameLength, stripDelimiter, failFast, new ByteBuf[]{delimiter.slice(delimiter.readerIndex(), delimiter.readableBytes())});
     }
 
     /**
      * Creates a new instance.
      *
-     * @param maxFrameLength  the maximum length of the decoded frame.
-     *                        A {@link TooLongFrameException} is thrown if
-     *                        the length of the frame exceeds this value.
-     * @param delimiters  the delimiters
+     * @param maxFrameLength the maximum length of the decoded frame.
+     *                       A {@link TooLongFrameException} is thrown if
+     *                       the length of the frame exceeds this value.
+     * @param delimiters     the delimiters
      */
     public DelimiterBasedFrameDecoder(int maxFrameLength, ByteBuf... delimiters) {
         this(maxFrameLength, true, delimiters);
@@ -135,37 +118,35 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
     /**
      * Creates a new instance.
      *
-     * @param maxFrameLength  the maximum length of the decoded frame.
-     *                        A {@link TooLongFrameException} is thrown if
-     *                        the length of the frame exceeds this value.
-     * @param stripDelimiter  whether the decoded frame should strip out the
-     *                        delimiter or not
-     * @param delimiters  the delimiters
+     * @param maxFrameLength the maximum length of the decoded frame.
+     *                       A {@link TooLongFrameException} is thrown if
+     *                       the length of the frame exceeds this value.
+     * @param stripDelimiter whether the decoded frame should strip out the
+     *                       delimiter or not
+     * @param delimiters     the delimiters
      */
-    public DelimiterBasedFrameDecoder(
-            int maxFrameLength, boolean stripDelimiter, ByteBuf... delimiters) {
+    public DelimiterBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter, ByteBuf... delimiters) {
         this(maxFrameLength, stripDelimiter, true, delimiters);
     }
 
     /**
      * Creates a new instance.
      *
-     * @param maxFrameLength  the maximum length of the decoded frame.
-     *                        A {@link TooLongFrameException} is thrown if
-     *                        the length of the frame exceeds this value.
-     * @param stripDelimiter  whether the decoded frame should strip out the
-     *                        delimiter or not
-     * @param failFast  If <tt>true</tt>, a {@link TooLongFrameException} is
-     *                  thrown as soon as the decoder notices the length of the
-     *                  frame will exceed <tt>maxFrameLength</tt> regardless of
-     *                  whether the entire frame has been read.
-     *                  If <tt>false</tt>, a {@link TooLongFrameException} is
-     *                  thrown after the entire frame that exceeds
-     *                  <tt>maxFrameLength</tt> has been read.
-     * @param delimiters  the delimiters
+     * @param maxFrameLength the maximum length of the decoded frame.
+     *                       A {@link TooLongFrameException} is thrown if
+     *                       the length of the frame exceeds this value.
+     * @param stripDelimiter whether the decoded frame should strip out the
+     *                       delimiter or not
+     * @param failFast       If <tt>true</tt>, a {@link TooLongFrameException} is
+     *                       thrown as soon as the decoder notices the length of the
+     *                       frame will exceed <tt>maxFrameLength</tt> regardless of
+     *                       whether the entire frame has been read.
+     *                       If <tt>false</tt>, a {@link TooLongFrameException} is
+     *                       thrown after the entire frame that exceeds
+     *                       <tt>maxFrameLength</tt> has been read.
+     * @param delimiters     the delimiters
      */
-    public DelimiterBasedFrameDecoder(
-            int maxFrameLength, boolean stripDelimiter, boolean failFast, ByteBuf... delimiters) {
+    public DelimiterBasedFrameDecoder(int maxFrameLength, boolean stripDelimiter, boolean failFast, ByteBuf... delimiters) {
         validateMaxFrameLength(maxFrameLength);
         ObjectUtil.checkNonEmpty(delimiters, "delimiters");
 
@@ -174,7 +155,7 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
             this.delimiters = null;
         } else {
             this.delimiters = new ByteBuf[delimiters.length];
-            for (int i = 0; i < delimiters.length; i ++) {
+            for (int i = 0; i < delimiters.length; i++) {
                 ByteBuf d = delimiters[i];
                 validateDelimiter(d);
                 this.delimiters[i] = d.slice(d.readerIndex(), d.readableBytes());
@@ -186,7 +167,9 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
         this.failFast = failFast;
     }
 
-    /** Returns true if the delimiters are "\n" and "\r\n".  */
+    /**
+     * Returns true if the delimiters are "\n" and "\r\n".
+     */
     private static boolean isLineBased(final ByteBuf[] delimiters) {
         if (delimiters.length != 2) {
             return false;
@@ -197,9 +180,46 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
             a = delimiters[1];
             b = delimiters[0];
         }
-        return a.capacity() == 2 && b.capacity() == 1
-                && a.getByte(0) == '\r' && a.getByte(1) == '\n'
-                && b.getByte(0) == '\n';
+        return a.capacity() == 2 && b.capacity() == 1 && a.getByte(0) == '\r' && a.getByte(1) == '\n' && b.getByte(0) == '\n';
+    }
+
+    /**
+     * Returns the number of bytes between the readerIndex of the haystack and
+     * the first needle found in the haystack.  -1 is returned if no needle is
+     * found in the haystack.
+     */
+    private static int indexOf(ByteBuf haystack, ByteBuf needle) {
+        for (int i = haystack.readerIndex(); i < haystack.writerIndex(); i++) {
+            int haystackIndex = i;
+            int needleIndex;
+            for (needleIndex = 0; needleIndex < needle.capacity(); needleIndex++) {
+                if (haystack.getByte(haystackIndex) != needle.getByte(needleIndex)) {
+                    break;
+                } else {
+                    haystackIndex++;
+                    if (haystackIndex == haystack.writerIndex() && needleIndex != needle.capacity() - 1) {
+                        return -1;
+                    }
+                }
+            }
+
+            if (needleIndex == needle.capacity()) {
+                // Found the needle from the haystack!
+                return i - haystack.readerIndex();
+            }
+        }
+        return -1;
+    }
+
+    private static void validateDelimiter(ByteBuf delimiter) {
+        ObjectUtil.checkNotNull(delimiter, "delimiter");
+        if (!delimiter.isReadable()) {
+            throw new IllegalArgumentException("empty delimiter");
+        }
+    }
+
+    private static void validateMaxFrameLength(int maxFrameLength) {
+        checkPositive(maxFrameLength, "maxFrameLength");
     }
 
     /**
@@ -220,10 +240,10 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
     /**
      * Create a frame out of the {@link ByteBuf} and return it.
      *
-     * @param   ctx             the {@link ChannelHandlerContext} which this {@link ByteToMessageDecoder} belongs to
-     * @param   buffer          the {@link ByteBuf} from which to read data
-     * @return  frame           the {@link ByteBuf} which represent the frame or {@code null} if no frame could
-     *                          be created.
+     * @param ctx    the {@link ChannelHandlerContext} which this {@link ByteToMessageDecoder} belongs to
+     * @param buffer the {@link ByteBuf} from which to read data
+     * @return frame           the {@link ByteBuf} which represent the frame or {@code null} if no frame could
+     * be created.
      */
     protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
         if (lineBasedDecoder != null) {
@@ -232,7 +252,7 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
         // Try all delimiters and choose the delimiter which yields the shortest frame.
         int minFrameLength = Integer.MAX_VALUE;
         ByteBuf minDelim = null;
-        for (ByteBuf delim: delimiters) {
+        for (ByteBuf delim : delimiters) {
             int frameLength = indexOf(buffer, delim);
             if (frameLength >= 0 && frameLength < minFrameLength) {
                 minFrameLength = frameLength;
@@ -295,53 +315,9 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
 
     private void fail(long frameLength) {
         if (frameLength > 0) {
-            throw new TooLongFrameException(
-                            "frame length exceeds " + maxFrameLength +
-                            ": " + frameLength + " - discarded");
+            throw new TooLongFrameException("frame length exceeds " + maxFrameLength + ": " + frameLength + " - discarded");
         } else {
-            throw new TooLongFrameException(
-                            "frame length exceeds " + maxFrameLength +
-                            " - discarding");
+            throw new TooLongFrameException("frame length exceeds " + maxFrameLength + " - discarding");
         }
-    }
-
-    /**
-     * Returns the number of bytes between the readerIndex of the haystack and
-     * the first needle found in the haystack.  -1 is returned if no needle is
-     * found in the haystack.
-     */
-    private static int indexOf(ByteBuf haystack, ByteBuf needle) {
-        for (int i = haystack.readerIndex(); i < haystack.writerIndex(); i ++) {
-            int haystackIndex = i;
-            int needleIndex;
-            for (needleIndex = 0; needleIndex < needle.capacity(); needleIndex ++) {
-                if (haystack.getByte(haystackIndex) != needle.getByte(needleIndex)) {
-                    break;
-                } else {
-                    haystackIndex ++;
-                    if (haystackIndex == haystack.writerIndex() &&
-                        needleIndex != needle.capacity() - 1) {
-                        return -1;
-                    }
-                }
-            }
-
-            if (needleIndex == needle.capacity()) {
-                // Found the needle from the haystack!
-                return i - haystack.readerIndex();
-            }
-        }
-        return -1;
-    }
-
-    private static void validateDelimiter(ByteBuf delimiter) {
-        ObjectUtil.checkNotNull(delimiter, "delimiter");
-        if (!delimiter.isReadable()) {
-            throw new IllegalArgumentException("empty delimiter");
-        }
-    }
-
-    private static void validateMaxFrameLength(int maxFrameLength) {
-        checkPositive(maxFrameLength, "maxFrameLength");
     }
 }

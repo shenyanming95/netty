@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.websocketx;
 
 import io.netty.buffer.ByteBuf;
@@ -31,12 +16,9 @@ import java.util.List;
  */
 @Sharable
 public class WebSocket00FrameEncoder extends MessageToMessageEncoder<WebSocketFrame> implements WebSocketFrameEncoder {
-    private static final ByteBuf _0X00 = Unpooled.unreleasableBuffer(
-            Unpooled.directBuffer(1, 1).writeByte((byte) 0x00));
-    private static final ByteBuf _0XFF = Unpooled.unreleasableBuffer(
-            Unpooled.directBuffer(1, 1).writeByte((byte) 0xFF));
-    private static final ByteBuf _0XFF_0X00 = Unpooled.unreleasableBuffer(
-            Unpooled.directBuffer(2, 2).writeByte((byte) 0xFF).writeByte((byte) 0x00));
+    private static final ByteBuf _0X00 = Unpooled.unreleasableBuffer(Unpooled.directBuffer(1, 1).writeByte((byte) 0x00));
+    private static final ByteBuf _0XFF = Unpooled.unreleasableBuffer(Unpooled.directBuffer(1, 1).writeByte((byte) 0xFF));
+    private static final ByteBuf _0XFF_0X00 = Unpooled.unreleasableBuffer(Unpooled.directBuffer(2, 2).writeByte((byte) 0xFF).writeByte((byte) 0x00));
 
     @Override
     protected void encode(ChannelHandlerContext ctx, WebSocketFrame msg, List<Object> out) throws Exception {

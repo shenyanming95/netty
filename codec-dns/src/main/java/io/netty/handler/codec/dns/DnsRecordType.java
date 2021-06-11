@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.dns;
 
 import io.netty.util.collection.IntObjectHashMap;
@@ -308,44 +293,21 @@ public class DnsRecordType implements Comparable<DnsRecordType> {
     private static final String EXPECTED;
 
     static {
-        DnsRecordType[] all = {
-                A, NS, CNAME, SOA, PTR, MX, TXT, RP, AFSDB, SIG, KEY, AAAA, LOC, SRV, NAPTR, KX, CERT, DNAME, OPT, APL,
-                DS, SSHFP, IPSECKEY, RRSIG, NSEC, DNSKEY, DHCID, NSEC3, NSEC3PARAM, TLSA, HIP, SPF, TKEY, TSIG, IXFR,
-                AXFR, ANY, CAA, TA, DLV
-        };
+        DnsRecordType[] all = {A, NS, CNAME, SOA, PTR, MX, TXT, RP, AFSDB, SIG, KEY, AAAA, LOC, SRV, NAPTR, KX, CERT, DNAME, OPT, APL, DS, SSHFP, IPSECKEY, RRSIG, NSEC, DNSKEY, DHCID, NSEC3, NSEC3PARAM, TLSA, HIP, SPF, TKEY, TSIG, IXFR, AXFR, ANY, CAA, TA, DLV};
 
         final StringBuilder expected = new StringBuilder(512);
 
         expected.append(" (expected: ");
-        for (DnsRecordType type: all) {
+        for (DnsRecordType type : all) {
             BY_NAME.put(type.name(), type);
             BY_TYPE.put(type.intValue(), type);
 
-            expected.append(type.name())
-                    .append('(')
-                    .append(type.intValue())
-                    .append("), ");
+            expected.append(type.name()).append('(').append(type.intValue()).append("), ");
         }
 
         expected.setLength(expected.length() - 2);
         expected.append(')');
         EXPECTED = expected.toString();
-    }
-
-    public static DnsRecordType valueOf(int intValue) {
-        DnsRecordType result = BY_TYPE.get(intValue);
-        if (result == null) {
-            return new DnsRecordType(intValue);
-        }
-        return result;
-    }
-
-    public static DnsRecordType valueOf(String name) {
-        DnsRecordType result = BY_NAME.get(name);
-        if (result == null) {
-            throw new IllegalArgumentException("name: " + name + EXPECTED);
-        }
-        return result;
     }
 
     private final int intValue;
@@ -362,6 +324,22 @@ public class DnsRecordType implements Comparable<DnsRecordType> {
         }
         this.intValue = intValue;
         this.name = name;
+    }
+
+    public static DnsRecordType valueOf(int intValue) {
+        DnsRecordType result = BY_TYPE.get(intValue);
+        if (result == null) {
+            return new DnsRecordType(intValue);
+        }
+        return result;
+    }
+
+    public static DnsRecordType valueOf(String name) {
+        DnsRecordType result = BY_NAME.get(name);
+        if (result == null) {
+            throw new IllegalArgumentException("name: " + name + EXPECTED);
+        }
+        return result;
     }
 
     /**

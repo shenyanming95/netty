@@ -51,7 +51,7 @@ import static io.netty.handler.codec.http2.Http2Exception.connectionError;
  * <p>{@link ChannelConfig#setMaxMessagesPerRead(int)} and {@link ChannelConfig#setAutoRead(boolean)} are supported.
  *
  * <h3>Reference Counting</h3>
- *
+ * <p>
  * Some {@link Http2StreamFrame}s implement the {@link ReferenceCounted} interface, as they carry
  * reference counted objects (e.g. {@link ByteBuf}s). The multiplex codec will call {@link ReferenceCounted#retain()}
  * before propagating a reference counted object through the pipeline, and thus an application handler needs to release
@@ -59,7 +59,7 @@ import static io.netty.handler.codec.http2.Http2Exception.connectionError;
  * https://netty.io/wiki/reference-counted-objects.html
  *
  * <h3>Channel Events</h3>
- *
+ * <p>
  * A child channel becomes active as soon as it is registered to an {@link EventLoop}. Therefore, an active channel
  * does not map to an active HTTP/2 stream immediately. Only once a {@link Http2HeadersFrame} has been successfully sent
  * or received, does the channel map to an active HTTP/2 stream. In case it is not possible to open a new HTTP/2 stream
@@ -67,7 +67,7 @@ import static io.netty.handler.codec.http2.Http2Exception.connectionError;
  * indicating the cause and is closed immediately thereafter.
  *
  * <h3>Writability and Flow Control</h3>
- *
+ * <p>
  * A child channel observes outbound/remote flow control via the channel's writability. A channel only becomes writable
  * when it maps to an active HTTP/2 stream . A child channel does not know about the connection-level flow control
  * window. {@link ChannelHandler}s are free to ignore the channel's writability, in which case the excessive writes will
@@ -86,10 +86,9 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
 
     private final ChannelHandler inboundStreamHandler;
     private final ChannelHandler upgradeStreamHandler;
-    private final Queue<AbstractHttp2StreamChannel> readCompletePendingQueue =
-            new MaxCapacityQueue<AbstractHttp2StreamChannel>(new ArrayDeque<AbstractHttp2StreamChannel>(8),
-                    // Choose 100 which is what is used most of the times as default.
-                    Http2CodecUtil.SMALLEST_MAX_CONCURRENT_STREAMS);
+    private final Queue<AbstractHttp2StreamChannel> readCompletePendingQueue = new MaxCapacityQueue<AbstractHttp2StreamChannel>(new ArrayDeque<AbstractHttp2StreamChannel>(8),
+            // Choose 100 which is what is used most of the times as default.
+            Http2CodecUtil.SMALLEST_MAX_CONCURRENT_STREAMS);
 
     private boolean parentReadInProgress;
     private int idCount;
@@ -134,6 +133,10 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
         }
     }
 
+    private static boolean isServer(ChannelHandlerContext ctx) {
+        return ctx.channel().parent() instanceof ServerChannel;
+    }
+
     @Override
     protected void handlerAdded0(ChannelHandlerContext ctx) {
         if (ctx.executor() != ctx.channel().eventLoop()) {
@@ -156,8 +159,7 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
                 return;
             }
             Http2StreamFrame streamFrame = (Http2StreamFrame) msg;
-            DefaultHttp2FrameStream s =
-                    (DefaultHttp2FrameStream) streamFrame.stream();
+            DefaultHttp2FrameStream s = (DefaultHttp2FrameStream) streamFrame.stream();
 
             AbstractHttp2StreamChannel channel = (AbstractHttp2StreamChannel) s.attachment;
             if (msg instanceof Http2ResetFrame) {
@@ -219,8 +221,7 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
                         if (stream.id() == Http2CodecUtil.HTTP_UPGRADE_STREAM_ID && !isServer(ctx)) {
                             // We must have an upgrade handler or else we can't handle the stream
                             if (upgradeStreamHandler == null) {
-                                throw connectionError(INTERNAL_ERROR,
-                                        "Client is misconfigured for upgrade requests");
+                                throw connectionError(INTERNAL_ERROR, "Client is misconfigured for upgrade requests");
                             }
                             ch = new Http2MultiplexHandlerStreamChannel(stream, upgradeStreamHandler);
                             ch.closeOutbound();
@@ -260,8 +261,7 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
         if (cause instanceof Http2FrameStreamException) {
             Http2FrameStreamException exception = (Http2FrameStreamException) cause;
             Http2FrameStream stream = exception.stream();
-            AbstractHttp2StreamChannel childChannel = (AbstractHttp2StreamChannel)
-                    ((DefaultHttp2FrameStream) stream).attachment;
+            AbstractHttp2StreamChannel childChannel = (AbstractHttp2StreamChannel) ((DefaultHttp2FrameStream) stream).attachment;
             try {
                 childChannel.pipeline().fireExceptionCaught(cause.getCause());
             } finally {
@@ -272,10 +272,6 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
         ctx.fireExceptionCaught(cause);
     }
 
-    private static boolean isServer(ChannelHandlerContext ctx) {
-        return ctx.channel().parent() instanceof ServerChannel;
-    }
-
     private void onHttp2GoAwayFrame(ChannelHandlerContext ctx, final Http2GoAwayFrame goAwayFrame) {
         try {
             final boolean server = isServer(ctx);
@@ -284,8 +280,7 @@ public final class Http2MultiplexHandler extends Http2ChannelDuplexHandler {
                 public boolean visit(Http2FrameStream stream) {
                     final int streamId = stream.id();
                     if (streamId > goAwayFrame.lastStreamId() && Http2CodecUtil.isStreamIdValid(streamId, server)) {
-                        final AbstractHttp2StreamChannel childChannel = (AbstractHttp2StreamChannel)
-                                ((DefaultHttp2FrameStream) stream).attachment;
+                        final AbstractHttp2StreamChannel childChannel = (AbstractHttp2StreamChannel) ((DefaultHttp2FrameStream) stream).attachment;
                         childChannel.pipeline().fireUserEventTriggered(goAwayFrame.retainedDuplicate());
                     }
                     return true;

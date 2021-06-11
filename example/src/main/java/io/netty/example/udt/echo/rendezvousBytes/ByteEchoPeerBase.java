@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.example.udt.echo.rendezvousBytes;
 
 import io.netty.bootstrap.Bootstrap;
@@ -51,20 +36,15 @@ public class ByteEchoPeerBase {
 
     public void run() throws Exception {
         final ThreadFactory connectFactory = new DefaultThreadFactory("rendezvous");
-        final NioEventLoopGroup connectGroup = new NioEventLoopGroup(1,
-                connectFactory, NioUdtProvider.BYTE_PROVIDER);
+        final NioEventLoopGroup connectGroup = new NioEventLoopGroup(1, connectFactory, NioUdtProvider.BYTE_PROVIDER);
         try {
             final Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(connectGroup)
-                    .channelFactory(NioUdtProvider.BYTE_RENDEZVOUS)
-                    .handler(new ChannelInitializer<UdtChannel>() {
-                        @Override
-                        protected void initChannel(UdtChannel ch) throws Exception {
-                            ch.pipeline().addLast(
-                                    new LoggingHandler(LogLevel.INFO),
-                                    new ByteEchoPeerHandler(messageSize));
-                        }
-                    });
+            bootstrap.group(connectGroup).channelFactory(NioUdtProvider.BYTE_RENDEZVOUS).handler(new ChannelInitializer<UdtChannel>() {
+                @Override
+                protected void initChannel(UdtChannel ch) throws Exception {
+                    ch.pipeline().addLast(new LoggingHandler(LogLevel.INFO), new ByteEchoPeerHandler(messageSize));
+                }
+            });
             final ChannelFuture future = bootstrap.connect(peerAddress, myAddress).sync();
             future.channel().closeFuture().sync();
         } finally {

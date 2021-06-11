@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.oio;
 
 
@@ -40,11 +25,11 @@ public class OioEventLoopGroup extends ThreadPerChannelEventLoopGroup {
     /**
      * Create a new {@link OioEventLoopGroup}.
      *
-     * @param maxChannels       the maximum number of channels to handle with this instance. Once you try to register
-     *                          a new {@link Channel} and the maximum is exceed it will throw an
-     *                          {@link ChannelException} on the {@link #register(Channel)} and
-     *                          {@link #register(ChannelPromise)} method.
-     *                          Use {@code 0} to use no limit
+     * @param maxChannels the maximum number of channels to handle with this instance. Once you try to register
+     *                    a new {@link Channel} and the maximum is exceed it will throw an
+     *                    {@link ChannelException} on the {@link #register(Channel)} and
+     *                    {@link #register(ChannelPromise)} method.
+     *                    Use {@code 0} to use no limit
      */
     public OioEventLoopGroup(int maxChannels) {
         this(maxChannels, (ThreadFactory) null);
@@ -53,13 +38,13 @@ public class OioEventLoopGroup extends ThreadPerChannelEventLoopGroup {
     /**
      * Create a new {@link OioEventLoopGroup}.
      *
-     * @param maxChannels       the maximum number of channels to handle with this instance. Once you try to register
-     *                          a new {@link Channel} and the maximum is exceed it will throw an
-     *                          {@link ChannelException} on the {@link #register(Channel)} and
-     *                          {@link #register(ChannelPromise)} method.
-     *                          Use {@code 0} to use no limit
-     * @param executor     the {@link Executor} used to create new {@link Thread} instances that handle the
-     *                          registered {@link Channel}s
+     * @param maxChannels the maximum number of channels to handle with this instance. Once you try to register
+     *                    a new {@link Channel} and the maximum is exceed it will throw an
+     *                    {@link ChannelException} on the {@link #register(Channel)} and
+     *                    {@link #register(ChannelPromise)} method.
+     *                    Use {@code 0} to use no limit
+     * @param executor    the {@link Executor} used to create new {@link Thread} instances that handle the
+     *                    registered {@link Channel}s
      */
     public OioEventLoopGroup(int maxChannels, Executor executor) {
         super(maxChannels, executor);
@@ -68,13 +53,13 @@ public class OioEventLoopGroup extends ThreadPerChannelEventLoopGroup {
     /**
      * Create a new {@link OioEventLoopGroup}.
      *
-     * @param maxChannels       the maximum number of channels to handle with this instance. Once you try to register
-     *                          a new {@link Channel} and the maximum is exceed it will throw an
-     *                          {@link ChannelException} on the {@link #register(Channel)} and
-     *                          {@link #register(ChannelPromise)} method.
-     *                          Use {@code 0} to use no limit
-     * @param threadFactory     the {@link ThreadFactory} used to create new {@link Thread} instances that handle the
-     *                          registered {@link Channel}s
+     * @param maxChannels   the maximum number of channels to handle with this instance. Once you try to register
+     *                      a new {@link Channel} and the maximum is exceed it will throw an
+     *                      {@link ChannelException} on the {@link #register(Channel)} and
+     *                      {@link #register(ChannelPromise)} method.
+     *                      Use {@code 0} to use no limit
+     * @param threadFactory the {@link ThreadFactory} used to create new {@link Thread} instances that handle the
+     *                      registered {@link Channel}s
      */
     public OioEventLoopGroup(int maxChannels, ThreadFactory threadFactory) {
         super(maxChannels, threadFactory);

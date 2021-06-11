@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.buffer;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
@@ -30,53 +15,12 @@ import static io.netty.buffer.Unpooled.wrappedBuffer;
 @Measurement(iterations = 10, time = 1, timeUnit = TimeUnit.SECONDS)
 public class CompositeByteBufRandomAccessBenchmark extends AbstractMicrobenchmark {
 
-    public enum ByteBufType {
-        SMALL_CHUNKS {
-            @Override
-            ByteBuf newBuffer(int length) {
-                return newBufferSmallChunks(length);
-            }
-        },
-        LARGE_CHUNKS {
-            @Override
-            ByteBuf newBuffer(int length) {
-                return newBufferLargeChunks(length);
-            }
-        };
-        abstract ByteBuf newBuffer(int length);
-    }
-
-    @Param({ "64", "10240", "1024000" }) // ({ "64", "1024", "10240", "102400", "1024000" })
+    @Param({"64", "10240", "1024000"}) // ({ "64", "1024", "10240", "102400", "1024000" })
     public int size;
-
     @Param
     public ByteBufType bufferType;
-
     private ByteBuf buffer;
     private Random random;
-
-    @Setup
-    public void setup() {
-        buffer = bufferType.newBuffer(size);
-        random = new Random(0L);
-    }
-
-    @TearDown
-    public void teardown() {
-        buffer.release();
-    }
-
-    @Benchmark
-    public long setGetLong() {
-        int i = random.nextInt(size - 8);
-        return buffer.setLong(i, 1).getLong(i);
-    }
-
-    @Benchmark
-    public ByteBuf setLong() {
-        int i = random.nextInt(size - 8);
-        return buffer.setLong(i, 1);
-    }
 
     private static ByteBuf newBufferSmallChunks(int length) {
 
@@ -108,5 +52,44 @@ public class CompositeByteBufRandomAccessBenchmark extends AbstractMicrobenchmar
 
         // Truncate to the requested capacity.
         return buffer.capacity(length).writerIndex(0);
+    }
+
+    @Setup
+    public void setup() {
+        buffer = bufferType.newBuffer(size);
+        random = new Random(0L);
+    }
+
+    @TearDown
+    public void teardown() {
+        buffer.release();
+    }
+
+    @Benchmark
+    public long setGetLong() {
+        int i = random.nextInt(size - 8);
+        return buffer.setLong(i, 1).getLong(i);
+    }
+
+    @Benchmark
+    public ByteBuf setLong() {
+        int i = random.nextInt(size - 8);
+        return buffer.setLong(i, 1);
+    }
+
+    public enum ByteBufType {
+        SMALL_CHUNKS {
+            @Override
+            ByteBuf newBuffer(int length) {
+                return newBufferSmallChunks(length);
+            }
+        }, LARGE_CHUNKS {
+            @Override
+            ByteBuf newBuffer(int length) {
+                return newBufferLargeChunks(length);
+            }
+        };
+
+        abstract ByteBuf newBuffer(int length);
     }
 }

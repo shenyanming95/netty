@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.compression;
 
 import io.netty.buffer.ByteBuf;
@@ -35,6 +20,7 @@ final class Bzip2BitWriter {
 
     /**
      * Writes up to 32 bits to the output {@link ByteBuf}.
+     *
      * @param count The number of bits to write (maximum {@code 32} as a size of {@code int})
      * @param value The bits to write
      */
@@ -57,6 +43,7 @@ final class Bzip2BitWriter {
 
     /**
      * Writes a single bit to the output {@link ByteBuf}.
+     *
      * @param value The bit to write
      */
     void writeBoolean(ByteBuf out, final boolean value) {
@@ -75,6 +62,7 @@ final class Bzip2BitWriter {
     /**
      * Writes a zero-terminated unary number to the output {@link ByteBuf}.
      * Example of the output for value = 6: {@code 1111110}
+     *
      * @param value The number of {@code 1} to write
      */
     void writeUnary(ByteBuf out, int value) {
@@ -89,6 +77,7 @@ final class Bzip2BitWriter {
 
     /**
      * Writes an integer as 32 bits to the output {@link ByteBuf}.
+     *
      * @param value The integer to write
      */
     void writeInt(ByteBuf out, final int value) {

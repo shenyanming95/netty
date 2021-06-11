@@ -1,20 +1,4 @@
 /*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
-/*
  * Copyright 2014 Twitter, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,32 +31,14 @@ import static io.netty.util.internal.ObjectUtil.checkPositive;
 import static io.netty.util.internal.ThrowableUtil.unknownStackTrace;
 
 final class HpackDecoder {
-    private static final Http2Exception DECODE_ULE_128_DECOMPRESSION_EXCEPTION = unknownStackTrace(
-            Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - decompression failure",
-                    Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class,
-            "decodeULE128(..)");
-    private static final Http2Exception DECODE_ULE_128_TO_LONG_DECOMPRESSION_EXCEPTION = unknownStackTrace(
-            Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - long overflow",
-                    Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "decodeULE128(..)");
-    private static final Http2Exception DECODE_ULE_128_TO_INT_DECOMPRESSION_EXCEPTION = unknownStackTrace(
-            Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - int overflow",
-                    Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "decodeULE128ToInt(..)");
-    private static final Http2Exception DECODE_ILLEGAL_INDEX_VALUE = unknownStackTrace(
-            Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - illegal index value",
-                    Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "decode(..)");
-    private static final Http2Exception INDEX_HEADER_ILLEGAL_INDEX_VALUE = unknownStackTrace(
-            Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - illegal index value",
-                    Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "indexHeader(..)");
-    private static final Http2Exception READ_NAME_ILLEGAL_INDEX_VALUE = unknownStackTrace(
-            Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - illegal index value",
-                    Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "readName(..)");
-    private static final Http2Exception INVALID_MAX_DYNAMIC_TABLE_SIZE = unknownStackTrace(
-            Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - invalid max dynamic table size",
-                    Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class,
-            "setDynamicTableSize(..)");
-    private static final Http2Exception MAX_DYNAMIC_TABLE_SIZE_CHANGE_REQUIRED = unknownStackTrace(
-            Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - max dynamic table size change required",
-                    Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "decode(..)");
+    private static final Http2Exception DECODE_ULE_128_DECOMPRESSION_EXCEPTION = unknownStackTrace(Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - decompression failure", Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "decodeULE128(..)");
+    private static final Http2Exception DECODE_ULE_128_TO_LONG_DECOMPRESSION_EXCEPTION = unknownStackTrace(Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - long overflow", Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "decodeULE128(..)");
+    private static final Http2Exception DECODE_ULE_128_TO_INT_DECOMPRESSION_EXCEPTION = unknownStackTrace(Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - int overflow", Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "decodeULE128ToInt(..)");
+    private static final Http2Exception DECODE_ILLEGAL_INDEX_VALUE = unknownStackTrace(Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - illegal index value", Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "decode(..)");
+    private static final Http2Exception INDEX_HEADER_ILLEGAL_INDEX_VALUE = unknownStackTrace(Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - illegal index value", Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "indexHeader(..)");
+    private static final Http2Exception READ_NAME_ILLEGAL_INDEX_VALUE = unknownStackTrace(Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - illegal index value", Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "readName(..)");
+    private static final Http2Exception INVALID_MAX_DYNAMIC_TABLE_SIZE = unknownStackTrace(Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - invalid max dynamic table size", Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "setDynamicTableSize(..)");
+    private static final Http2Exception MAX_DYNAMIC_TABLE_SIZE_CHANGE_REQUIRED = unknownStackTrace(Http2Exception.newStatic(COMPRESSION_ERROR, "HPACK - max dynamic table size change required", Http2Exception.ShutdownHint.HARD_SHUTDOWN), HpackDecoder.class, "decode(..)");
     private static final byte READ_HEADER_REPRESENTATION = 0;
     private static final byte READ_MAX_DYNAMIC_TABLE_SIZE = 1;
     private static final byte READ_INDEXED_HEADER = 2;
@@ -93,10 +59,11 @@ final class HpackDecoder {
 
     /**
      * Create a new instance.
+     *
      * @param maxHeaderListSize This is the only setting that can be configured before notifying the peer.
-     *  This is because <a href="https://tools.ietf.org/html/rfc7540#section-6.5.1">SETTINGS_MAX_HEADER_LIST_SIZE</a>
-     *  allows a lower than advertised limit from being enforced, and the default limit is unlimited
-     *  (which is dangerous).
+     *                          This is because <a href="https://tools.ietf.org/html/rfc7540#section-6.5.1">SETTINGS_MAX_HEADER_LIST_SIZE</a>
+     *                          allows a lower than advertised limit from being enforced, and the default limit is unlimited
+     *                          (which is dangerous).
      */
     HpackDecoder(long maxHeaderListSize) {
         this(maxHeaderListSize, DEFAULT_HEADER_TABLE_SIZE);
@@ -112,6 +79,84 @@ final class HpackDecoder {
         maxDynamicTableSize = encoderMaxDynamicTableSize = maxHeaderTableSize;
         maxDynamicTableSizeChangeRequired = false;
         hpackDynamicTable = new HpackDynamicTable(maxHeaderTableSize);
+    }
+
+    private static HeaderType validate(int streamId, CharSequence name, HeaderType previousHeaderType) throws Http2Exception {
+        if (hasPseudoHeaderFormat(name)) {
+            if (previousHeaderType == HeaderType.REGULAR_HEADER) {
+                throw streamError(streamId, PROTOCOL_ERROR, "Pseudo-header field '%s' found after regular header.", name);
+            }
+
+            final Http2Headers.PseudoHeaderName pseudoHeader = getPseudoHeader(name);
+            if (pseudoHeader == null) {
+                throw streamError(streamId, PROTOCOL_ERROR, "Invalid HTTP/2 pseudo-header '%s' encountered.", name);
+            }
+
+            final HeaderType currentHeaderType = pseudoHeader.isRequestOnly() ? HeaderType.REQUEST_PSEUDO_HEADER : HeaderType.RESPONSE_PSEUDO_HEADER;
+            if (previousHeaderType != null && currentHeaderType != previousHeaderType) {
+                throw streamError(streamId, PROTOCOL_ERROR, "Mix of request and response pseudo-headers.");
+            }
+
+            return currentHeaderType;
+        }
+
+        return HeaderType.REGULAR_HEADER;
+    }
+
+    private static IllegalArgumentException notEnoughDataException(ByteBuf in) {
+        return new IllegalArgumentException("decode only works with an entire header block! " + in);
+    }
+
+    /**
+     * Unsigned Little Endian Base 128 Variable-Length Integer Encoding
+     * <p>
+     * Visible for testing only!
+     */
+    static int decodeULE128(ByteBuf in, int result) throws Http2Exception {
+        final int readerIndex = in.readerIndex();
+        final long v = decodeULE128(in, (long) result);
+        if (v > Integer.MAX_VALUE) {
+            // the maximum value that can be represented by a signed 32 bit number is:
+            // [0x1,0x7f] + 0x7f + (0x7f << 7) + (0x7f << 14) + (0x7f << 21) + (0x6 << 28)
+            // OR
+            // 0x0 + 0x7f + (0x7f << 7) + (0x7f << 14) + (0x7f << 21) + (0x7 << 28)
+            // we should reset the readerIndex if we overflowed the int type.
+            in.readerIndex(readerIndex);
+            throw DECODE_ULE_128_TO_INT_DECOMPRESSION_EXCEPTION;
+        }
+        return (int) v;
+    }
+
+    /**
+     * Unsigned Little Endian Base 128 Variable-Length Integer Encoding
+     * <p>
+     * Visible for testing only!
+     */
+    static long decodeULE128(ByteBuf in, long result) throws Http2Exception {
+        assert result <= 0x7f && result >= 0;
+        final boolean resultStartedAtZero = result == 0;
+        final int writerIndex = in.writerIndex();
+        for (int readerIndex = in.readerIndex(), shift = 0; readerIndex < writerIndex; ++readerIndex, shift += 7) {
+            byte b = in.getByte(readerIndex);
+            if (shift == 56 && ((b & 0x80) != 0 || b == 0x7F && !resultStartedAtZero)) {
+                // the maximum value that can be represented by a signed 64 bit number is:
+                // [0x01L, 0x7fL] + 0x7fL + (0x7fL << 7) + (0x7fL << 14) + (0x7fL << 21) + (0x7fL << 28) + (0x7fL << 35)
+                // + (0x7fL << 42) + (0x7fL << 49) + (0x7eL << 56)
+                // OR
+                // 0x0L + 0x7fL + (0x7fL << 7) + (0x7fL << 14) + (0x7fL << 21) + (0x7fL << 28) + (0x7fL << 35) +
+                // (0x7fL << 42) + (0x7fL << 49) + (0x7fL << 56)
+                // this means any more shifts will result in overflow so we should break out and throw an error.
+                throw DECODE_ULE_128_TO_LONG_DECOMPRESSION_EXCEPTION;
+            }
+
+            if ((b & 0x80) == 0) {
+                in.readerIndex(readerIndex + 1);
+                return result + ((b & 0x7FL) << shift);
+            }
+            result += (b & 0x7FL) << shift;
+        }
+
+        throw DECODE_ULE_128_DECOMPRESSION_EXCEPTION;
     }
 
     /**
@@ -299,42 +344,23 @@ final class HpackDecoder {
     }
 
     /**
-     * Set the maximum table size. If this is below the maximum size of the dynamic table used by
-     * the encoder, the beginning of the next header block MUST signal this change.
-     */
-    public void setMaxHeaderTableSize(long maxHeaderTableSize) throws Http2Exception {
-        if (maxHeaderTableSize < MIN_HEADER_TABLE_SIZE || maxHeaderTableSize > MAX_HEADER_TABLE_SIZE) {
-            throw connectionError(PROTOCOL_ERROR, "Header Table Size must be >= %d and <= %d but was %d",
-                    MIN_HEADER_TABLE_SIZE, MAX_HEADER_TABLE_SIZE, maxHeaderTableSize);
-        }
-        maxDynamicTableSize = maxHeaderTableSize;
-        if (maxDynamicTableSize < encoderMaxDynamicTableSize) {
-            // decoder requires less space than encoder
-            // encoder MUST signal this change
-            maxDynamicTableSizeChangeRequired = true;
-            hpackDynamicTable.setCapacity(maxDynamicTableSize);
-        }
-    }
-
-    /**
      * @deprecated use {@link #setMaxHeaderListSize(long)}; {@code maxHeaderListSizeGoAway} is
-     *     ignored
+     * ignored
      */
     @Deprecated
     public void setMaxHeaderListSize(long maxHeaderListSize, long maxHeaderListSizeGoAway) throws Http2Exception {
         setMaxHeaderListSize(maxHeaderListSize);
     }
 
-    public void setMaxHeaderListSize(long maxHeaderListSize) throws Http2Exception {
-        if (maxHeaderListSize < MIN_HEADER_LIST_SIZE || maxHeaderListSize > MAX_HEADER_LIST_SIZE) {
-            throw connectionError(PROTOCOL_ERROR, "Header List Size must be >= %d and <= %d but was %d",
-                    MIN_HEADER_TABLE_SIZE, MAX_HEADER_TABLE_SIZE, maxHeaderListSize);
-        }
-        this.maxHeaderListSize = maxHeaderListSize;
-    }
-
     public long getMaxHeaderListSize() {
         return maxHeaderListSize;
+    }
+
+    public void setMaxHeaderListSize(long maxHeaderListSize) throws Http2Exception {
+        if (maxHeaderListSize < MIN_HEADER_LIST_SIZE || maxHeaderListSize > MAX_HEADER_LIST_SIZE) {
+            throw connectionError(PROTOCOL_ERROR, "Header List Size must be >= %d and <= %d but was %d", MIN_HEADER_TABLE_SIZE, MAX_HEADER_TABLE_SIZE, maxHeaderListSize);
+        }
+        this.maxHeaderListSize = maxHeaderListSize;
     }
 
     /**
@@ -343,6 +369,23 @@ final class HpackDecoder {
      */
     public long getMaxHeaderTableSize() {
         return hpackDynamicTable.capacity();
+    }
+
+    /**
+     * Set the maximum table size. If this is below the maximum size of the dynamic table used by
+     * the encoder, the beginning of the next header block MUST signal this change.
+     */
+    public void setMaxHeaderTableSize(long maxHeaderTableSize) throws Http2Exception {
+        if (maxHeaderTableSize < MIN_HEADER_TABLE_SIZE || maxHeaderTableSize > MAX_HEADER_TABLE_SIZE) {
+            throw connectionError(PROTOCOL_ERROR, "Header Table Size must be >= %d and <= %d but was %d", MIN_HEADER_TABLE_SIZE, MAX_HEADER_TABLE_SIZE, maxHeaderTableSize);
+        }
+        maxDynamicTableSize = maxHeaderTableSize;
+        if (maxDynamicTableSize < encoderMaxDynamicTableSize) {
+            // decoder requires less space than encoder
+            // encoder MUST signal this change
+            maxDynamicTableSizeChangeRequired = true;
+            hpackDynamicTable.setCapacity(maxDynamicTableSize);
+        }
     }
 
     /**
@@ -373,31 +416,6 @@ final class HpackDecoder {
         encoderMaxDynamicTableSize = dynamicTableSize;
         maxDynamicTableSizeChangeRequired = false;
         hpackDynamicTable.setCapacity(dynamicTableSize);
-    }
-
-    private static HeaderType validate(int streamId, CharSequence name,
-                                       HeaderType previousHeaderType) throws Http2Exception {
-        if (hasPseudoHeaderFormat(name)) {
-            if (previousHeaderType == HeaderType.REGULAR_HEADER) {
-                throw streamError(streamId, PROTOCOL_ERROR,
-                        "Pseudo-header field '%s' found after regular header.", name);
-            }
-
-            final Http2Headers.PseudoHeaderName pseudoHeader = getPseudoHeader(name);
-            if (pseudoHeader == null) {
-                throw streamError(streamId, PROTOCOL_ERROR, "Invalid HTTP/2 pseudo-header '%s' encountered.", name);
-            }
-
-            final HeaderType currentHeaderType = pseudoHeader.isRequestOnly() ?
-                    HeaderType.REQUEST_PSEUDO_HEADER : HeaderType.RESPONSE_PSEUDO_HEADER;
-            if (previousHeaderType != null && currentHeaderType != previousHeaderType) {
-                throw streamError(streamId, PROTOCOL_ERROR, "Mix of request and response pseudo-headers.");
-            }
-
-            return currentHeaderType;
-        }
-
-        return HeaderType.REGULAR_HEADER;
     }
 
     private CharSequence readName(int index) throws Http2Exception {
@@ -448,73 +466,16 @@ final class HpackDecoder {
         return new AsciiString(buf, false);
     }
 
-    private static IllegalArgumentException notEnoughDataException(ByteBuf in) {
-        return new IllegalArgumentException("decode only works with an entire header block! " + in);
-    }
-
-    /**
-     * Unsigned Little Endian Base 128 Variable-Length Integer Encoding
-     * <p>
-     * Visible for testing only!
-     */
-    static int decodeULE128(ByteBuf in, int result) throws Http2Exception {
-        final int readerIndex = in.readerIndex();
-        final long v = decodeULE128(in, (long) result);
-        if (v > Integer.MAX_VALUE) {
-            // the maximum value that can be represented by a signed 32 bit number is:
-            // [0x1,0x7f] + 0x7f + (0x7f << 7) + (0x7f << 14) + (0x7f << 21) + (0x6 << 28)
-            // OR
-            // 0x0 + 0x7f + (0x7f << 7) + (0x7f << 14) + (0x7f << 21) + (0x7 << 28)
-            // we should reset the readerIndex if we overflowed the int type.
-            in.readerIndex(readerIndex);
-            throw DECODE_ULE_128_TO_INT_DECOMPRESSION_EXCEPTION;
-        }
-        return (int) v;
-    }
-
-    /**
-     * Unsigned Little Endian Base 128 Variable-Length Integer Encoding
-     * <p>
-     * Visible for testing only!
-     */
-    static long decodeULE128(ByteBuf in, long result) throws Http2Exception {
-        assert result <= 0x7f && result >= 0;
-        final boolean resultStartedAtZero = result == 0;
-        final int writerIndex = in.writerIndex();
-        for (int readerIndex = in.readerIndex(), shift = 0; readerIndex < writerIndex; ++readerIndex, shift += 7) {
-            byte b = in.getByte(readerIndex);
-            if (shift == 56 && ((b & 0x80) != 0 || b == 0x7F && !resultStartedAtZero)) {
-                // the maximum value that can be represented by a signed 64 bit number is:
-                // [0x01L, 0x7fL] + 0x7fL + (0x7fL << 7) + (0x7fL << 14) + (0x7fL << 21) + (0x7fL << 28) + (0x7fL << 35)
-                // + (0x7fL << 42) + (0x7fL << 49) + (0x7eL << 56)
-                // OR
-                // 0x0L + 0x7fL + (0x7fL << 7) + (0x7fL << 14) + (0x7fL << 21) + (0x7fL << 28) + (0x7fL << 35) +
-                // (0x7fL << 42) + (0x7fL << 49) + (0x7fL << 56)
-                // this means any more shifts will result in overflow so we should break out and throw an error.
-                throw DECODE_ULE_128_TO_LONG_DECOMPRESSION_EXCEPTION;
-            }
-
-            if ((b & 0x80) == 0) {
-                in.readerIndex(readerIndex + 1);
-                return result + ((b & 0x7FL) << shift);
-            }
-            result += (b & 0x7FL) << shift;
-        }
-
-        throw DECODE_ULE_128_DECOMPRESSION_EXCEPTION;
-    }
-
     /**
      * HTTP/2 header types.
      */
     private enum HeaderType {
-        REGULAR_HEADER,
-        REQUEST_PSEUDO_HEADER,
-        RESPONSE_PSEUDO_HEADER
+        REGULAR_HEADER, REQUEST_PSEUDO_HEADER, RESPONSE_PSEUDO_HEADER
     }
 
     private interface Sink {
         void appendToHeaderList(CharSequence name, CharSequence value);
+
         void finish() throws Http2Exception;
     }
 

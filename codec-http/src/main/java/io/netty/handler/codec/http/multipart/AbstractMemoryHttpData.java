@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.multipart;
 
 import io.netty.buffer.ByteBuf;
@@ -48,8 +33,7 @@ public abstract class AbstractMemoryHttpData extends AbstractHttpData {
         long localsize = buffer.readableBytes();
         checkSize(localsize);
         if (definedSize > 0 && definedSize < localsize) {
-            throw new IOException("Out of size: " + localsize + " > " +
-                    definedSize);
+            throw new IOException("Out of size: " + localsize + " > " + definedSize);
         }
         if (byteBuf != null) {
             byteBuf.release();
@@ -91,14 +75,12 @@ public abstract class AbstractMemoryHttpData extends AbstractHttpData {
     }
 
     @Override
-    public void addContent(ByteBuf buffer, boolean last)
-            throws IOException {
+    public void addContent(ByteBuf buffer, boolean last) throws IOException {
         if (buffer != null) {
             long localsize = buffer.readableBytes();
             checkSize(size + localsize);
             if (definedSize > 0 && definedSize < size + localsize) {
-                throw new IOException("Out of size: " + (size + localsize) +
-                        " > " + definedSize);
+                throw new IOException("Out of size: " + (size + localsize) + " > " + definedSize);
             }
             size += localsize;
             if (byteBuf == null) {
@@ -191,6 +173,7 @@ public abstract class AbstractMemoryHttpData extends AbstractHttpData {
     /**
      * Utility to go from a In Memory FileUpload
      * to a Disk (or another implementation) FileUpload
+     *
      * @return the attached ByteBuf containing the actual bytes
      */
     @Override

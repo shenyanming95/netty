@@ -1,19 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.example.http2.tiles;
 
 import io.netty.buffer.ByteBuf;
@@ -39,10 +23,7 @@ import static io.netty.util.CharsetUtil.UTF_8;
  */
 public final class FallbackRequestHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
-    private static final ByteBuf response = unreleasableBuffer(copiedBuffer("<!DOCTYPE html>"
-            + "<html><body><h2>To view the example you need a browser that supports HTTP/2 ("
-            + Http2CodecUtil.TLS_UPGRADE_PROTOCOL_NAME
-            + ")</h2></body></html>", UTF_8)).asReadOnly();
+    private static final ByteBuf response = unreleasableBuffer(copiedBuffer("<!DOCTYPE html>" + "<html><body><h2>To view the example you need a browser that supports HTTP/2 (" + Http2CodecUtil.TLS_UPGRADE_PROTOCOL_NAME + ")</h2></body></html>", UTF_8)).asReadOnly();
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest req) throws Exception {

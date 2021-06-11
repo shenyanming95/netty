@@ -37,14 +37,18 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 10)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class ReadOnlyHttp2HeadersBenchmark extends AbstractMicrobenchmark {
+    private final AsciiString path = new AsciiString("/BigDynamicPayload");
+    private final AsciiString authority = new AsciiString("io.netty");
+    @Param({"1", "5", "10", "20"})
+    public int headerCount;
     private AsciiString[] headerNames;
     private AsciiString[] headerValues;
 
-    @Param({ "1", "5", "10", "20" })
-    public int headerCount;
-
-    private final AsciiString path = new AsciiString("/BigDynamicPayload");
-    private final AsciiString authority = new AsciiString("io.netty");
+    private static void iterate(Http2Headers headers, Blackhole bh) {
+        for (Map.Entry<CharSequence, CharSequence> entry : headers) {
+            bh.consume(entry);
+        }
+    }
 
     @Setup
     public void setUp() throws Exception {
@@ -89,8 +93,7 @@ public class ReadOnlyHttp2HeadersBenchmark extends AbstractMicrobenchmark {
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     public void readOnlyClientHeaders(Blackhole bh) {
-        iterate(ReadOnlyHttp2Headers.clientHeaders(false, HttpMethod.POST.asciiName(), path,
-                                                          HttpScheme.HTTPS.name(), authority, buildPairs()), bh);
+        iterate(ReadOnlyHttp2Headers.clientHeaders(false, HttpMethod.POST.asciiName(), path, HttpScheme.HTTPS.name(), authority, buildPairs()), bh);
     }
 
     @Benchmark
@@ -108,12 +111,6 @@ public class ReadOnlyHttp2HeadersBenchmark extends AbstractMicrobenchmark {
     @BenchmarkMode(Mode.AverageTime)
     public void readOnlyServerHeaders(Blackhole bh) {
         iterate(ReadOnlyHttp2Headers.serverHeaders(false, HttpResponseStatus.OK.codeAsText(), buildPairs()), bh);
-    }
-
-    private static void iterate(Http2Headers headers, Blackhole bh) {
-        for (Map.Entry<CharSequence, CharSequence> entry : headers) {
-            bh.consume(entry);
-        }
     }
 
     private AsciiString[] buildPairs() {

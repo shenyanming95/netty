@@ -46,10 +46,6 @@ public final class IntegerRedisMessage implements RedisMessage {
 
     @Override
     public String toString() {
-        return new StringBuilder(StringUtil.simpleClassName(this))
-                .append('[')
-                .append("value=")
-                .append(value)
-                .append(']').toString();
+        return new StringBuilder(StringUtil.simpleClassName(this)).append('[').append("value=").append(value).append(']').toString();
     }
 }

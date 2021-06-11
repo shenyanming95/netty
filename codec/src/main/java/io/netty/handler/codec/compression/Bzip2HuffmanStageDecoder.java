@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.compression;
 
 import static io.netty.handler.codec.compression.Bzip2Constants.*;
@@ -22,80 +7,66 @@ import static io.netty.handler.codec.compression.Bzip2Constants.*;
  */
 final class Bzip2HuffmanStageDecoder {
     /**
+     * Total number of used Huffman tables in range 2..6.
+     */
+    final int totalTables;
+    /**
+     * The total number of codes (uniform for each table).
+     */
+    final int alphabetSize;
+    /**
+     * Table for Move To Front transformations.
+     */
+    final Bzip2MoveToFrontTable tableMTF = new Bzip2MoveToFrontTable();
+    /**
+     * The Canonical Huffman code lengths for each table.
+     */
+    final byte[][] tableCodeLengths;
+    /**
      * A reader that provides bit-level reads.
      */
     private final Bzip2BitReader reader;
-
-    /**
-     * The Huffman table number to use for each group of 50 symbols.
-     */
-    byte[] selectors;
-
     /**
      * The minimum code length for each Huffman table.
      */
     private final int[] minimumLengths;
-
     /**
      * An array of values for each Huffman table that must be subtracted from the numerical value of
      * a Huffman code of a given bit length to give its canonical code index.
      */
     private final int[][] codeBases;
-
     /**
      * An array of values for each Huffman table that gives the highest numerical value of a Huffman
      * code of a given bit length.
      */
     private final int[][] codeLimits;
-
     /**
      * A mapping for each Huffman table from canonical code index to output symbol.
      */
     private final int[][] codeSymbols;
-
     /**
-     * The Huffman table for the current group.
+     * The Huffman table number to use for each group of 50 symbols.
      */
-    private int currentTable;
-
-    /**
-     * The index of the current group within the selectors array.
-     */
-    private int groupIndex = -1;
-
-    /**
-     * The byte position within the current group. A new group is selected every 50 decoded bytes.
-     */
-    private int groupPosition = -1;
-
-    /**
-     * Total number of used Huffman tables in range 2..6.
-     */
-    final int totalTables;
-
-    /**
-     * The total number of codes (uniform for each table).
-     */
-    final int alphabetSize;
-
-    /**
-     * Table for Move To Front transformations.
-     */
-    final Bzip2MoveToFrontTable tableMTF = new Bzip2MoveToFrontTable();
-
+    byte[] selectors;
     // For saving state if end of current ByteBuf was reached
     int currentSelector;
-
-    /**
-     * The Canonical Huffman code lengths for each table.
-     */
-    final byte[][] tableCodeLengths;
-
     // For saving state if end of current ByteBuf was reached
     int currentGroup;
     int currentLength = -1;
     int currentAlpha;
     boolean modifyLength;
+    /**
+     * The Huffman table for the current group.
+     */
+    private int currentTable;
+    /**
+     * The index of the current group within the selectors array.
+     */
+    private int groupIndex = -1;
+    /**
+     * The byte position within the current group. A new group is selected every 50 decoded bytes.
+     */
+    private int groupPosition = -1;
 
     Bzip2HuffmanStageDecoder(final Bzip2BitReader reader, final int totalTables, final int alphabetSize) {
         this.reader = reader;
@@ -166,6 +137,7 @@ final class Bzip2HuffmanStageDecoder {
 
     /**
      * Decodes and returns the next symbol.
+     *
      * @return The decoded symbol
      */
     int nextSymbol() {

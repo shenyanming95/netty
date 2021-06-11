@@ -1,19 +1,3 @@
-/*
- * Copyright 2013 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package io.netty.util.concurrent;
 
 import io.netty.util.internal.DefaultPriorityQueue;
@@ -26,6 +10,40 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
 final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFuture<V>, PriorityQueueNode {
     private static final long START_TIME = System.nanoTime();
+    /* 0 - no repeat, >0 - repeat at fixed rate, <0 - repeat with fixed delay */
+    private final long periodNanos;
+    // set once when added to priority queue
+    private long id;
+    private long deadlineNanos;
+    private int queueIndex = INDEX_NOT_IN_QUEUE;
+
+    ScheduledFutureTask(AbstractScheduledEventExecutor executor, Runnable runnable, long nanoTime) {
+
+        super(executor, runnable);
+        deadlineNanos = nanoTime;
+        periodNanos = 0;
+    }
+
+    ScheduledFutureTask(AbstractScheduledEventExecutor executor, Runnable runnable, long nanoTime, long period) {
+
+        super(executor, runnable);
+        deadlineNanos = nanoTime;
+        periodNanos = validatePeriod(period);
+    }
+
+    ScheduledFutureTask(AbstractScheduledEventExecutor executor, Callable<V> callable, long nanoTime, long period) {
+
+        super(executor, callable);
+        deadlineNanos = nanoTime;
+        periodNanos = validatePeriod(period);
+    }
+
+    ScheduledFutureTask(AbstractScheduledEventExecutor executor, Callable<V> callable, long nanoTime) {
+
+        super(executor, callable);
+        deadlineNanos = nanoTime;
+        periodNanos = 0;
+    }
 
     static long nanoTime() {
         return System.nanoTime() - START_TIME;
@@ -41,52 +59,15 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
         return START_TIME;
     }
 
-    // set once when added to priority queue
-    private long id;
-
-    private long deadlineNanos;
-    /* 0 - no repeat, >0 - repeat at fixed rate, <0 - repeat with fixed delay */
-    private final long periodNanos;
-
-    private int queueIndex = INDEX_NOT_IN_QUEUE;
-
-    ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Runnable runnable, long nanoTime) {
-
-        super(executor, runnable);
-        deadlineNanos = nanoTime;
-        periodNanos = 0;
-    }
-
-    ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Runnable runnable, long nanoTime, long period) {
-
-        super(executor, runnable);
-        deadlineNanos = nanoTime;
-        periodNanos = validatePeriod(period);
-    }
-
-    ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Callable<V> callable, long nanoTime, long period) {
-
-        super(executor, callable);
-        deadlineNanos = nanoTime;
-        periodNanos = validatePeriod(period);
-    }
-
-    ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Callable<V> callable, long nanoTime) {
-
-        super(executor, callable);
-        deadlineNanos = nanoTime;
-        periodNanos = 0;
-    }
-
     private static long validatePeriod(long period) {
         if (period == 0) {
             throw new IllegalArgumentException("period: 0 (expected: != 0)");
         }
         return period;
+    }
+
+    static long deadlineToDelayNanos(long deadlineNanos) {
+        return deadlineNanos == 0L ? 0L : Math.max(0L, deadlineNanos - nanoTime());
     }
 
     ScheduledFutureTask<V> setId(long id) {
@@ -118,13 +99,8 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
         return deadlineToDelayNanos(deadlineNanos());
     }
 
-    static long deadlineToDelayNanos(long deadlineNanos) {
-        return deadlineNanos == 0L ? 0L : Math.max(0L, deadlineNanos - nanoTime());
-    }
-
     public long delayNanos(long currentTimeNanos) {
-        return deadlineNanos == 0L ? 0L
-                : Math.max(0L, deadlineNanos() - (currentTimeNanos - START_TIME));
+        return deadlineNanos == 0L ? 0L : Math.max(0L, deadlineNanos() - (currentTimeNanos - START_TIME));
     }
 
     @Override
@@ -218,11 +194,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
         StringBuilder buf = super.toStringBuilder();
         buf.setCharAt(buf.length() - 1, ',');
 
-        return buf.append(" deadline: ")
-                  .append(deadlineNanos)
-                  .append(", period: ")
-                  .append(periodNanos)
-                  .append(')');
+        return buf.append(" deadline: ").append(deadlineNanos).append(", period: ").append(periodNanos).append(')');
     }
 
     @Override

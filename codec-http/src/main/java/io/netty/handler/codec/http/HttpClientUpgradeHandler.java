@@ -38,6 +38,173 @@ import static io.netty.util.ReferenceCountUtil.release;
  */
 public class HttpClientUpgradeHandler extends HttpObjectAggregator implements ChannelOutboundHandler {
 
+    private final SourceCodec sourceCodec;
+    private final UpgradeCodec upgradeCodec;
+    private boolean upgradeRequested;
+
+    /**
+     * Constructs the client upgrade handler.
+     *
+     * @param sourceCodec      the codec that is being used initially.
+     * @param upgradeCodec     the codec that the client would like to upgrade to.
+     * @param maxContentLength the maximum length of the aggregated content.
+     */
+    public HttpClientUpgradeHandler(SourceCodec sourceCodec, UpgradeCodec upgradeCodec, int maxContentLength) {
+        super(maxContentLength);
+        this.sourceCodec = ObjectUtil.checkNotNull(sourceCodec, "sourceCodec");
+        this.upgradeCodec = ObjectUtil.checkNotNull(upgradeCodec, "upgradeCodec");
+    }
+
+    private static void removeThisHandler(ChannelHandlerContext ctx) {
+        ctx.pipeline().remove(ctx.name());
+    }
+
+    @Override
+    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
+        ctx.bind(localAddress, promise);
+    }
+
+    @Override
+    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
+        ctx.connect(remoteAddress, localAddress, promise);
+    }
+
+    @Override
+    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+        ctx.disconnect(promise);
+    }
+
+    @Override
+    public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+        ctx.close(promise);
+    }
+
+    @Override
+    public void deregister(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+        ctx.deregister(promise);
+    }
+
+    @Override
+    public void read(ChannelHandlerContext ctx) throws Exception {
+        ctx.read();
+    }
+
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+        if (!(msg instanceof HttpRequest)) {
+            ctx.write(msg, promise);
+            return;
+        }
+
+        if (upgradeRequested) {
+            promise.setFailure(new IllegalStateException("Attempting to write HTTP request with upgrade in progress"));
+            return;
+        }
+
+        upgradeRequested = true;
+        setUpgradeRequestHeaders(ctx, (HttpRequest) msg);
+
+        // Continue writing the request.
+        ctx.write(msg, promise);
+
+        // Notify that the upgrade request was issued.
+        ctx.fireUserEventTriggered(UpgradeEvent.UPGRADE_ISSUED);
+        // Now we wait for the next HTTP response to see if we switch protocols.
+    }
+
+    @Override
+    public void flush(ChannelHandlerContext ctx) throws Exception {
+        ctx.flush();
+    }
+
+    @Override
+    protected void decode(ChannelHandlerContext ctx, HttpObject msg, List<Object> out) throws Exception {
+        FullHttpResponse response = null;
+        try {
+            if (!upgradeRequested) {
+                throw new IllegalStateException("Read HTTP response without requesting protocol switch");
+            }
+
+            if (msg instanceof HttpResponse) {
+                HttpResponse rep = (HttpResponse) msg;
+                if (!SWITCHING_PROTOCOLS.equals(rep.status())) {
+                    // The server does not support the requested protocol, just remove this handler
+                    // and continue processing HTTP.
+                    // NOTE: not releasing the response since we're letting it propagate to the
+                    // next handler.
+                    ctx.fireUserEventTriggered(UpgradeEvent.UPGRADE_REJECTED);
+                    removeThisHandler(ctx);
+                    ctx.fireChannelRead(msg);
+                    return;
+                }
+            }
+
+            if (msg instanceof FullHttpResponse) {
+                response = (FullHttpResponse) msg;
+                // Need to retain since the base class will release after returning from this method.
+                response.retain();
+                out.add(response);
+            } else {
+                // Call the base class to handle the aggregation of the full request.
+                super.decode(ctx, msg, out);
+                if (out.isEmpty()) {
+                    // The full request hasn't been created yet, still awaiting more data.
+                    return;
+                }
+
+                assert out.size() == 1;
+                response = (FullHttpResponse) out.get(0);
+            }
+
+            CharSequence upgradeHeader = response.headers().get(HttpHeaderNames.UPGRADE);
+            if (upgradeHeader != null && !AsciiString.contentEqualsIgnoreCase(upgradeCodec.protocol(), upgradeHeader)) {
+                throw new IllegalStateException("Switching Protocols response with unexpected UPGRADE protocol: " + upgradeHeader);
+            }
+
+            // Upgrade to the new protocol.
+            sourceCodec.prepareUpgradeFrom(ctx);
+            upgradeCodec.upgradeTo(ctx, response);
+
+            // Notify that the upgrade to the new protocol completed successfully.
+            ctx.fireUserEventTriggered(UpgradeEvent.UPGRADE_SUCCESSFUL);
+
+            // We guarantee UPGRADE_SUCCESSFUL event will be arrived at the next handler
+            // before http2 setting frame and http response.
+            sourceCodec.upgradeFrom(ctx);
+
+            // We switched protocols, so we're done with the upgrade response.
+            // Release it and clear it from the output.
+            response.release();
+            out.clear();
+            removeThisHandler(ctx);
+        } catch (Throwable t) {
+            release(response);
+            ctx.fireExceptionCaught(t);
+            removeThisHandler(ctx);
+        }
+    }
+
+    /**
+     * Adds all upgrade request headers necessary for an upgrade to the supported protocols.
+     */
+    private void setUpgradeRequestHeaders(ChannelHandlerContext ctx, HttpRequest request) {
+        // Set the UPGRADE header on the request.
+        request.headers().set(HttpHeaderNames.UPGRADE, upgradeCodec.protocol());
+
+        // Add all protocol-specific headers to the request.
+        Set<CharSequence> connectionParts = new LinkedHashSet<CharSequence>(2);
+        connectionParts.addAll(upgradeCodec.setUpgradeHeaders(ctx, request));
+
+        // Set the CONNECTION header from the set of all protocol-specific headers that were added.
+        StringBuilder builder = new StringBuilder();
+        for (CharSequence part : connectionParts) {
+            builder.append(part);
+            builder.append(',');
+        }
+        builder.append(HttpHeaderValues.UPGRADE);
+        request.headers().add(HttpHeaderNames.CONNECTION, builder.toString());
+    }
+
     /**
      * User events that are fired to notify about upgrade status.
      */
@@ -95,183 +262,10 @@ public class HttpClientUpgradeHandler extends HttpObjectAggregator implements Ch
          * Performs an HTTP protocol upgrade from the source codec. This method is responsible for
          * adding all handlers required for the new protocol.
          *
-         * @param ctx the context for the current handler.
+         * @param ctx             the context for the current handler.
          * @param upgradeResponse the 101 Switching Protocols response that indicates that the server
-         *            has switched to this protocol.
+         *                        has switched to this protocol.
          */
         void upgradeTo(ChannelHandlerContext ctx, FullHttpResponse upgradeResponse) throws Exception;
-    }
-
-    private final SourceCodec sourceCodec;
-    private final UpgradeCodec upgradeCodec;
-    private boolean upgradeRequested;
-
-    /**
-     * Constructs the client upgrade handler.
-     *
-     * @param sourceCodec the codec that is being used initially.
-     * @param upgradeCodec the codec that the client would like to upgrade to.
-     * @param maxContentLength the maximum length of the aggregated content.
-     */
-    public HttpClientUpgradeHandler(SourceCodec sourceCodec, UpgradeCodec upgradeCodec,
-                                    int maxContentLength) {
-        super(maxContentLength);
-        this.sourceCodec = ObjectUtil.checkNotNull(sourceCodec, "sourceCodec");
-        this.upgradeCodec = ObjectUtil.checkNotNull(upgradeCodec, "upgradeCodec");
-    }
-
-    @Override
-    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
-        ctx.bind(localAddress, promise);
-    }
-
-    @Override
-    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress,
-                        ChannelPromise promise) throws Exception {
-        ctx.connect(remoteAddress, localAddress, promise);
-    }
-
-    @Override
-    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        ctx.disconnect(promise);
-    }
-
-    @Override
-    public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        ctx.close(promise);
-    }
-
-    @Override
-    public void deregister(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        ctx.deregister(promise);
-    }
-
-    @Override
-    public void read(ChannelHandlerContext ctx) throws Exception {
-        ctx.read();
-    }
-
-    @Override
-    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise)
-            throws Exception {
-        if (!(msg instanceof HttpRequest)) {
-            ctx.write(msg, promise);
-            return;
-        }
-
-        if (upgradeRequested) {
-            promise.setFailure(new IllegalStateException(
-                    "Attempting to write HTTP request with upgrade in progress"));
-            return;
-        }
-
-        upgradeRequested = true;
-        setUpgradeRequestHeaders(ctx, (HttpRequest) msg);
-
-        // Continue writing the request.
-        ctx.write(msg, promise);
-
-        // Notify that the upgrade request was issued.
-        ctx.fireUserEventTriggered(UpgradeEvent.UPGRADE_ISSUED);
-        // Now we wait for the next HTTP response to see if we switch protocols.
-    }
-
-    @Override
-    public void flush(ChannelHandlerContext ctx) throws Exception {
-        ctx.flush();
-    }
-
-    @Override
-    protected void decode(ChannelHandlerContext ctx, HttpObject msg, List<Object> out)
-            throws Exception {
-        FullHttpResponse response = null;
-        try {
-            if (!upgradeRequested) {
-                throw new IllegalStateException("Read HTTP response without requesting protocol switch");
-            }
-
-            if (msg instanceof HttpResponse) {
-                HttpResponse rep = (HttpResponse) msg;
-                if (!SWITCHING_PROTOCOLS.equals(rep.status())) {
-                    // The server does not support the requested protocol, just remove this handler
-                    // and continue processing HTTP.
-                    // NOTE: not releasing the response since we're letting it propagate to the
-                    // next handler.
-                    ctx.fireUserEventTriggered(UpgradeEvent.UPGRADE_REJECTED);
-                    removeThisHandler(ctx);
-                    ctx.fireChannelRead(msg);
-                    return;
-                }
-            }
-
-            if (msg instanceof FullHttpResponse) {
-                response = (FullHttpResponse) msg;
-                // Need to retain since the base class will release after returning from this method.
-                response.retain();
-                out.add(response);
-            } else {
-                // Call the base class to handle the aggregation of the full request.
-                super.decode(ctx, msg, out);
-                if (out.isEmpty()) {
-                    // The full request hasn't been created yet, still awaiting more data.
-                    return;
-                }
-
-                assert out.size() == 1;
-                response = (FullHttpResponse) out.get(0);
-            }
-
-            CharSequence upgradeHeader = response.headers().get(HttpHeaderNames.UPGRADE);
-            if (upgradeHeader != null && !AsciiString.contentEqualsIgnoreCase(upgradeCodec.protocol(), upgradeHeader)) {
-                throw new IllegalStateException(
-                        "Switching Protocols response with unexpected UPGRADE protocol: " + upgradeHeader);
-            }
-
-            // Upgrade to the new protocol.
-            sourceCodec.prepareUpgradeFrom(ctx);
-            upgradeCodec.upgradeTo(ctx, response);
-
-            // Notify that the upgrade to the new protocol completed successfully.
-            ctx.fireUserEventTriggered(UpgradeEvent.UPGRADE_SUCCESSFUL);
-
-            // We guarantee UPGRADE_SUCCESSFUL event will be arrived at the next handler
-            // before http2 setting frame and http response.
-            sourceCodec.upgradeFrom(ctx);
-
-            // We switched protocols, so we're done with the upgrade response.
-            // Release it and clear it from the output.
-            response.release();
-            out.clear();
-            removeThisHandler(ctx);
-        } catch (Throwable t) {
-            release(response);
-            ctx.fireExceptionCaught(t);
-            removeThisHandler(ctx);
-        }
-    }
-
-    private static void removeThisHandler(ChannelHandlerContext ctx) {
-        ctx.pipeline().remove(ctx.name());
-    }
-
-    /**
-     * Adds all upgrade request headers necessary for an upgrade to the supported protocols.
-     */
-    private void setUpgradeRequestHeaders(ChannelHandlerContext ctx, HttpRequest request) {
-        // Set the UPGRADE header on the request.
-        request.headers().set(HttpHeaderNames.UPGRADE, upgradeCodec.protocol());
-
-        // Add all protocol-specific headers to the request.
-        Set<CharSequence> connectionParts = new LinkedHashSet<CharSequence>(2);
-        connectionParts.addAll(upgradeCodec.setUpgradeHeaders(ctx, request));
-
-        // Set the CONNECTION header from the set of all protocol-specific headers that were added.
-        StringBuilder builder = new StringBuilder();
-        for (CharSequence part : connectionParts) {
-            builder.append(part);
-            builder.append(',');
-        }
-        builder.append(HttpHeaderValues.UPGRADE);
-        request.headers().add(HttpHeaderNames.CONNECTION, builder.toString());
     }
 }

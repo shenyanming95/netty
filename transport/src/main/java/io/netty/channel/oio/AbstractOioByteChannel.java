@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.oio;
 
 import io.netty.buffer.ByteBuf;
@@ -32,9 +17,7 @@ import java.io.IOException;
 public abstract class AbstractOioByteChannel extends AbstractOioChannel {
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(false);
-    private static final String EXPECTED_TYPES =
-            " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " +
-            StringUtil.simpleClassName(FileRegion.class) + ')';
+    private static final String EXPECTED_TYPES = " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " + StringUtil.simpleClassName(FileRegion.class) + ')';
 
     /**
      * @see AbstractOioByteChannel#AbstractOioByteChannel(Channel)
@@ -50,12 +33,14 @@ public abstract class AbstractOioByteChannel extends AbstractOioChannel {
 
     /**
      * Determine if the input side of this channel is shutdown.
+     *
      * @return {@code true} if the input side of this channel is shutdown.
      */
     protected abstract boolean isInputShutdown();
 
     /**
      * Shutdown the input side of this channel.
+     *
      * @return A channel future that will complete when the shutdown is complete.
      */
     protected abstract ChannelFuture shutdownInput();
@@ -72,8 +57,7 @@ public abstract class AbstractOioByteChannel extends AbstractOioChannel {
         }
     }
 
-    private void handleReadException(ChannelPipeline pipeline, ByteBuf byteBuf, Throwable cause, boolean close,
-            RecvByteBufAllocator.Handle allocHandle) {
+    private void handleReadException(ChannelPipeline pipeline, ByteBuf byteBuf, Throwable cause, boolean close, RecvByteBufAllocator.Handle allocHandle) {
         if (byteBuf != null) {
             if (byteBuf.isReadable()) {
                 readPending = false;
@@ -190,7 +174,7 @@ public abstract class AbstractOioByteChannel extends AbstractOioChannel {
 
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
-        for (;;) {
+        for (; ; ) {
             Object msg = in.current();
             if (msg == null) {
                 // nothing left to write
@@ -213,8 +197,7 @@ public abstract class AbstractOioByteChannel extends AbstractOioChannel {
                 in.progress(region.transferred() - transferred);
                 in.remove();
             } else {
-                in.remove(new UnsupportedOperationException(
-                        "unsupported message type: " + StringUtil.simpleClassName(msg)));
+                in.remove(new UnsupportedOperationException("unsupported message type: " + StringUtil.simpleClassName(msg)));
             }
         }
     }
@@ -225,8 +208,7 @@ public abstract class AbstractOioByteChannel extends AbstractOioChannel {
             return msg;
         }
 
-        throw new UnsupportedOperationException(
-                "unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
+        throw new UnsupportedOperationException("unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
     }
 
     /**
@@ -237,26 +219,26 @@ public abstract class AbstractOioByteChannel extends AbstractOioChannel {
     /**
      * Read bytes from the underlying Socket.
      *
-     * @param buf           the {@link ByteBuf} into which the read bytes will be written
+     * @param buf the {@link ByteBuf} into which the read bytes will be written
      * @return amount       the number of bytes read. This may return a negative amount if the underlying
-     *                      Socket was closed
-     * @throws Exception    is thrown if an error occurred
+     * Socket was closed
+     * @throws Exception is thrown if an error occurred
      */
     protected abstract int doReadBytes(ByteBuf buf) throws Exception;
 
     /**
      * Write the data which is hold by the {@link ByteBuf} to the underlying Socket.
      *
-     * @param buf           the {@link ByteBuf} which holds the data to transfer
-     * @throws Exception    is thrown if an error occurred
+     * @param buf the {@link ByteBuf} which holds the data to transfer
+     * @throws Exception is thrown if an error occurred
      */
     protected abstract void doWriteBytes(ByteBuf buf) throws Exception;
 
     /**
      * Write the data which is hold by the {@link FileRegion} to the underlying Socket.
      *
-     * @param region        the {@link FileRegion} which holds the data to transfer
-     * @throws Exception    is thrown if an error occurred
+     * @param region the {@link FileRegion} which holds the data to transfer
+     * @throws Exception is thrown if an error occurred
      */
     protected abstract void doWriteFileRegion(FileRegion region) throws Exception;
 }

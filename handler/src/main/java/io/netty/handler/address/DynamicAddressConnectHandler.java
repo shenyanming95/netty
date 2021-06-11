@@ -30,8 +30,7 @@ import java.net.SocketAddress;
 public abstract class DynamicAddressConnectHandler extends ChannelOutboundHandlerAdapter {
 
     @Override
-    public final void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress,
-                              SocketAddress localAddress, ChannelPromise promise) {
+    public final void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) {
         final SocketAddress remote;
         final SocketAddress local;
         try {
@@ -59,8 +58,7 @@ public abstract class DynamicAddressConnectHandler extends ChannelOutboundHandle
      * and {@code localAddress}.
      * By default, this method returns the given {@code localAddress}.
      */
-    protected SocketAddress localAddress(
-            @SuppressWarnings("unused") SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
+    protected SocketAddress localAddress(@SuppressWarnings("unused") SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         return localAddress;
     }
 
@@ -70,8 +68,7 @@ public abstract class DynamicAddressConnectHandler extends ChannelOutboundHandle
      * and {@code localAddress}.
      * By default, this method returns the given {@code remoteAddress}.
      */
-    protected SocketAddress remoteAddress(
-            SocketAddress remoteAddress, @SuppressWarnings("unused") SocketAddress localAddress) throws Exception {
+    protected SocketAddress remoteAddress(SocketAddress remoteAddress, @SuppressWarnings("unused") SocketAddress localAddress) throws Exception {
         return remoteAddress;
     }
 }

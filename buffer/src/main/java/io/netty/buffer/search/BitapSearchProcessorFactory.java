@@ -22,12 +22,35 @@ import io.netty.util.internal.PlatformDependent;
  * to create an instance of this factory.
  * Use {@link BitapSearchProcessorFactory#newSearchProcessor} to get an instance of {@link io.netty.util.ByteProcessor}
  * implementation for performing the actual search.
+ *
  * @see AbstractSearchProcessorFactory
  */
 public class BitapSearchProcessorFactory extends AbstractSearchProcessorFactory {
 
     private final long[] bitMasks = new long[256];
     private final long successBit;
+
+    BitapSearchProcessorFactory(byte[] needle) {
+        if (needle.length > 64) {
+            throw new IllegalArgumentException("Maximum supported search pattern length is 64, got " + needle.length);
+        }
+
+        long bit = 1L;
+        for (byte c : needle) {
+            bitMasks[c & 0xff] |= bit;
+            bit <<= 1;
+        }
+
+        successBit = 1L << (needle.length - 1);
+    }
+
+    /**
+     * Returns a new {@link Processor}.
+     */
+    @Override
+    public Processor newSearchProcessor() {
+        return new Processor(bitMasks, successBit);
+    }
 
     public static class Processor implements SearchProcessor {
 
@@ -50,28 +73,6 @@ public class BitapSearchProcessorFactory extends AbstractSearchProcessorFactory 
         public void reset() {
             currentMask = 0;
         }
-    }
-
-    BitapSearchProcessorFactory(byte[] needle) {
-        if (needle.length > 64) {
-            throw new IllegalArgumentException("Maximum supported search pattern length is 64, got " + needle.length);
-        }
-
-        long bit = 1L;
-        for (byte c: needle) {
-            bitMasks[c & 0xff] |= bit;
-            bit <<= 1;
-        }
-
-        successBit = 1L << (needle.length - 1);
-    }
-
-    /**
-     * Returns a new {@link Processor}.
-     */
-    @Override
-    public Processor newSearchProcessor() {
-        return new Processor(bitMasks, successBit);
     }
 
 }

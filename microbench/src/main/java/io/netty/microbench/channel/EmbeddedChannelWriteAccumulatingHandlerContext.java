@@ -27,14 +27,11 @@ public abstract class EmbeddedChannelWriteAccumulatingHandlerContext extends Emb
     private ByteBuf cumulation;
     private ByteToMessageDecoder.Cumulator cumulator;
 
-    protected EmbeddedChannelWriteAccumulatingHandlerContext(ByteBufAllocator alloc, ChannelHandler handler,
-                                                          ByteToMessageDecoder.Cumulator writeCumulator) {
+    protected EmbeddedChannelWriteAccumulatingHandlerContext(ByteBufAllocator alloc, ChannelHandler handler, ByteToMessageDecoder.Cumulator writeCumulator) {
         this(alloc, handler, writeCumulator, new EmbeddedChannel());
     }
 
-    protected EmbeddedChannelWriteAccumulatingHandlerContext(ByteBufAllocator alloc, ChannelHandler handler,
-                                                          ByteToMessageDecoder.Cumulator writeCumulator,
-                                                          EmbeddedChannel channel) {
+    protected EmbeddedChannelWriteAccumulatingHandlerContext(ByteBufAllocator alloc, ChannelHandler handler, ByteToMessageDecoder.Cumulator writeCumulator, EmbeddedChannel channel) {
         super(alloc, handler, channel);
         this.cumulator = ObjectUtil.checkNotNull(writeCumulator, "writeCumulator");
     }

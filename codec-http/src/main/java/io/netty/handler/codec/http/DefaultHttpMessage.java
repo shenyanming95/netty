@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http;
 
 import io.netty.util.internal.ObjectUtil;
@@ -24,8 +9,8 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  */
 public abstract class DefaultHttpMessage extends DefaultHttpObject implements HttpMessage {
     private static final int HASH_CODE_PRIME = 31;
-    private HttpVersion version;
     private final HttpHeaders headers;
+    private HttpVersion version;
 
     /**
      * Creates a new instance.
@@ -38,9 +23,7 @@ public abstract class DefaultHttpMessage extends DefaultHttpObject implements Ht
      * Creates a new instance.
      */
     protected DefaultHttpMessage(final HttpVersion version, boolean validateHeaders, boolean singleFieldHeaders) {
-        this(version,
-                singleFieldHeaders ? new CombinedHttpHeaders(validateHeaders)
-                                   : new DefaultHttpHeaders(validateHeaders));
+        this(version, singleFieldHeaders ? new CombinedHttpHeaders(validateHeaders) : new DefaultHttpHeaders(validateHeaders));
     }
 
     /**
@@ -84,9 +67,7 @@ public abstract class DefaultHttpMessage extends DefaultHttpObject implements Ht
 
         DefaultHttpMessage other = (DefaultHttpMessage) o;
 
-        return headers().equals(other.headers()) &&
-               protocolVersion().equals(other.protocolVersion()) &&
-               super.equals(o);
+        return headers().equals(other.headers()) && protocolVersion().equals(other.protocolVersion()) && super.equals(o);
     }
 
     @Override

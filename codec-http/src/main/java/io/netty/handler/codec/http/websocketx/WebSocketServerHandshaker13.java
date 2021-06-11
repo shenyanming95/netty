@@ -33,62 +33,42 @@ public class WebSocketServerHandshaker13 extends WebSocketServerHandshaker {
     /**
      * Constructor specifying the destination web socket location
      *
-     * @param webSocketURL
-     *        URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web
-     *        socket frames will be sent to this URL.
-     * @param subprotocols
-     *        CSV of supported protocols
-     * @param allowExtensions
-     *        Allow extensions to be used in the reserved bits of the web socket frame
-     * @param maxFramePayloadLength
-     *        Maximum allowable frame payload length. Setting this value to your application's
-     *        requirement may reduce denial of service attacks using long data frames.
+     * @param webSocketURL          URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web
+     *                              socket frames will be sent to this URL.
+     * @param subprotocols          CSV of supported protocols
+     * @param allowExtensions       Allow extensions to be used in the reserved bits of the web socket frame
+     * @param maxFramePayloadLength Maximum allowable frame payload length. Setting this value to your application's
+     *                              requirement may reduce denial of service attacks using long data frames.
      */
-    public WebSocketServerHandshaker13(
-            String webSocketURL, String subprotocols, boolean allowExtensions, int maxFramePayloadLength) {
+    public WebSocketServerHandshaker13(String webSocketURL, String subprotocols, boolean allowExtensions, int maxFramePayloadLength) {
         this(webSocketURL, subprotocols, allowExtensions, maxFramePayloadLength, false);
     }
 
     /**
      * Constructor specifying the destination web socket location
      *
-     * @param webSocketURL
-     *        URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web
-     *        socket frames will be sent to this URL.
-     * @param subprotocols
-     *        CSV of supported protocols
-     * @param allowExtensions
-     *        Allow extensions to be used in the reserved bits of the web socket frame
-     * @param maxFramePayloadLength
-     *        Maximum allowable frame payload length. Setting this value to your application's
-     *        requirement may reduce denial of service attacks using long data frames.
-     * @param allowMaskMismatch
-     *            When set to true, frames which are not masked properly according to the standard will still be
-     *            accepted.
+     * @param webSocketURL          URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web
+     *                              socket frames will be sent to this URL.
+     * @param subprotocols          CSV of supported protocols
+     * @param allowExtensions       Allow extensions to be used in the reserved bits of the web socket frame
+     * @param maxFramePayloadLength Maximum allowable frame payload length. Setting this value to your application's
+     *                              requirement may reduce denial of service attacks using long data frames.
+     * @param allowMaskMismatch     When set to true, frames which are not masked properly according to the standard will still be
+     *                              accepted.
      */
-    public WebSocketServerHandshaker13(
-            String webSocketURL, String subprotocols, boolean allowExtensions, int maxFramePayloadLength,
-            boolean allowMaskMismatch) {
-        this(webSocketURL, subprotocols, WebSocketDecoderConfig.newBuilder()
-            .allowExtensions(allowExtensions)
-            .maxFramePayloadLength(maxFramePayloadLength)
-            .allowMaskMismatch(allowMaskMismatch)
-            .build());
+    public WebSocketServerHandshaker13(String webSocketURL, String subprotocols, boolean allowExtensions, int maxFramePayloadLength, boolean allowMaskMismatch) {
+        this(webSocketURL, subprotocols, WebSocketDecoderConfig.newBuilder().allowExtensions(allowExtensions).maxFramePayloadLength(maxFramePayloadLength).allowMaskMismatch(allowMaskMismatch).build());
     }
 
     /**
      * Constructor specifying the destination web socket location
      *
-     * @param webSocketURL
-     *        URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web
-     *        socket frames will be sent to this URL.
-     * @param subprotocols
-     *        CSV of supported protocols
-     * @param decoderConfig
-     *            Frames decoder configuration.
+     * @param webSocketURL  URL for web socket communications. e.g "ws://myhost.com/mypath". Subsequent web
+     *                      socket frames will be sent to this URL.
+     * @param subprotocols  CSV of supported protocols
+     * @param decoderConfig Frames decoder configuration.
      */
-    public WebSocketServerHandshaker13(
-            String webSocketURL, String subprotocols, WebSocketDecoderConfig decoderConfig) {
+    public WebSocketServerHandshaker13(String webSocketURL, String subprotocols, WebSocketDecoderConfig decoderConfig) {
         super(WebSocketVersion.V13, webSocketURL, subprotocols, decoderConfig);
     }
 
@@ -133,8 +113,7 @@ public class WebSocketServerHandshaker13 extends WebSocketServerHandshaker {
             throw new WebSocketHandshakeException("not a WebSocket request: missing key");
         }
 
-        FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS,
-                req.content().alloc().buffer(0));
+        FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS, req.content().alloc().buffer(0));
         if (headers != null) {
             res.headers().add(headers);
         }
@@ -147,9 +126,7 @@ public class WebSocketServerHandshaker13 extends WebSocketServerHandshaker {
             logger.debug("WebSocket version 13 server handshake key: {}, response: {}", key, accept);
         }
 
-        res.headers().set(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET)
-                     .set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE)
-                     .set(HttpHeaderNames.SEC_WEBSOCKET_ACCEPT, accept);
+        res.headers().set(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET).set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE).set(HttpHeaderNames.SEC_WEBSOCKET_ACCEPT, accept);
 
         String subprotocols = req.headers().get(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL);
         if (subprotocols != null) {

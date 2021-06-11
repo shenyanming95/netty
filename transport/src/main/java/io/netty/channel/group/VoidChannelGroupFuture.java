@@ -33,6 +33,10 @@ final class VoidChannelGroupFuture implements ChannelGroupFuture {
         this.group = group;
     }
 
+    private static RuntimeException reject() {
+        return new IllegalStateException("void future");
+    }
+
     @Override
     public ChannelGroup group() {
         return group;
@@ -164,11 +168,7 @@ final class VoidChannelGroupFuture implements ChannelGroupFuture {
     }
 
     @Override
-    public Void get(long timeout, TimeUnit unit)  {
+    public Void get(long timeout, TimeUnit unit) {
         throw reject();
-    }
-
-    private static RuntimeException reject() {
-        return new IllegalStateException("void future");
     }
 }

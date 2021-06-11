@@ -33,6 +33,7 @@ import io.netty.util.internal.ObjectUtil;
  * from the {@link EventExecutor} thread.</p>
  */
 public final class PromiseCombiner {
+    private final EventExecutor executor;
     private int expectedCount;
     private int doneCount;
     private Promise<Void> aggregatePromise;
@@ -64,8 +65,6 @@ public final class PromiseCombiner {
         }
     };
 
-    private final EventExecutor executor;
-
     /**
      * Deprecated use {@link PromiseCombiner#PromiseCombiner(EventExecutor)}.
      */
@@ -89,7 +88,6 @@ public final class PromiseCombiner {
      * {@link PromiseCombiner#finish(Promise)} method.
      *
      * @param promise the promise to add to this promise combiner
-     *
      * @deprecated Replaced by {@link PromiseCombiner#add(Future)}.
      */
     @Deprecated
@@ -103,7 +101,7 @@ public final class PromiseCombiner {
      *
      * @param future the future to add to this promise combiner
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public void add(Future future) {
         checkAddAllowed();
         checkInEventLoop();
@@ -116,7 +114,6 @@ public final class PromiseCombiner {
      * {@link PromiseCombiner#finish(Promise)} method.
      *
      * @param promises the promises to add to this promise combiner
-     *
      * @deprecated Replaced by {@link PromiseCombiner#addAll(Future[])}
      */
     @Deprecated
@@ -130,7 +127,7 @@ public final class PromiseCombiner {
      *
      * @param futures the futures to add to this promise combiner
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public void addAll(Future... futures) {
         for (Future future : futures) {
             this.add(future);

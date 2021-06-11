@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.epoll;
 
 import io.netty.buffer.ByteBuf;
@@ -39,17 +24,10 @@ public final class EpollDatagramChannelConfig extends EpollChannelConfig impleme
     @Override
     @SuppressWarnings("deprecation")
     public Map<ChannelOption<?>, Object> getOptions() {
-        return getOptions(
-                super.getOptions(),
-                ChannelOption.SO_BROADCAST, ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF,
-                ChannelOption.SO_REUSEADDR, ChannelOption.IP_MULTICAST_LOOP_DISABLED,
-                ChannelOption.IP_MULTICAST_ADDR, ChannelOption.IP_MULTICAST_IF, ChannelOption.IP_MULTICAST_TTL,
-                ChannelOption.IP_TOS, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION,
-                EpollChannelOption.SO_REUSEPORT, EpollChannelOption.IP_FREEBIND, EpollChannelOption.IP_TRANSPARENT,
-                EpollChannelOption.IP_RECVORIGDSTADDR, EpollChannelOption.MAX_DATAGRAM_PAYLOAD_SIZE);
+        return getOptions(super.getOptions(), ChannelOption.SO_BROADCAST, ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF, ChannelOption.SO_REUSEADDR, ChannelOption.IP_MULTICAST_LOOP_DISABLED, ChannelOption.IP_MULTICAST_ADDR, ChannelOption.IP_MULTICAST_IF, ChannelOption.IP_MULTICAST_TTL, ChannelOption.IP_TOS, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, EpollChannelOption.SO_REUSEPORT, EpollChannelOption.IP_FREEBIND, EpollChannelOption.IP_TRANSPARENT, EpollChannelOption.IP_RECVORIGDSTADDR, EpollChannelOption.MAX_DATAGRAM_PAYLOAD_SIZE);
     }
 
-    @SuppressWarnings({ "unchecked", "deprecation" })
+    @SuppressWarnings({"unchecked", "deprecation"})
     @Override
     public <T> T getOption(ChannelOption<T> option) {
         if (option == ChannelOption.SO_BROADCAST) {
@@ -142,15 +120,15 @@ public final class EpollDatagramChannelConfig extends EpollChannelConfig impleme
         return true;
     }
 
+    boolean getActiveOnOpen() {
+        return activeOnOpen;
+    }
+
     private void setActiveOnOpen(boolean activeOnOpen) {
         if (channel.isRegistered()) {
             throw new IllegalStateException("Can only changed before channel was registered");
         }
         this.activeOnOpen = activeOnOpen;
-    }
-
-    boolean getActiveOnOpen() {
-        return activeOnOpen;
     }
 
     @Override
@@ -414,7 +392,7 @@ public final class EpollDatagramChannelConfig extends EpollChannelConfig impleme
     /**
      * Set the SO_REUSEPORT option on the underlying Channel. This will allow to bind multiple
      * {@link EpollSocketChannel}s to the same port and so accept connections with multiple threads.
-     *
+     * <p>
      * Be aware this method needs be called before {@link EpollDatagramChannel#bind(java.net.SocketAddress)} to have
      * any affect.
      */
@@ -503,6 +481,13 @@ public final class EpollDatagramChannelConfig extends EpollChannelConfig impleme
     }
 
     /**
+     * Get the maximum {@link io.netty.channel.socket.DatagramPacket} size.
+     */
+    public int getMaxDatagramPayloadSize() {
+        return maxDatagramSize;
+    }
+
+    /**
      * Set the maximum {@link io.netty.channel.socket.DatagramPacket} size. This will be used to determine if
      * {@code recvmmsg} should be used when reading from the underlying socket. When {@code recvmmsg} is used
      * we may be able to read multiple {@link io.netty.channel.socket.DatagramPacket}s with one syscall and so
@@ -513,12 +498,5 @@ public final class EpollDatagramChannelConfig extends EpollChannelConfig impleme
     public EpollDatagramChannelConfig setMaxDatagramPayloadSize(int maxDatagramSize) {
         this.maxDatagramSize = ObjectUtil.checkPositiveOrZero(maxDatagramSize, "maxDatagramSize");
         return this;
-    }
-
-    /**
-     * Get the maximum {@link io.netty.channel.socket.DatagramPacket} size.
-     */
-    public int getMaxDatagramPayloadSize() {
-        return maxDatagramSize;
     }
 }

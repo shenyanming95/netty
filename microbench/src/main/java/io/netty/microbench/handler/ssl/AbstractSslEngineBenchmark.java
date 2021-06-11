@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.microbench.handler.ssl;
 
 import io.netty.buffer.ByteBufAllocator;
@@ -35,112 +20,40 @@ import java.nio.ByteBuffer;
 public class AbstractSslEngineBenchmark extends AbstractMicrobenchmark {
 
     private static final String PROTOCOL_TLS_V1_2 = "TLSv1.2";
-
-    public enum SslEngineProvider {
-        JDK {
-            @Override
-            SslProvider sslProvider() {
-                return SslProvider.JDK;
-            }
-        },
-        OPENSSL {
-            @Override
-            SslProvider sslProvider() {
-                return SslProvider.OPENSSL;
-            }
-        },
-        OPENSSL_REFCNT {
-            @Override
-            SslProvider sslProvider() {
-                return SslProvider.OPENSSL_REFCNT;
-            }
-        };
-        private final SslContext clientContext = newClientContext();
-        private final SslContext serverContext = newServerContext();
-
-        private SslContext newClientContext() {
-            try {
-                return SslContextBuilder.forClient()
-                        .sslProvider(sslProvider())
-                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                        .build();
-            } catch (SSLException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
-        private SslContext newServerContext() {
-            try {
-                File keyFile = new File(getClass().getResource("test_unencrypted.pem").getFile());
-                File crtFile = new File(getClass().getResource("test.crt").getFile());
-
-                return SslContextBuilder.forServer(crtFile, keyFile)
-                        .sslProvider(sslProvider())
-                        .build();
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
-        SSLEngine newClientEngine(ByteBufAllocator allocator, String cipher) {
-            return configureEngine(clientContext.newHandler(allocator).engine(), cipher);
-        }
-
-        SSLEngine newServerEngine(ByteBufAllocator allocator, String cipher) {
-            return configureEngine(serverContext.newHandler(allocator).engine(), cipher);
-        }
-
-        abstract SslProvider sslProvider();
-
-        static SSLEngine configureEngine(SSLEngine engine, String cipher) {
-            engine.setEnabledProtocols(new String[]{ PROTOCOL_TLS_V1_2 });
-            engine.setEnabledCipherSuites(new String[]{ cipher });
-            return engine;
-        }
-    }
-
-    public enum BufferType {
-        HEAP {
-            @Override
-            ByteBuffer newBuffer(int size) {
-                return ByteBuffer.allocate(size);
-            }
-        },
-        DIRECT {
-            @Override
-            ByteBuffer newBuffer(int size) {
-                return ByteBuffer.allocateDirect(size);
-            }
-
-            @Override
-            void freeBuffer(ByteBuffer buffer) {
-                PlatformDependent.freeDirectBuffer(buffer);
-            }
-        };
-
-        abstract ByteBuffer newBuffer(int size);
-
-        void freeBuffer(ByteBuffer buffer) { }
-    }
-
     @Param
     public SslEngineProvider sslProvider;
-
     @Param
     public BufferType bufferType;
-
     // Includes cipher required by HTTP/2
-    @Param({ "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" })
+    @Param({"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"})
     public String cipher;
-
     protected SSLEngine clientEngine;
     protected SSLEngine serverEngine;
-
     private ByteBuffer cTOs;
     private ByteBuffer sTOc;
     private ByteBuffer serverAppReadBuffer;
     private ByteBuffer clientAppReadBuffer;
     private ByteBuffer empty;
+
+    static boolean checkSslEngineResult(SSLEngineResult result, ByteBuffer src, ByteBuffer dst) {
+        return result.getStatus() == SSLEngineResult.Status.OK && !src.hasRemaining() && dst.hasRemaining();
+    }
+
+    private static boolean isHandshakeFinished(SSLEngineResult result) {
+        return result.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.FINISHED;
+    }
+
+    private static void runDelegatedTasks(SSLEngineResult result, SSLEngine engine) {
+        if (result.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.NEED_TASK) {
+            for (; ; ) {
+                Runnable task = engine.getDelegatedTask();
+                if (task == null) {
+                    break;
+                }
+                task.run();
+            }
+        }
+    }
 
     protected final void initEngines(ByteBufAllocator allocator) {
         clientEngine = newClientEngine(allocator);
@@ -156,10 +69,8 @@ public class AbstractSslEngineBenchmark extends AbstractMicrobenchmark {
         cTOs = allocateBuffer(clientEngine.getSession().getPacketBufferSize());
         sTOc = allocateBuffer(serverEngine.getSession().getPacketBufferSize());
 
-        serverAppReadBuffer = allocateBuffer(
-                serverEngine.getSession().getApplicationBufferSize());
-        clientAppReadBuffer = allocateBuffer(
-                clientEngine.getSession().getApplicationBufferSize());
+        serverAppReadBuffer = allocateBuffer(serverEngine.getSession().getApplicationBufferSize());
+        clientAppReadBuffer = allocateBuffer(clientEngine.getSession().getApplicationBufferSize());
         empty = allocateBuffer(0);
     }
 
@@ -237,8 +148,7 @@ public class AbstractSslEngineBenchmark extends AbstractMicrobenchmark {
             sTOc.compact();
             cTOs.compact();
         } while (!clientHandshakeFinished || !serverHandshakeFinished);
-        return clientResult.getStatus() == SSLEngineResult.Status.OK &&
-                serverResult.getStatus() == SSLEngineResult.Status.OK;
+        return clientResult.getStatus() == SSLEngineResult.Status.OK && serverResult.getStatus() == SSLEngineResult.Status.OK;
     }
 
     protected final SSLEngine newClientEngine(ByteBufAllocator allocator) {
@@ -249,10 +159,6 @@ public class AbstractSslEngineBenchmark extends AbstractMicrobenchmark {
         return sslProvider.newServerEngine(allocator, cipher);
     }
 
-    static boolean checkSslEngineResult(SSLEngineResult result, ByteBuffer src, ByteBuffer dst) {
-        return result.getStatus() == SSLEngineResult.Status.OK && !src.hasRemaining() && dst.hasRemaining();
-    }
-
     protected final ByteBuffer allocateBuffer(int size) {
         return bufferType.newBuffer(size);
     }
@@ -261,19 +167,83 @@ public class AbstractSslEngineBenchmark extends AbstractMicrobenchmark {
         bufferType.freeBuffer(buffer);
     }
 
-    private static boolean isHandshakeFinished(SSLEngineResult result) {
-        return result.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.FINISHED;
+    public enum SslEngineProvider {
+        JDK {
+            @Override
+            SslProvider sslProvider() {
+                return SslProvider.JDK;
+            }
+        }, OPENSSL {
+            @Override
+            SslProvider sslProvider() {
+                return SslProvider.OPENSSL;
+            }
+        }, OPENSSL_REFCNT {
+            @Override
+            SslProvider sslProvider() {
+                return SslProvider.OPENSSL_REFCNT;
+            }
+        };
+        private final SslContext clientContext = newClientContext();
+        private final SslContext serverContext = newServerContext();
+
+        static SSLEngine configureEngine(SSLEngine engine, String cipher) {
+            engine.setEnabledProtocols(new String[]{PROTOCOL_TLS_V1_2});
+            engine.setEnabledCipherSuites(new String[]{cipher});
+            return engine;
+        }
+
+        private SslContext newClientContext() {
+            try {
+                return SslContextBuilder.forClient().sslProvider(sslProvider()).trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+            } catch (SSLException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        private SslContext newServerContext() {
+            try {
+                File keyFile = new File(getClass().getResource("test_unencrypted.pem").getFile());
+                File crtFile = new File(getClass().getResource("test.crt").getFile());
+
+                return SslContextBuilder.forServer(crtFile, keyFile).sslProvider(sslProvider()).build();
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        SSLEngine newClientEngine(ByteBufAllocator allocator, String cipher) {
+            return configureEngine(clientContext.newHandler(allocator).engine(), cipher);
+        }
+
+        SSLEngine newServerEngine(ByteBufAllocator allocator, String cipher) {
+            return configureEngine(serverContext.newHandler(allocator).engine(), cipher);
+        }
+
+        abstract SslProvider sslProvider();
     }
 
-    private static void runDelegatedTasks(SSLEngineResult result, SSLEngine engine) {
-        if (result.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.NEED_TASK) {
-            for (;;) {
-                Runnable task = engine.getDelegatedTask();
-                if (task == null) {
-                    break;
-                }
-                task.run();
+    public enum BufferType {
+        HEAP {
+            @Override
+            ByteBuffer newBuffer(int size) {
+                return ByteBuffer.allocate(size);
             }
+        }, DIRECT {
+            @Override
+            ByteBuffer newBuffer(int size) {
+                return ByteBuffer.allocateDirect(size);
+            }
+
+            @Override
+            void freeBuffer(ByteBuffer buffer) {
+                PlatformDependent.freeDirectBuffer(buffer);
+            }
+        };
+
+        abstract ByteBuffer newBuffer(int size);
+
+        void freeBuffer(ByteBuffer buffer) {
         }
     }
 }

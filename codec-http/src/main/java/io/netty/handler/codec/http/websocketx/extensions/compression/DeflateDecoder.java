@@ -1,18 +1,3 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.websocketx.extensions.compression;
 
 import io.netty.buffer.ByteBuf;
@@ -40,13 +25,9 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  */
 abstract class DeflateDecoder extends WebSocketExtensionDecoder {
 
-    static final ByteBuf FRAME_TAIL = Unpooled.unreleasableBuffer(
-            Unpooled.wrappedBuffer(new byte[] {0x00, 0x00, (byte) 0xff, (byte) 0xff}))
-            .asReadOnly();
+    static final ByteBuf FRAME_TAIL = Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer(new byte[]{0x00, 0x00, (byte) 0xff, (byte) 0xff})).asReadOnly();
 
-    static final ByteBuf EMPTY_DEFLATE_BLOCK = Unpooled.unreleasableBuffer(
-            Unpooled.wrappedBuffer(new byte[] { 0x00 }))
-            .asReadOnly();
+    static final ByteBuf EMPTY_DEFLATE_BLOCK = Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer(new byte[]{0x00})).asReadOnly();
 
     private final boolean noContext;
     private final WebSocketExtensionFilter extensionDecoderFilter;
@@ -56,7 +37,7 @@ abstract class DeflateDecoder extends WebSocketExtensionDecoder {
     /**
      * Constructor
      *
-     * @param noContext true to disable context takeover.
+     * @param noContext              true to disable context takeover.
      * @param extensionDecoderFilter extension decoder filter.
      */
     DeflateDecoder(boolean noContext, WebSocketExtensionFilter extensionDecoderFilter) {
@@ -122,7 +103,7 @@ abstract class DeflateDecoder extends WebSocketExtensionDecoder {
         }
 
         CompositeByteBuf compositeDecompressedContent = ctx.alloc().compositeBuffer();
-        for (;;) {
+        for (; ; ) {
             ByteBuf partUncompressedContent = decoder.readInbound();
             if (partUncompressedContent == null) {
                 break;

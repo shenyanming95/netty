@@ -1,18 +1,3 @@
-/*
- * Copyright 2015 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.codec.http.cookie;
 
 import io.netty.util.internal.logging.InternalLogger;
@@ -49,8 +34,7 @@ public abstract class CookieDecoder {
         CharSequence wrappedValue = CharBuffer.wrap(header, valueBegin, valueEnd);
         CharSequence unwrappedValue = unwrapValue(wrappedValue);
         if (unwrappedValue == null) {
-            logger.debug("Skipping cookie because starting quotes are not properly balanced in '{}'",
-                    wrappedValue);
+            logger.debug("Skipping cookie because starting quotes are not properly balanced in '{}'", wrappedValue);
             return null;
         }
 
@@ -59,8 +43,7 @@ public abstract class CookieDecoder {
         int invalidOctetPos;
         if (strict && (invalidOctetPos = firstInvalidCookieNameOctet(name)) >= 0) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Skipping cookie because name '{}' contains invalid char '{}'",
-                        name, name.charAt(invalidOctetPos));
+                logger.debug("Skipping cookie because name '{}' contains invalid char '{}'", name, name.charAt(invalidOctetPos));
             }
             return null;
         }
@@ -69,8 +52,7 @@ public abstract class CookieDecoder {
 
         if (strict && (invalidOctetPos = firstInvalidCookieValueOctet(unwrappedValue)) >= 0) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Skipping cookie because value '{}' contains invalid char '{}'",
-                        unwrappedValue, unwrappedValue.charAt(invalidOctetPos));
+                logger.debug("Skipping cookie because value '{}' contains invalid char '{}'", unwrappedValue, unwrappedValue.charAt(invalidOctetPos));
             }
             return null;
         }

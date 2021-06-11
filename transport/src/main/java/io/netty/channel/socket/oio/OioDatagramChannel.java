@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.channel.socket.oio;
 
 import io.netty.buffer.ByteBuf;
@@ -43,30 +28,16 @@ import java.util.Locale;
  * @deprecated use NIO / EPOLL / KQUEUE transport.
  */
 @Deprecated
-public class OioDatagramChannel extends AbstractOioMessageChannel
-                                implements DatagramChannel {
+public class OioDatagramChannel extends AbstractOioMessageChannel implements DatagramChannel {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(OioDatagramChannel.class);
 
     private static final ChannelMetadata METADATA = new ChannelMetadata(true);
-    private static final String EXPECTED_TYPES =
-            " (expected: " + StringUtil.simpleClassName(DatagramPacket.class) + ", " +
-            StringUtil.simpleClassName(AddressedEnvelope.class) + '<' +
-            StringUtil.simpleClassName(ByteBuf.class) + ", " +
-            StringUtil.simpleClassName(SocketAddress.class) + ">, " +
-            StringUtil.simpleClassName(ByteBuf.class) + ')';
+    private static final String EXPECTED_TYPES = " (expected: " + StringUtil.simpleClassName(DatagramPacket.class) + ", " + StringUtil.simpleClassName(AddressedEnvelope.class) + '<' + StringUtil.simpleClassName(ByteBuf.class) + ", " + StringUtil.simpleClassName(SocketAddress.class) + ">, " + StringUtil.simpleClassName(ByteBuf.class) + ')';
 
     private final MulticastSocket socket;
     private final OioDatagramChannelConfig config;
     private final java.net.DatagramPacket tmpPacket = new java.net.DatagramPacket(EmptyArrays.EMPTY_BYTES, 0);
-
-    private static MulticastSocket newSocket() {
-        try {
-            return new MulticastSocket(null);
-        } catch (Exception e) {
-            throw new ChannelException("failed to create a new socket", e);
-        }
-    }
 
     /**
      * Create a new instance with an new {@link MulticastSocket}.
@@ -78,7 +49,7 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
     /**
      * Create a new instance from the given {@link MulticastSocket}.
      *
-     * @param socket    the {@link MulticastSocket} which is used by this instance
+     * @param socket the {@link MulticastSocket} which is used by this instance
      */
     public OioDatagramChannel(MulticastSocket socket) {
         super(null);
@@ -89,8 +60,7 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
             socket.setBroadcast(false);
             success = true;
         } catch (SocketException e) {
-            throw new ChannelException(
-                    "Failed to configure the datagram socket timeout.", e);
+            throw new ChannelException("Failed to configure the datagram socket timeout.", e);
         } finally {
             if (!success) {
                 socket.close();
@@ -101,6 +71,14 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
         config = new DefaultOioDatagramChannelConfig(this, socket);
     }
 
+    private static MulticastSocket newSocket() {
+        try {
+            return new MulticastSocket(null);
+        } catch (Exception e) {
+            throw new ChannelException("failed to create a new socket", e);
+        }
+    }
+
     @Override
     public ChannelMetadata metadata() {
         return METADATA;
@@ -108,7 +86,7 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
 
     /**
      * {@inheritDoc}
-     *
+     * <p>
      * This can be safely cast to {@link OioDatagramChannelConfig}.
      */
     @Override
@@ -125,9 +103,7 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
     @Override
     @SuppressWarnings("deprecation")
     public boolean isActive() {
-        return isOpen()
-            && (config.getOption(ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION) && isRegistered()
-                 || socket.isBound());
+        return isOpen() && (config.getOption(ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION) && isRegistered() || socket.isBound());
     }
 
     @Override
@@ -161,8 +137,7 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
     }
 
     @Override
-    protected void doConnect(SocketAddress remoteAddress,
-            SocketAddress localAddress) throws Exception {
+    protected void doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
         if (localAddress != null) {
             socket.bind(localAddress);
         }
@@ -231,7 +206,7 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
 
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
-        for (;;) {
+        for (; ; ) {
             final Object o = in.current();
             if (o == null) {
                 break;
@@ -240,8 +215,7 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
             final ByteBuf data;
             final SocketAddress remoteAddress;
             if (o instanceof AddressedEnvelope) {
-                @SuppressWarnings("unchecked")
-                AddressedEnvelope<ByteBuf, SocketAddress> envelope = (AddressedEnvelope<ByteBuf, SocketAddress>) o;
+                @SuppressWarnings("unchecked") AddressedEnvelope<ByteBuf, SocketAddress> envelope = (AddressedEnvelope<ByteBuf, SocketAddress>) o;
                 remoteAddress = envelope.recipient();
                 data = envelope.content();
             } else {
@@ -285,15 +259,13 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
         }
 
         if (msg instanceof AddressedEnvelope) {
-            @SuppressWarnings("unchecked")
-            AddressedEnvelope<Object, SocketAddress> e = (AddressedEnvelope<Object, SocketAddress>) msg;
+            @SuppressWarnings("unchecked") AddressedEnvelope<Object, SocketAddress> e = (AddressedEnvelope<Object, SocketAddress>) msg;
             if (e.content() instanceof ByteBuf) {
                 return msg;
             }
         }
 
-        throw new UnsupportedOperationException(
-                "unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
+        throw new UnsupportedOperationException("unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
     }
 
     @Override
@@ -319,9 +291,7 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
     }
 
     @Override
-    public ChannelFuture joinGroup(
-            InetSocketAddress multicastAddress, NetworkInterface networkInterface,
-            ChannelPromise promise) {
+    public ChannelFuture joinGroup(InetSocketAddress multicastAddress, NetworkInterface networkInterface, ChannelPromise promise) {
         ensureBound();
         try {
             socket.joinGroup(multicastAddress, networkInterface);
@@ -333,24 +303,19 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
     }
 
     @Override
-    public ChannelFuture joinGroup(
-            InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source) {
+    public ChannelFuture joinGroup(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source) {
         return newFailedFuture(new UnsupportedOperationException());
     }
 
     @Override
-    public ChannelFuture joinGroup(
-            InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source,
-            ChannelPromise promise) {
+    public ChannelFuture joinGroup(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source, ChannelPromise promise) {
         promise.setFailure(new UnsupportedOperationException());
         return promise;
     }
 
     private void ensureBound() {
         if (!isActive()) {
-            throw new IllegalStateException(
-                    DatagramChannel.class.getName() +
-                    " must be bound to join a group.");
+            throw new IllegalStateException(DatagramChannel.class.getName() + " must be bound to join a group.");
         }
     }
 
@@ -371,15 +336,12 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
     }
 
     @Override
-    public ChannelFuture leaveGroup(
-            InetSocketAddress multicastAddress, NetworkInterface networkInterface) {
+    public ChannelFuture leaveGroup(InetSocketAddress multicastAddress, NetworkInterface networkInterface) {
         return leaveGroup(multicastAddress, networkInterface, newPromise());
     }
 
     @Override
-    public ChannelFuture leaveGroup(
-            InetSocketAddress multicastAddress, NetworkInterface networkInterface,
-            ChannelPromise promise) {
+    public ChannelFuture leaveGroup(InetSocketAddress multicastAddress, NetworkInterface networkInterface, ChannelPromise promise) {
         try {
             socket.leaveGroup(multicastAddress, networkInterface);
             promise.setSuccess();
@@ -390,42 +352,34 @@ public class OioDatagramChannel extends AbstractOioMessageChannel
     }
 
     @Override
-    public ChannelFuture leaveGroup(
-            InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source) {
+    public ChannelFuture leaveGroup(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source) {
         return newFailedFuture(new UnsupportedOperationException());
     }
 
     @Override
-    public ChannelFuture leaveGroup(
-            InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source,
-            ChannelPromise promise) {
+    public ChannelFuture leaveGroup(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress source, ChannelPromise promise) {
         promise.setFailure(new UnsupportedOperationException());
         return promise;
     }
 
     @Override
-    public ChannelFuture block(InetAddress multicastAddress,
-            NetworkInterface networkInterface, InetAddress sourceToBlock) {
+    public ChannelFuture block(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress sourceToBlock) {
         return newFailedFuture(new UnsupportedOperationException());
     }
 
     @Override
-    public ChannelFuture block(InetAddress multicastAddress,
-            NetworkInterface networkInterface, InetAddress sourceToBlock,
-            ChannelPromise promise) {
+    public ChannelFuture block(InetAddress multicastAddress, NetworkInterface networkInterface, InetAddress sourceToBlock, ChannelPromise promise) {
         promise.setFailure(new UnsupportedOperationException());
         return promise;
     }
 
     @Override
-    public ChannelFuture block(InetAddress multicastAddress,
-            InetAddress sourceToBlock) {
+    public ChannelFuture block(InetAddress multicastAddress, InetAddress sourceToBlock) {
         return newFailedFuture(new UnsupportedOperationException());
     }
 
     @Override
-    public ChannelFuture block(InetAddress multicastAddress,
-            InetAddress sourceToBlock, ChannelPromise promise) {
+    public ChannelFuture block(InetAddress multicastAddress, InetAddress sourceToBlock, ChannelPromise promise) {
         promise.setFailure(new UnsupportedOperationException());
         return promise;
     }

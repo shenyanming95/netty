@@ -28,23 +28,26 @@ public abstract class SctpServerChannel extends AbstractSelectableChannel {
         UnsupportedOperatingSystemException.raise();
     }
 
-    public static SctpServerChannel open() throws IOException {
-        return null;
-    }
-
     protected SctpServerChannel(SelectorProvider provider) {
         super(provider);
     }
 
+    public static SctpServerChannel open() throws IOException {
+        return null;
+    }
+
     public abstract <T> T getOption(SctpSocketOption<T> name) throws IOException;
+
     public abstract <T> SctpServerChannel setOption(SctpSocketOption<T> name, T value) throws IOException;
 
     public abstract Set<SocketAddress> getAllLocalAddresses() throws IOException;
 
     public abstract SctpServerChannel bind(SocketAddress local) throws IOException;
+
     public abstract SctpServerChannel bind(SocketAddress local, int backlog) throws IOException;
 
     public abstract SctpServerChannel bindAddress(InetAddress inetAddress) throws IOException;
+
     public abstract SctpServerChannel unbindAddress(InetAddress inetAddress) throws IOException;
 
     public abstract SctpChannel accept() throws IOException;

@@ -25,29 +25,11 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.TearDown;
 
 public abstract class AbstractSslHandlerThroughputBenchmark extends AbstractSslHandlerBenchmark {
-    @Param({ "64", "128", "512", "1024", "4096" })
+    @Param({"64", "128", "512", "1024", "4096"})
     public int messageSize;
 
     @Param
     public BufferType bufferType;
-
-    public enum BufferType {
-        HEAP {
-            @Override
-            ByteBuf newBuffer(ByteBufAllocator allocator, int size) {
-                return allocator.heapBuffer(size);
-            }
-        },
-        DIRECT {
-            @Override
-            ByteBuf newBuffer(ByteBufAllocator allocator, int size) {
-                return allocator.directBuffer(size);
-            }
-        };
-
-        abstract ByteBuf newBuffer(ByteBufAllocator allocator, int size);
-    }
-
     protected ByteBuf wrapSrcBuffer;
     protected EmbeddedChannel channel;
     private ByteBufAllocator allocator;
@@ -90,5 +72,21 @@ public abstract class AbstractSslHandlerThroughputBenchmark extends AbstractSslH
         }
         clientSslHandler.flush(clientCtx);
         return clientCtx.cumulation().retainedSlice();
+    }
+
+    public enum BufferType {
+        HEAP {
+            @Override
+            ByteBuf newBuffer(ByteBufAllocator allocator, int size) {
+                return allocator.heapBuffer(size);
+            }
+        }, DIRECT {
+            @Override
+            ByteBuf newBuffer(ByteBufAllocator allocator, int size) {
+                return allocator.directBuffer(size);
+            }
+        };
+
+        abstract ByteBuf newBuffer(ByteBufAllocator allocator, int size);
     }
 }

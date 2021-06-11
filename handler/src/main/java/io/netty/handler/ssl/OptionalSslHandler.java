@@ -1,18 +1,3 @@
-/*
- * Copyright 2017 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package io.netty.handler.ssl;
 
 import io.netty.buffer.ByteBuf;
@@ -77,6 +62,7 @@ public class OptionalSslHandler extends ByteToMessageDecoder {
 
     /**
      * Optionally specify the SSL handler name, this method may return {@code null}.
+     *
      * @return the name of the SSL handler.
      */
     protected String newSslHandlerName() {
@@ -88,7 +74,7 @@ public class OptionalSslHandler extends ByteToMessageDecoder {
      * The hostname and port is not known by this method so servers may want to override this method and use the
      * {@link SslContext#newHandler(ByteBufAllocator, String, int)} variant.
      *
-     * @param context the {@link ChannelHandlerContext} to use.
+     * @param context    the {@link ChannelHandlerContext} to use.
      * @param sslContext the {@link SSLContext} to use.
      * @return the {@link SslHandler} which will replace the {@link OptionalSslHandler} in the pipeline if the
      * traffic is SSL.
@@ -99,6 +85,7 @@ public class OptionalSslHandler extends ByteToMessageDecoder {
 
     /**
      * Optionally specify the non-SSL handler name, this method may return {@code null}.
+     *
      * @return the name of the non-SSL handler.
      */
     protected String newNonSslHandlerName() {
@@ -107,6 +94,7 @@ public class OptionalSslHandler extends ByteToMessageDecoder {
 
     /**
      * Override to configure the ChannelHandler.
+     *
      * @param context the {@link ChannelHandlerContext} to use.
      * @return the {@link ChannelHandler} which will replace the {@link OptionalSslHandler} in the pipeline
      * or {@code null} to simply remove the {@link OptionalSslHandler} if the traffic is non-SSL.
